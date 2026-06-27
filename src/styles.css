@@ -46,7 +46,8 @@ textarea {
 }
 
 h1,
-h2 {
+h2,
+h3 {
   margin: 0;
   line-height: 1.05;
 }
@@ -61,16 +62,22 @@ h2 {
   letter-spacing: -0.04em;
 }
 
-.hero-copy {
+h3 {
+  color: #f8fbff;
+  font-size: 1rem;
+}
+
+.hero-copy,
+.scenario-summary {
   max-width: 720px;
   color: #b8c9dd;
-  font-size: 1.1rem;
+  font-size: 1.02rem;
   line-height: 1.75;
 }
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(0, 1fr) 390px;
   gap: 22px;
   align-items: stretch;
 }
@@ -95,8 +102,8 @@ h2 {
   padding: 26px 28px 0;
 }
 
-.status-pill {
-  align-self: start;
+.status-pill,
+.source-badge {
   border: 1px solid rgba(116, 212, 255, 0.32);
   border-radius: 999px;
   padding: 8px 12px;
@@ -104,6 +111,10 @@ h2 {
   background: rgba(116, 212, 255, 0.08);
   font-size: 0.8rem;
   font-weight: 700;
+}
+
+.status-pill {
+  align-self: start;
   white-space: nowrap;
 }
 
@@ -111,13 +122,19 @@ svg {
   display: block;
   width: 100%;
   min-height: 420px;
-  color: rgba(150, 200, 255, 0.58);
+  color: rgba(150, 200, 255, 0.48);
 }
 
 .edge {
   stroke: currentColor;
   stroke-width: 3;
   marker-end: url(#arrow);
+  transition: color 160ms ease, stroke-width 160ms ease;
+}
+
+.edge-active {
+  color: #7dd3fc;
+  stroke-width: 5;
 }
 
 .node {
@@ -136,16 +153,21 @@ svg {
   stroke: #7dd3fc;
 }
 
-.node-input.selected,
-.node-input:hover,
-.node-input:focus {
-  stroke: #67e8f9;
+.node-on-path {
+  fill: rgba(18, 54, 86, 0.98);
+  stroke: rgba(125, 211, 252, 0.78);
 }
 
-.node-decision.selected,
-.node-decision:hover,
-.node-decision:focus {
+.node-active {
+  fill: rgba(21, 90, 122, 0.98);
   stroke: #facc15;
+  stroke-width: 3;
+}
+
+.node-terminal.node-active,
+.node-terminal:hover,
+.node-terminal:focus {
+  stroke: #a78bfa;
 }
 
 .node-title {
@@ -162,6 +184,8 @@ svg {
 }
 
 .detail-panel {
+  display: grid;
+  gap: 20px;
   padding: 28px;
 }
 
@@ -170,10 +194,34 @@ svg {
   line-height: 1.7;
 }
 
+.command-card,
+.alternatives,
+.source-list,
+.continuation-routes,
+.validation-checklist,
+.choice-group {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(137, 184, 255, 0.16);
+  border-radius: 22px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.command-card code {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 12px;
+  padding: 8px 10px;
+  color: #07111f;
+  background: #7dd3fc;
+  font-weight: 800;
+}
+
 dl {
   display: grid;
   gap: 14px;
-  margin: 24px 0 0;
+  margin: 0;
 }
 
 dt {
@@ -181,6 +229,7 @@ dt {
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 dd {
@@ -189,7 +238,100 @@ dd {
   line-height: 1.65;
 }
 
-@media (max-width: 900px) {
+.choice-button {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(125, 211, 252, 0.32);
+  border-radius: 16px;
+  padding: 12px;
+  color: #eef4ff;
+  background: rgba(14, 165, 233, 0.12);
+  text-align: left;
+  cursor: pointer;
+}
+
+.choice-button:hover,
+.choice-button:focus {
+  border-color: #7dd3fc;
+  background: rgba(14, 165, 233, 0.22);
+}
+
+.choice-button span,
+.alternatives strong,
+.continuation-route strong {
+  font-weight: 800;
+}
+
+.choice-button small,
+.alternatives span,
+.continuation-route span {
+  color: #b8c9dd;
+  line-height: 1.5;
+}
+
+.alternatives article,
+.continuation-route {
+  display: grid;
+  gap: 4px;
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(15, 34, 58, 0.72);
+}
+
+.source-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+}
+
+.source-list h3 {
+  width: 100%;
+}
+
+.source-cited {
+  border-color: rgba(74, 222, 128, 0.42);
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.source-pending {
+  border-color: rgba(250, 204, 21, 0.42);
+  color: #fef08a;
+  background: rgba(250, 204, 21, 0.1);
+}
+
+.source-platform-check {
+  border-color: rgba(167, 139, 250, 0.42);
+  color: #ddd6fe;
+  background: rgba(167, 139, 250, 0.1);
+}
+
+.checklist-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.checklist-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  color: #e6effa;
+  line-height: 1.5;
+}
+
+.checklist-item input {
+  margin-top: 4px;
+  accent-color: #7dd3fc;
+}
+
+.validation-state {
+  margin: 0;
+  color: #bbf7d0;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 980px) {
   .app-shell {
     padding: 36px 0;
   }

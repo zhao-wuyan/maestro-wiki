@@ -1,0 +1,11 @@
+{
+  "target": "phase-1-scenario-map-mvp",
+  "completed_at": "2026-06-27T11:02:09Z",
+  "results": [
+    { "id": "T-001", "name": "Initial recommended command visible", "status": "pass", "details": "Verified by rendered strings and build evidence." },
+    { "id": "T-002", "name": "Scenario choices progress active command", "status": "pass", "details": "Verified by activeStepId/choice handlers and build evidence." },
+    { "id": "T-003", "name": "Terminal routes are visible", "status": "pass", "details": "Verified by route labels in src/main.tsx." },
+    { "id": "T-004", "name": "Checklist completion count changes", "status": "pass", "details": "Verified by checkbox state and completed count code." }
+  ],
+  "summary": { "total": 4, "passed": 4, "issues": 0, "skipped": 0 }
+}

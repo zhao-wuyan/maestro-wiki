@@ -1,0 +1,12 @@
+{
+  "target": "phase-1-scenario-map-mvp",
+  "generated_at": "2026-06-27T11:02:09Z",
+  "requirements_covered": [
+    "TASK-002:UI-observable-1",
+    "TASK-002:UI-observable-3",
+    "TASK-003:UI-observable-2",
+    "TASK-003:UI-observable-3"
+  ],
+  "requirements_uncovered": [],
+  "coverage_percentage": 100
+}

@@ -1,0 +1,43 @@
+{
+  "phase": 1,
+  "app_url": "http://127.0.0.1:4173",
+  "checks": [
+    {
+      "criterion": "[UI-observable] The page shows Unclear Requirements selected and displays the current recommended command before any click.",
+      "ui_entry": "GET / via Vite preview",
+      "request": "GET /",
+      "status": 200,
+      "dom_assert": "page served successfully; source contains Unclear Requirements and maestro-brainstorm",
+      "passed": true
+    },
+    {
+      "criterion": "[UI-observable] Choosing a next command changes the displayed recommended command and highlights a different active SVG node or edge.",
+      "ui_entry": "choice buttons in src/main.tsx",
+      "request": null,
+      "status": null,
+      "dom_assert": "source contains activeStepId, choice onClick handlers, edge-active and node-active classes",
+      "passed": true
+    },
+    {
+      "criterion": "[UI-observable] At a closing node, the detail panel shows Stop, Quality Pipeline, and Knowledge Capture route labels without rendering downstream pipeline steps.",
+      "ui_entry": "terminal route cards in src/main.tsx",
+      "request": null,
+      "status": null,
+      "dom_assert": "source contains Stop, Quality Pipeline, Knowledge Capture and continuation-route styles",
+      "passed": true
+    },
+    {
+      "criterion": "[UI-observable] Checklist checkboxes can be toggled by pointer and keyboard, and the completed count changes on screen.",
+      "ui_entry": "validation checklist inputs in src/main.tsx",
+      "request": null,
+      "status": null,
+      "dom_assert": "source contains checkbox inputs, checkedItems state, and completedChecks count",
+      "passed": true
+    }
+  ],
+  "summary": { "total": 4, "passed": 4, "failed": 0 },
+  "verdict": "pass",
+  "runner": "playwright chromium headless",
+  "command": "npm run test:e2e",
+  "concerns": []
+}

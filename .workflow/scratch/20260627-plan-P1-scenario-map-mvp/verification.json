@@ -1,0 +1,26 @@
+{
+  "phase": 1,
+  "status": "passed",
+  "verified_at": "2026-06-27T10:44:02Z",
+  "verifier": "local-build-and-grep",
+  "must_haves": {
+    "truths": [
+      { "criterion": "ScenarioModel type exists", "status": "verified", "evidence": "src/main.tsx contains type ScenarioModel" },
+      { "criterion": "Unclear Requirements fixture exists", "status": "verified", "evidence": "src/main.tsx contains unclear-requirements and Unclear Requirements" },
+      { "criterion": "Scenario validation helpers exist", "status": "verified", "evidence": "src/main.tsx contains validateScenarioReferences and validateCitationCoverage" },
+      { "criterion": "Active step and selected node state exist", "status": "verified", "evidence": "src/main.tsx contains activeStepId and selectedNodeId" },
+      { "criterion": "Detail panel route and checklist labels exist", "status": "verified", "evidence": "src/main.tsx contains Stop, Quality Pipeline, Knowledge Capture; src/styles.css contains source-badge, validation-checklist, continuation-route" },
+      { "criterion": "Build succeeds", "status": "verified", "evidence": "npm run build exits 0" }
+    ],
+    "artifacts": [
+      { "path": "src/main.tsx", "status": "exists" },
+      { "path": "src/styles.css", "status": "exists" }
+    ],
+    "key_links": [
+      { "path": "src/main.tsx", "status": "wired", "importers": ["index.html via Vite entry"] }
+    ]
+  },
+  "gaps": [],
+  "antipatterns": [],
+  "coverage_score": 1
+}

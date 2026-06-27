@@ -1,0 +1,45 @@
+{
+  "id": "TASK-002",
+  "title": "Wire active scenario interaction",
+  "type": "implementation",
+  "description": "Use the typed scenario fixture to drive the visible app state: scenario selection, current recommended command, condition, next command choices, selected SVG node, and active path highlighting. Pointer and keyboard users must be able to select nodes and advance the scenario without command execution.",
+  "files": [
+    "src/main.tsx",
+    "src/styles.css"
+  ],
+  "read_first": [
+    "src/main.tsx",
+    "src/styles.css",
+    "package.json",
+    ".workflow/scratch/20260627-analyze-P1-scenario-map-mvp/context-package.json",
+    ".workflow/roadmap.md"
+  ],
+  "action": "Refactor `App` so UI state is derived from `unclearRequirementsScenario`, and connect SVG nodes plus next-choice controls to active step state with accessible pointer and keyboard behavior.",
+  "implementation": [
+    "Add React state for `selectedScenarioId`, `activeStepId`, and `selectedNodeId`; initialize them to the unclear-requirements scenario and its first step.",
+    "Derive `activeStep`, `selectedNode`, and active edge or node ids from the scenario model rather than hard-coded generic flow data.",
+    "Render a scenario selector or single scenario control that visibly identifies `Unclear Requirements` as selected.",
+    "Render the active step's recommended command, condition, purpose, input, output, and next choices in the main/detail layout.",
+    "Make each SVG node selectable with pointer and keyboard activation using `role=\"button\"`, `tabIndex`, and Enter/Space handling; selecting a node updates `selectedNodeId`.",
+    "Make each next-choice button update `activeStepId` when it targets another step, while non-step terminal routes remain represented for TASK-003.",
+    "Update CSS with active path classes such as `.node-active`, `.node-on-path`, and `.edge-active` so current path highlighting is visually distinct from simple selection."
+  ],
+  "convergence": {
+    "criteria": [
+      "[UI-observable] The page shows `Unclear Requirements` selected and displays the current recommended command before any click.",
+      "[UI-observable] Clicking or pressing Enter/Space on an SVG scenario node changes the detail panel heading to that node's title.",
+      "[UI-observable] Choosing a next command changes the displayed recommended command and highlights a different active SVG node or edge.",
+      "`grep -n \"activeStepId\" src/main.tsx` and `grep -n \"selectedNodeId\" src/main.tsx` both return matches.",
+      "`grep -n \"edge-active\" src/styles.css` and `grep -n \"node-active\" src/styles.css` both return matches.",
+      "`npm run build` exits with status 0 after interaction wiring."
+    ]
+  },
+  "dependencies": [
+    "TASK-001"
+  ],
+  "wave": 2,
+  "estimated_complexity": "medium",
+  "status": "completed",
+  "completed_at": "2026-06-27T10:44:02Z",
+  "summary_path": ".summaries/TASK-002-summary.md"
+}

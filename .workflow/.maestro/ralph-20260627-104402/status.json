@@ -1,0 +1,479 @@
+{
+  "session_id": "ralph-20260627-104402",
+  "source": "ralph",
+  "status": "running",
+  "ralph_protocol_version": "1",
+  "active_step_index": null,
+  "intent": "继续当前项目。参考 Roadmap: .workflow/roadmap.md；当前 milestone: M1-stepwise-scenario-map-mvp；当前 phase: 1 Scenario Map MVP；Analyze artifact: ANL-001 at .workflow/scratch/20260627-analyze-P1-scenario-map-mvp/context-package.json。接管后先判断下一步应执行 /maestro-plan 1 还是需要补充分析；若可推进，生成 Phase 1 plan，并在计划确认后执行。约束：不复用 maestro-flow/docs-site，不修改 maestro-flow 子模块，不引入后端/LLM/登录/real status.json parsing。",
+  "lifecycle_position": "plan",
+  "phase": 1,
+  "phase_is_new": false,
+  "milestone": "M1-stepwise-scenario-map-mvp",
+  "auto_mode": true,
+  "quality_mode": "standard",
+  "planning_mode": "independent",
+  "scope_verdict": null,
+  "wants_roadmap": true,
+  "analyze_macro_id": null,
+  "blueprint_id": "BLP-stepwise-scenario-map-2026-06-27",
+  "cli_tool": "claude",
+  "passed_gates": [],
+  "context": {
+    "issue_id": null,
+    "scratch_dir": null,
+    "plan_dir": null,
+    "analysis_dir": "scratch/20260627-analyze-P1-scenario-map-mvp",
+    "brainstorm_dir": null,
+    "blueprint_dir": "blueprint/BLP-stepwise-scenario-map-2026-06-27"
+  },
+  "steps": [
+    {
+      "index": 0,
+      "skill": "maestro-plan",
+      "args": "1",
+      "stage": "plan",
+      "scope": "phase",
+      "decision": null,
+      "retry_count": 0,
+      "max_retries": 2,
+      "command_scope": "global",
+      "command_path": "/root/.agents/skills/maestro-plan/SKILL.md",
+      "milestone_id": "M1-stepwise-scenario-map-mvp",
+      "source_artifact_ref": null,
+      "status": "completed",
+      "goal_ref": null,
+      "completion_confirmed": true,
+      "completion_status": "DONE",
+      "completion_evidence": ".workflow/scratch/20260627-plan-P1-scenario-map-mvp/plan.json",
+      "completed_at": "2026-06-27T10:53:34.338Z",
+      "deferred_reads": [
+        "/root/.maestro/templates/plan.json",
+        "/root/.maestro/templates/task.json",
+        "/root/.maestro/templates/state.json"
+      ],
+      "load": {
+        "loaded_at": "2026-06-27T10:47:56.664Z",
+        "required_files": [
+          "/root/.maestro/workflows/plan.md"
+        ],
+        "deferred_files": [
+          "/root/.maestro/templates/plan.json",
+          "/root/.maestro/templates/task.json",
+          "/root/.maestro/templates/state.json"
+        ],
+        "resolve_version": "1"
+      },
+      "concerns": null
+    },
+    {
+      "index": 1,
+      "skill": "maestro-execute",
+      "args": "1",
+      "stage": "execute",
+      "scope": "phase",
+      "decision": null,
+      "retry_count": 0,
+      "max_retries": 2,
+      "command_scope": "global",
+      "command_path": "/root/.agents/skills/maestro-execute/SKILL.md",
+      "milestone_id": "M1-stepwise-scenario-map-mvp",
+      "source_artifact_ref": null,
+      "status": "completed",
+      "goal_ref": "G1",
+      "completion_confirmed": true,
+      "completion_status": "DONE",
+      "completion_evidence": ".workflow/scratch/20260627-plan-P1-scenario-map-mvp/verification.json",
+      "completed_at": "2026-06-27T11:02:00.968Z",
+      "deferred_reads": [
+        "/root/.maestro/templates/task.json",
+        "/root/.maestro/templates/state.json"
+      ],
+      "load": {
+        "loaded_at": "2026-06-27T10:53:41.564Z",
+        "required_files": [
+          "/root/.maestro/workflows/execute.md"
+        ],
+        "deferred_files": [
+          "/root/.maestro/templates/task.json",
+          "/root/.maestro/templates/state.json"
+        ],
+        "resolve_version": "1"
+      },
+      "concerns": null
+    },
+    {
+      "index": 2,
+      "skill": null,
+      "args": "",
+      "stage": "decision",
+      "scope": null,
+      "decision": "post-execute",
+      "retry_count": 0,
+      "max_retries": 2,
+      "command_scope": null,
+      "command_path": null,
+      "milestone_id": null,
+      "source_artifact_ref": null,
+      "status": "pending",
+      "goal_ref": null,
+      "completion_confirmed": false,
+      "completion_status": null,
+      "completion_evidence": null,
+      "completed_at": null,
+      "deferred_reads": [],
+      "load": null
+    },
+    {
+      "index": 3,
+      "skill": "quality-review",
+      "args": "1",
+      "stage": "review",
+      "scope": "phase",
+      "decision": null,
+      "retry_count": 0,
+      "max_retries": 2,
+      "command_scope": "global",
+      "command_path": "/root/.agents/skills/quality-review/SKILL.md",
+      "milestone_id": "M1-stepwise-scenario-map-mvp",
+      "source_artifact_ref": null,
+      "status": "completed",
+      "goal_ref": null,
+      "completion_confirmed": true,
+      "completion_status": "DONE",
+      "completion_evidence": ".workflow/scratch/20260627-review-P1-scenario-map-mvp/review.json",
+      "completed_at": "2026-06-27T11:03:36.892Z",
+      "deferred_reads": [
+        "/root/.maestro/templates/index.json"
+      ],
+      "load": {
+        "loaded_at": "2026-06-27T11:02:09.695Z",
+        "required_files": [
+          "/root/.maestro/workflows/review.md"
+        ],
+        "deferred_files": [
+          "/root/.maestro/templates/index.json"
+        ],
+        "resolve_version": "1"
+      },
+      "concerns": null
+    },
+    {
+      "index": 4,
+      "skill": null,
+      "args": "",
+      "stage": "decision",
+      "scope": null,
+      "decision": "post-review",
+      "retry_count": 0,
+      "max_retries": 2,
+      "command_scope": null,
+      "command_path": null,
+      "milestone_id": null,
+      "source_artifact_ref": null,
+      "status": "pending",
+      "goal_ref": null,
+      "completion_confirmed": false,
+      "completion_status": null,
+      "completion_evidence": null,
+      "completed_at": null,
+      "deferred_reads": [],
+      "load": null
+    },
+    {
+      "index": 5,
+      "skill": "quality-auto-test",
+      "args": "1",
+      "stage": "test-gen",
+      "scope": "phase",
+      "decision": null,
+      "retry_count": 0,
+      "max_retries": 2,
+      "command_scope": "global",
+      "command_path": "/root/.agents/skills/quality-auto-test/SKILL.md",
+      "milestone_id": "M1-stepwise-scenario-map-mvp",
+      "source_artifact_ref": null,
+      "status": "completed",
+      "goal_ref": null,
+      "completion_confirmed": true,
+      "completion_status": "DONE_WITH_CONCERNS",
+      "completion_evidence": null,
+      "completed_at": "2026-06-27T11:04:50.104Z",
+      "deferred_reads": [],
+      "load": {
+        "loaded_at": "2026-06-27T11:03:44.786Z",
+        "required_files": [
+          "/root/.maestro/workflows/auto-test.md"
+        ],
+        "deferred_files": [],
+        "resolve_version": "1"
+      },
+      "concerns": "No dedicated test framework configured; generated automated tests skipped, fallback validation is npm run build."
+    },
+    {
+      "index": 6,
+      "skill": "quality-test",
+      "args": "1",
+      "stage": "test",
+      "scope": "phase",
+      "decision": null,
+      "retry_count": 0,
+      "max_retries": 2,
+      "command_scope": "global",
+      "command_path": "/root/.agents/skills/quality-test/SKILL.md",
+      "milestone_id": "M1-stepwise-scenario-map-mvp",
+      "source_artifact_ref": null,
+      "status": "completed",
+      "goal_ref": "G2",
+      "completion_confirmed": true,
+      "completion_status": "DONE",
+      "completion_evidence": ".workflow/scratch/20260627-test-P1-scenario-map-mvp/uat.md",
+      "completed_at": "2026-06-27T11:07:02.959Z",
+      "deferred_reads": [],
+      "load": {
+        "loaded_at": "2026-06-27T11:05:00.917Z",
+        "required_files": [
+          "/root/.maestro/workflows/test.md"
+        ],
+        "deferred_files": [],
+        "resolve_version": "1"
+      },
+      "concerns": null
+    },
+    {
+      "index": 7,
+      "skill": null,
+      "args": "",
+      "stage": "decision",
+      "scope": null,
+      "decision": "post-test",
+      "retry_count": 0,
+      "max_retries": 2,
+      "command_scope": null,
+      "command_path": null,
+      "milestone_id": null,
+      "source_artifact_ref": null,
+      "status": "pending",
+      "goal_ref": null,
+      "completion_confirmed": false,
+      "completion_status": null,
+      "completion_evidence": null,
+      "completed_at": null,
+      "deferred_reads": [],
+      "load": null
+    },
+    {
+      "index": 8,
+      "skill": "quality-test",
+      "args": "1 --frontend-verify",
+      "stage": "frontend-verify",
+      "scope": "phase",
+      "decision": null,
+      "retry_count": 0,
+      "max_retries": 2,
+      "command_scope": "global",
+      "command_path": "/root/.agents/skills/quality-test/SKILL.md",
+      "milestone_id": "M1-stepwise-scenario-map-mvp",
+      "source_artifact_ref": null,
+      "status": "completed",
+      "goal_ref": "G3",
+      "completion_confirmed": true,
+      "completion_status": "DONE_WITH_CONCERNS",
+      "completion_evidence": null,
+      "completed_at": "2026-06-27T11:08:51.092Z",
+      "deferred_reads": [],
+      "load": {
+        "loaded_at": "2026-06-27T11:07:12.202Z",
+        "required_files": [
+          "/root/.maestro/workflows/test.md"
+        ],
+        "deferred_files": [],
+        "resolve_version": "1"
+      },
+      "concerns": "Chrome DevTools MCP unavailable; verified Vite preview and static UI evidence instead."
+    },
+    {
+      "index": 9,
+      "skill": null,
+      "args": "",
+      "stage": "decision",
+      "scope": null,
+      "decision": "post-frontend-verify",
+      "retry_count": 0,
+      "max_retries": 2,
+      "command_scope": null,
+      "command_path": null,
+      "milestone_id": null,
+      "source_artifact_ref": null,
+      "status": "pending",
+      "goal_ref": null,
+      "completion_confirmed": false,
+      "completion_status": null,
+      "completion_evidence": null,
+      "completed_at": null,
+      "deferred_reads": [],
+      "load": null
+    },
+    {
+      "index": 10,
+      "skill": null,
+      "args": "",
+      "stage": "decision",
+      "scope": null,
+      "decision": "post-goal-audit",
+      "retry_count": 0,
+      "max_retries": 2,
+      "command_scope": null,
+      "command_path": null,
+      "milestone_id": null,
+      "source_artifact_ref": null,
+      "status": "pending",
+      "goal_ref": null,
+      "completion_confirmed": false,
+      "completion_status": null,
+      "completion_evidence": null,
+      "completed_at": null,
+      "deferred_reads": [],
+      "load": null
+    },
+    {
+      "index": 11,
+      "skill": "maestro-milestone-audit",
+      "args": "M1-stepwise-scenario-map-mvp",
+      "stage": "milestone-audit",
+      "scope": "milestone",
+      "decision": null,
+      "retry_count": 0,
+      "max_retries": 2,
+      "command_scope": "global",
+      "command_path": "/root/.agents/skills/maestro-milestone-audit/SKILL.md",
+      "milestone_id": null,
+      "source_artifact_ref": null,
+      "status": "completed",
+      "goal_ref": null,
+      "completion_confirmed": true,
+      "completion_status": "DONE_WITH_CONCERNS",
+      "completion_evidence": null,
+      "completed_at": "2026-06-27T11:10:11.012Z",
+      "deferred_reads": [],
+      "load": {
+        "loaded_at": "2026-06-27T11:08:59.048Z",
+        "required_files": [
+          "/root/.maestro/workflows/milestone-audit.md"
+        ],
+        "deferred_files": [],
+        "resolve_version": "1"
+      },
+      "concerns": "Milestone audit passed, but automated test framework and browser-driven verification were unavailable."
+    },
+    {
+      "index": 12,
+      "skill": "maestro-milestone-complete",
+      "args": "M1-stepwise-scenario-map-mvp",
+      "stage": "milestone-complete",
+      "scope": "milestone",
+      "decision": null,
+      "retry_count": 0,
+      "max_retries": 2,
+      "command_scope": "global",
+      "command_path": "/root/.agents/skills/maestro-milestone-complete/SKILL.md",
+      "milestone_id": null,
+      "source_artifact_ref": null,
+      "status": "completed",
+      "goal_ref": null,
+      "completion_confirmed": true,
+      "completion_status": "DONE",
+      "completion_evidence": ".workflow/milestones/M1-stepwise-scenario-map-mvp/audit-report.md",
+      "completed_at": "2026-06-27T12:09:09.402Z",
+      "deferred_reads": [
+        "/root/.maestro/templates/state.json"
+      ],
+      "load": {
+        "loaded_at": "2026-06-27T11:10:19.904Z",
+        "required_files": [
+          "/root/.maestro/workflows/milestone-complete.md"
+        ],
+        "deferred_files": [
+          "/root/.maestro/templates/state.json"
+        ],
+        "resolve_version": "1"
+      },
+      "concerns": null
+    }
+  ],
+  "waves": [],
+  "current_step": 0,
+  "boundary_contract": {
+    "in_scope": [
+      "src/main.tsx",
+      "src/styles.css",
+      "Phase 1 scenario data/model and UI state",
+      "local validation checklist"
+    ],
+    "out_of_scope": [
+      "maestro-flow/docs-site reuse",
+      "maestro-flow submodule modifications",
+      "backend service",
+      "LLM recommendation",
+      "login or personalization",
+      "real status.json parser"
+    ],
+    "constraints": [
+      "Scenario data must live outside React rendering components.",
+      "Alternatives, terminal routes, and source badges belong in the detail panel.",
+      "Citation policy prefers command definitions, then guide docs, then Codex skill mirrors.",
+      "Root Vite/React app remains independent from maestro-flow docs-site."
+    ],
+    "definition_of_done": "Phase 1 is done when users can follow the unclear-requirements scenario, choose stepwise Maestro commands, inspect terminal routes and citation status, and complete local validation without backend or real status parsing."
+  },
+  "execution_criteria": [
+    "Preserve existing independent Vite + React app structure.",
+    "Do not modify files under maestro-flow/.",
+    "Use npm run build as the baseline validation command.",
+    "Fix gaps at the scenario-model and interaction root rather than hiding broken references in UI.",
+    "Keep implementation minimal and scoped to Phase 1 acceptance criteria."
+  ],
+  "task_decomposition": [
+    {
+      "id": "G1",
+      "goal": "Data-driven Scenario Model and first unclear-requirements fixture exist outside JSX.",
+      "boundary": "In scope: root app scenario model/data; out of scope: extraction from maestro-flow or real status parsing.",
+      "done_when": "verification.json or build evidence confirms scenario nodes, edges, steps, choices, terminal options, and source refs are represented outside React rendering and contain no broken step references.",
+      "evidence": "verification.json",
+      "lifecycle": [
+        "execute"
+      ],
+      "status": "pending",
+      "completion_confirmed": false,
+      "completed_at": null
+    },
+    {
+      "id": "G2",
+      "goal": "Stepwise command-choice interaction supports current command, output condition, next choices, and active path highlighting.",
+      "boundary": "In scope: local React state and SVG/detail panel behavior; out of scope: executing Maestro commands from the browser.",
+      "done_when": "uat.md or test evidence confirms pointer and keyboard users can choose scenario nodes and progress through step choices while the active path updates correctly.",
+      "evidence": "uat.md",
+      "lifecycle": [
+        "test"
+      ],
+      "status": "pending",
+      "completion_confirmed": false,
+      "completed_at": null
+    },
+    {
+      "id": "G3",
+      "goal": "Detail panel exposes continuation routes, citation badges, and local validation checklist for Phase 1.",
+      "boundary": "In scope: terminal stop/quality/knowledge options, citation status, local checklist; out of scope: full downstream pipeline internals.",
+      "done_when": "e2e-results.json confirms terminal choices, cited/pending source status, and validation checklist are visible and usable in the rendered UI.",
+      "evidence": "e2e-results.json",
+      "lifecycle": [
+        "frontend-verify"
+      ],
+      "status": "pending",
+      "completion_confirmed": false,
+      "completed_at": null
+    }
+  ],
+  "task_decomposition_all_done": false,
+  "created_at": "2026-06-27T10:44:02Z",
+  "updated_at": "2026-06-27T10:44:02Z"
+}

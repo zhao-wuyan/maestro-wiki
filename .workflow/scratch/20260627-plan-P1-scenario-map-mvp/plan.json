@@ -1,0 +1,97 @@
+{
+  "id": "PLAN-20260627-P1-scenario-map-mvp",
+  "phase": "Phase 1: Scenario Map MVP",
+  "milestone": "M1-stepwise-scenario-map-mvp",
+  "scope": {
+    "in": [
+      "Data-driven Scenario Model for the unclear-requirements scenario",
+      "Active scenario slice navigation with stepwise command choices",
+      "Lightweight React state and SVG interaction in the independent Vite app",
+      "Detail-panel alternatives, continuation routes, source badges, and local validation checklist"
+    ],
+    "out": [
+      "maestro-flow/docs-site reuse",
+      "maestro-flow submodule edits",
+      "Backend, LLM service, login, real status.json parser, graph library",
+      "Expansion of downstream quality or knowledge pipelines beyond route choices"
+    ]
+  },
+  "summary": "Deliver Phase 1 as a three-wave MVP: first establish typed scenario data and validation helpers outside JSX, then wire active step navigation and SVG path highlighting, then complete the detail panel with continuations, citation badges, and a local checklist.",
+  "approach": [
+    "Keep the implementation inside the existing Vite React app structure, primarily `src/main.tsx` and `src/styles.css`.",
+    "Model scenario nodes, edges, steps, choices, citations, continuation routes, and checklist items as typed constants outside React rendering components.",
+    "Use React state for selected scenario, active step, selected node, and checklist completion; avoid graph libraries and runtime command execution.",
+    "Make every workflow concept in the UI expose purpose, input, output, and next action, with alternatives and citation status confined to the detail panel.",
+    "Validate with local helper checks for broken step references and citation coverage plus the baseline `npm run build`."
+  ],
+  "task_ids": [
+    "TASK-001",
+    "TASK-002",
+    "TASK-003"
+  ],
+  "task_count": 3,
+  "complexity": "medium",
+  "waves": [
+    {
+      "wave": 1,
+      "name": "Scenario model foundation",
+      "task_ids": ["TASK-001"],
+      "depends_on": []
+    },
+    {
+      "wave": 2,
+      "name": "Interactive scenario slice",
+      "task_ids": ["TASK-002"],
+      "depends_on": ["TASK-001"]
+    },
+    {
+      "wave": 3,
+      "name": "Detail panel completion",
+      "task_ids": ["TASK-003"],
+      "depends_on": ["TASK-002"]
+    }
+  ],
+  "confidence": {
+    "overall_score": 0.86,
+    "dimensions": {
+      "scope_fit": 0.95,
+      "implementation_clarity": 0.88,
+      "testability": 0.82,
+      "dependency_risk": 0.9,
+      "citation_alignment": 0.76
+    },
+    "weakest_dimension": "citation_alignment",
+    "pressure_pass": {
+      "target_task": "TASK-001",
+      "result": "Scenario fixture must include source refs with status values and validation helpers must expose missing citation coverage before UI work proceeds. This reduces the risk that TASK-003 adds decorative badges without data backing."
+    }
+  },
+  "created_at": "2026-06-27T00:00:00Z",
+  "source_artifacts": {
+    "upstream_analyze_artifact": "ANL-001",
+    "upstream_context_package": ".workflow/scratch/20260627-analyze-P1-scenario-map-mvp/context-package.json",
+    "roadmap": ".workflow/roadmap.md",
+    "implementation_files": [
+      "src/main.tsx",
+      "src/styles.css",
+      "package.json"
+    ]
+  },
+  "constraints": [
+    "Use TypeScript, React function components, and Vite.",
+    "Keep first graph implementation lightweight with React state and SVG.",
+    "Scenario data must live outside React rendering components.",
+    "Alternatives, terminal routes, source badges, and validation checklist belong in the detail panel.",
+    "Citation policy: maestro-flow command definitions first, guide docs second, Codex skill mirrors for platform checks.",
+    "Do not reuse maestro-flow/docs-site or modify the maestro-flow submodule.",
+    "Do not introduce backend, LLM service, login, real status.json parser, or graph library.",
+    "Run `npm run build` after frontend structural changes."
+  ],
+  "status": "verified",
+  "completed_at": "2026-06-27T10:44:02Z",
+  "verification": {
+    "path": "verification.json",
+    "status": "passed",
+    "coverage_score": 1
+  }
+}

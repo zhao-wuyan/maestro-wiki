@@ -1,0 +1,38 @@
+{
+  "id": "TASK-001",
+  "title": "Build typed scenario model and fixture",
+  "type": "implementation",
+  "description": "Create the Phase 1 data foundation for the unclear-requirements scenario without embedding scenario facts inside JSX. The model must represent scenario identity, nodes, edges, steps, command recommendations, conditions, choices, alternatives, terminal routes, citations, and checklist items, then expose helper validation for broken step references and citation coverage.",
+  "files": [
+    "src/main.tsx"
+  ],
+  "read_first": [
+    "src/main.tsx",
+    "package.json",
+    ".workflow/scratch/20260627-analyze-P1-scenario-map-mvp/context-package.json",
+    ".workflow/roadmap.md"
+  ],
+  "action": "Replace the current generic `nodes` and `edges` data with typed Scenario Model constants for a single `unclear-requirements` fixture, while keeping the existing app entry point and React component structure intact.",
+  "implementation": [
+    "Define TypeScript types such as `CitationStatus`, `ScenarioCitation`, `ScenarioNode`, `ScenarioStep`, `ScenarioChoice`, `ContinuationRoute`, `ValidationChecklistItem`, and `ScenarioModel` above `App`.",
+    "Create an `unclearRequirementsScenario` constant outside `App` with scenario id `unclear-requirements`, title text containing `Unclear Requirements`, and recommended commands that include `maestro-brainstorm`, `maestro-blueprint`, and `maestro-plan`.",
+    "Represent graph edges and step-to-step choices by stable ids, with at least one terminal step that offers stop, quality, and knowledge-capture continuation routes as data, not JSX literals.",
+    "Include source refs with status values such as `cited`, `pending`, or `platform-check`, preserving the policy order of command definitions, guide docs, then Codex skill mirrors.",
+    "Add local helper functions named `validateScenarioReferences` and `validateCitationCoverage` that return arrays of validation messages and are called from module-level `scenarioValidation` data consumed by the UI later."
+  ],
+  "convergence": {
+    "criteria": [
+      "`grep -n \"type ScenarioModel\" src/main.tsx` returns a match.",
+      "`grep -n \"unclear-requirements\" src/main.tsx` returns a match outside rendered JSX literals.",
+      "`grep -n \"validateScenarioReferences\" src/main.tsx` and `grep -n \"validateCitationCoverage\" src/main.tsx` both return matches.",
+      "`grep -n \"maestro-brainstorm\" src/main.tsx`, `grep -n \"maestro-blueprint\" src/main.tsx`, and `grep -n \"maestro-plan\" src/main.tsx` all return matches in the fixture data.",
+      "`npm run build` exits with status 0 after the structural data change."
+    ]
+  },
+  "dependencies": [],
+  "wave": 1,
+  "estimated_complexity": "medium",
+  "status": "completed",
+  "completed_at": "2026-06-27T10:44:02Z",
+  "summary_path": ".summaries/TASK-001-summary.md"
+}

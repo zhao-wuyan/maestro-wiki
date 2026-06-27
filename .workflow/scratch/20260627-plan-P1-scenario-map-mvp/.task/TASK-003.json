@@ -1,0 +1,44 @@
+{
+  "id": "TASK-003",
+  "title": "Complete detail panel routes and checklist",
+  "type": "implementation",
+  "description": "Finish the MVP detail panel by showing alternatives, terminal continuation routes, citation/source badges, and an internal validation checklist. The panel must keep downstream route choices shallow and must let pointer and keyboard users complete local checklist items.",
+  "files": [
+    "src/main.tsx",
+    "src/styles.css"
+  ],
+  "read_first": [
+    "src/main.tsx",
+    "src/styles.css",
+    "package.json",
+    ".workflow/scratch/20260627-analyze-P1-scenario-map-mvp/context-package.json",
+    ".workflow/roadmap.md"
+  ],
+  "action": "Extend the detail panel to render data-backed alternatives, source badges, stop/quality/knowledge continuation routes, and a local validation checklist with accessible checkbox controls.",
+  "implementation": [
+    "Render current-step alternatives in the detail panel only, with labels explaining why they are not the recommended command.",
+    "Render source badges from citation data using explicit statuses for command definitions, guide docs, and Codex skill mirrors; do not add source badges on SVG nodes.",
+    "Render terminal continuation route buttons or cards labeled `Stop`, `Quality Pipeline`, and `Knowledge Capture` only when the active step is terminal, without expanding quality or knowledge pipeline internals.",
+    "Add checklist state keyed by validation checklist item id and render accessible checkbox inputs that can be toggled by pointer and keyboard.",
+    "Display local validation results from `validateScenarioReferences` and `validateCitationCoverage`, including a zero-error state when both arrays are empty.",
+    "Add CSS classes for source badges, terminal routes, alternatives, and checklist states while preserving the existing responsive layout."
+  ],
+  "convergence": {
+    "criteria": [
+      "[UI-observable] The detail panel displays alternatives and source status badges while the SVG map remains focused on active path highlighting.",
+      "[UI-observable] At a closing node, the detail panel shows `Stop`, `Quality Pipeline`, and `Knowledge Capture` route labels without rendering downstream pipeline steps.",
+      "[UI-observable] Checklist checkboxes can be toggled by pointer and keyboard, and the completed count changes on screen.",
+      "`grep -n \"Quality Pipeline\" src/main.tsx`, `grep -n \"Knowledge Capture\" src/main.tsx`, and `grep -n \"Stop\" src/main.tsx` all return matches.",
+      "`grep -n \"source-badge\" src/styles.css`, `grep -n \"validation-checklist\" src/styles.css`, and `grep -n \"continuation-route\" src/styles.css` all return matches.",
+      "`npm run build` exits with status 0 after detail-panel completion."
+    ]
+  },
+  "dependencies": [
+    "TASK-002"
+  ],
+  "wave": 3,
+  "estimated_complexity": "medium",
+  "completed_at": "2026-06-27T10:44:02Z",
+  "status": "completed",
+  "summary_path": ".summaries/TASK-003-summary.md"
+}

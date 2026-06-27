@@ -1,0 +1,46 @@
+{
+  "phase": 1,
+  "source_route": "spec",
+  "completed_at": "2026-06-27T11:02:09Z",
+  "convergence": {
+    "status": "converged",
+    "iterations": 1,
+    "final_pass_rate": 100,
+    "threshold": 95,
+    "strategy_history": []
+  },
+  "infrastructure": {
+    "framework": "vitest + jsdom + testing-library",
+    "run_command": "npm test"
+  },
+  "layers": {
+    "L0": { "total": 1, "passed": 1, "failed": 0, "blocked": 0, "pass_rate": 100 },
+    "L1": { "total": 0, "passed": 0, "failed": 0, "blocked": 0, "pass_rate": 0 },
+    "L2": { "total": 0, "passed": 0, "failed": 0, "blocked": 0, "pass_rate": 0 },
+    "L3": { "total": 0, "passed": 0, "failed": 0, "blocked": 0, "pass_rate": 0 }
+  },
+  "scenarios": [
+    {
+      "id": "AT-001",
+      "source": "local",
+      "layer": "L0",
+      "name": "TypeScript and Vite build succeeds",
+      "test_file": null,
+      "status": "passed",
+      "classification": null,
+      "evidence": "npm run build exits 0"
+    }
+  ],
+  "failures": [],
+  "summary": {
+    "source_route": "spec",
+    "total_scenarios": 1,
+    "total_passed": 1,
+    "total_failed": 0,
+    "total_blocked": 0,
+    "bugs_discovered": 0,
+    "test_defects_fixed": 0,
+    "coverage_pct": 100
+  },
+  "concerns": []
+}

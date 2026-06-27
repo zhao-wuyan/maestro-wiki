@@ -138,9 +138,139 @@
         "confidence": 0.87,
         "dimensions": 6
       }
+    },
+    {
+      "id": "PLN-001",
+      "type": "plan",
+      "scope": "phase",
+      "status": "completed",
+      "milestone": "M1-stepwise-scenario-map-mvp",
+      "phase": 1,
+      "path": "scratch/20260627-plan-P1-scenario-map-mvp",
+      "depends_on": ["ANL-001"],
+      "harvested": false,
+      "created_at": "2026-06-27T10:44:02Z",
+      "completed_at": "2026-06-27T10:44:02Z",
+      "metadata": {
+        "task_count": 3,
+        "wave_count": 3,
+        "confidence": 0.86,
+        "weakest_dimension": "citation_alignment"
+      }
+    },
+    {
+      "id": "EXC-001",
+      "type": "execute",
+      "scope": "phase",
+      "status": "completed",
+      "milestone": "M1-stepwise-scenario-map-mvp",
+      "phase": 1,
+      "path": "scratch/20260627-plan-P1-scenario-map-mvp",
+      "depends_on": ["PLN-001"],
+      "harvested": false,
+      "created_at": "2026-06-27T10:44:02Z",
+      "completed_at": "2026-06-27T10:44:02Z",
+      "metadata": {
+        "tasks_completed": 3,
+        "verification_status": "passed",
+        "coverage_score": 1
+      }
+    },
+    {
+      "id": "REV-001",
+      "type": "review",
+      "scope": "phase",
+      "status": "completed",
+      "milestone": "M1-stepwise-scenario-map-mvp",
+      "phase": 1,
+      "path": "scratch/20260627-review-P1-scenario-map-mvp",
+      "depends_on": ["EXC-001"],
+      "harvested": false,
+      "created_at": "2026-06-27T11:02:09Z",
+      "completed_at": "2026-06-27T11:02:09Z",
+      "metadata": {
+        "level": "quick",
+        "verdict": "PASS",
+        "findings_count": 0
+      }
+    },
+    {
+      "id": "TST-001",
+      "type": "test",
+      "scope": "phase",
+      "status": "completed",
+      "milestone": "M1-stepwise-scenario-map-mvp",
+      "phase": 1,
+      "path": "scratch/20260627-plan-P1-scenario-map-mvp/.tests/auto-test/report.json",
+      "depends_on": ["EXC-001"],
+      "harvested": false,
+      "created_at": "2026-06-27T11:02:09Z",
+      "completed_at": "2026-06-27T11:02:09Z",
+      "metadata": {
+        "framework": "vitest + jsdom + testing-library",
+        "run_command": "npm test",
+        "passed": 3
+      }
+    },
+    {
+      "id": "UAT-001",
+      "type": "test",
+      "scope": "phase",
+      "status": "completed",
+      "milestone": "M1-stepwise-scenario-map-mvp",
+      "phase": 1,
+      "path": "scratch/20260627-test-P1-scenario-map-mvp",
+      "depends_on": ["EXC-001"],
+      "harvested": false,
+      "created_at": "2026-06-27T11:02:09Z",
+      "completed_at": "2026-06-27T11:02:09Z",
+      "metadata": {
+        "total": 4,
+        "passed": 4,
+        "issues": 0,
+        "coverage_percentage": 100
+      }
+    },
+    {
+      "id": "E2E-001",
+      "type": "frontend-verify",
+      "scope": "phase",
+      "status": "completed",
+      "milestone": "M1-stepwise-scenario-map-mvp",
+      "phase": 1,
+      "path": "scratch/20260627-test-P1-scenario-map-mvp/e2e-results.json",
+      "depends_on": ["UAT-001"],
+      "harvested": false,
+      "created_at": "2026-06-27T11:02:09Z",
+      "completed_at": "2026-06-27T11:02:09Z",
+      "metadata": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "runner": "playwright chromium headless",
+        "run_command": "npm run test:e2e"
+      }
+    },
+    {
+      "id": "AUD-001",
+      "type": "milestone-audit",
+      "scope": "milestone",
+      "status": "completed",
+      "milestone": "M1-stepwise-scenario-map-mvp",
+      "phase": null,
+      "path": "milestones/M1-stepwise-scenario-map-mvp/audit-report.md",
+      "depends_on": ["EXC-001", "REV-001", "UAT-001", "E2E-001"],
+      "harvested": false,
+      "created_at": "2026-06-27T11:02:09Z",
+      "completed_at": "2026-06-27T11:02:09Z",
+      "metadata": {
+        "verdict": "PASS",
+        "integration_gaps": 0,
+        "concerns": 0
+      }
     }
   ],
-  "last_updated": "2026-06-27T05:05:00Z",
+  "last_updated": "2026-06-27T10:44:02Z",
   "accumulated_context": {
     "key_decisions": [
       "Build an independent Vite + React wiki app in the root project.",

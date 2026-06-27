@@ -145,3 +145,6 @@ vite.config.ts.timestamp-*
 # Maestro local indexes
 .workflow/embedding-index.bin
 .workflow/wiki-index.json
+
+# Local test scratch
+tmp-test-execution/

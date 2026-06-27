@@ -1,0 +1,38 @@
+{
+  "target": "phase-1-scenario-map-mvp",
+  "generated_at": "2026-06-27T11:02:09Z",
+  "tests": [
+    {
+      "id": "T-001",
+      "name": "Initial recommended command visible",
+      "category": "e2e",
+      "expected": "The page shows Unclear Requirements and displays maestro-brainstorm as the initial recommended command.",
+      "requirement_ref": "TASK-002:UI-observable-1"
+    },
+    {
+      "id": "T-002",
+      "name": "Scenario choices progress active command",
+      "category": "e2e",
+      "expected": "Choosing the next command progresses from maestro-brainstorm toward maestro-blueprint, maestro-analyze 1, and maestro-plan 1.",
+      "requirement_ref": "TASK-002:UI-observable-3"
+    },
+    {
+      "id": "T-003",
+      "name": "Terminal routes are visible",
+      "category": "e2e",
+      "expected": "The closing node shows Stop, Quality Pipeline, and Knowledge Capture without rendering downstream internals.",
+      "requirement_ref": "TASK-003:UI-observable-2"
+    },
+    {
+      "id": "T-004",
+      "name": "Checklist completion count changes",
+      "category": "e2e",
+      "expected": "Validation Checklist checkboxes are present and the completed count can change.",
+      "requirement_ref": "TASK-003:UI-observable-3"
+    }
+  ],
+  "coverage": {
+    "requirements_mapped": ["TASK-002:UI-observable-1", "TASK-002:UI-observable-3", "TASK-003:UI-observable-2", "TASK-003:UI-observable-3"],
+    "requirements_unmapped": []
+  }
+}

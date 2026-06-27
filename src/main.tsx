@@ -2,109 +2,332 @@ import React, { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
-type FlowNode = {
+type CitationStatus = 'cited' | 'pending' | 'platform-check';
+
+type ScenarioCitation = {
+  id: string;
+  label: string;
+  source: string;
+  status: CitationStatus;
+};
+
+type ScenarioNode = {
   id: string;
   title: string;
   subtitle: string;
   x: number;
   y: number;
-  kind: 'input' | 'classify' | 'session' | 'execute' | 'decision';
-  explanation: string;
+  kind: 'input' | 'explore' | 'spec' | 'plan' | 'terminal';
+  purpose: string;
   input: string;
   output: string;
-  tip: string;
+  nextAction: string;
 };
 
-const nodes: FlowNode[] = [
-  {
-    id: 'intent',
-    title: '输入意图',
-    subtitle: '用户说想做什么',
-    x: 80,
-    y: 120,
-    kind: 'input',
-    explanation: 'Maestro 的起点不是命令，而是一段自然语言目标。系统会先拆出 flags、关键词和任务对象。',
-    input: '例如：我想做一个 Maestro 工作流百科网站。',
-    output: '得到 intent text、flags 和是否需要继续已有 session。',
-    tip: '不要一开始纠结命令名，先把目标说清楚。',
-  },
-  {
-    id: 'classify',
-    title: '意图分类',
-    subtitle: '选择最合适的链路',
-    x: 330,
-    y: 120,
-    kind: 'classify',
-    explanation: 'Maestro 读取 workflow catalog，把需求映射成 brainstorm、blueprint、analyze、plan、execute 等链路。',
-    input: 'intent text、项目状态、关键词和 flags。',
-    output: 'task_type、chain_name、confidence、classification_rationale。',
-    tip: '模糊探索类需求通常先进入 brainstorm，而不是直接 execute。',
-  },
-  {
-    id: 'decompose',
-    title: '边界分解',
-    subtitle: '明确做到什么程度',
-    x: 590,
-    y: 120,
-    kind: 'session',
-    explanation: '对宽泛任务，Maestro 会沉淀 boundary_contract、execution_criteria 和 task_decomposition。',
-    input: '分类后的链路和用户补充的范围、约束、完成标准。',
-    output: '可执行的子目标，每个子目标都有 done_when 和 evidence。',
-    tip: '这一步避免 agent 做偏、做大或遗漏验收标准。',
-  },
-  {
-    id: 'session',
-    title: '创建 Session',
-    subtitle: '写入 status.json',
-    x: 850,
-    y: 120,
-    kind: 'session',
-    explanation: '执行前必须创建 `.workflow/.maestro/{session_id}/status.json`，它是后续状态的唯一真源。',
-    input: 'chain steps、decomposition、project state、artifact refs。',
-    output: '包含 steps、active_step_index、task_decomposition 的 session 文件。',
-    tip: '不要额外维护 markdown 清单，避免状态分裂。',
-  },
-  {
-    id: 'dispatch',
-    title: '交给 Ralph 执行',
-    subtitle: '统一调度下一步',
-    x: 590,
-    y: 340,
-    kind: 'execute',
-    explanation: 'Maestro 不直接执行步骤，而是把 session 交给 `maestro-ralph-execute`。Ralph 负责加载下一步。',
-    input: '已创建的 status.json。',
-    output: '当前 step 的 skill 被执行，完成后由 CLI 写回 completion_confirmed。',
-    tip: '这保证所有链路都走同一套执行和确认机制。',
-  },
-  {
-    id: 'decision',
-    title: 'Decision 节点',
-    subtitle: '决定继续、修复或扩展链路',
-    x: 330,
-    y: 340,
-    kind: 'decision',
-    explanation: 'Decision 节点不对应普通命令，它读取执行证据，决定继续下一步、插入 debug/fix，或要求用户介入。',
-    input: 'step evidence、completion_status、scope_verdict。',
-    output: '更新后的 steps、下一步 active_step_index 或阻塞原因。',
-    tip: '这就是 Maestro 能自适应而不是死跑固定脚本的原因。',
-  },
-];
+type ScenarioEdge = {
+  from: string;
+  to: string;
+};
 
-const edges = [
-  ['intent', 'classify'],
-  ['classify', 'decompose'],
-  ['decompose', 'session'],
-  ['session', 'dispatch'],
-  ['dispatch', 'decision'],
-  ['decision', 'classify'],
-] as const;
+type ScenarioChoice = {
+  id: string;
+  label: string;
+  condition: string;
+  targetStepId?: string;
+  routeId?: string;
+};
 
-function App() {
-  const [selectedId, setSelectedId] = useState(nodes[0].id);
-  const selectedNode = useMemo(
-    () => nodes.find((node) => node.id === selectedId) ?? nodes[0],
-    [selectedId],
+type ContinuationRoute = {
+  id: string;
+  label: 'Stop' | 'Quality Pipeline' | 'Knowledge Capture';
+  description: string;
+};
+
+type ValidationChecklistItem = {
+  id: string;
+  label: string;
+};
+
+type ScenarioStep = {
+  id: string;
+  nodeId: string;
+  command: string;
+  condition: string;
+  purpose: string;
+  input: string;
+  output: string;
+  nextAction: string;
+  choices: ScenarioChoice[];
+  alternatives: ScenarioChoice[];
+  citations: string[];
+  terminalRoutes?: string[];
+};
+
+type ScenarioModel = {
+  id: string;
+  title: string;
+  summary: string;
+  nodes: ScenarioNode[];
+  edges: ScenarioEdge[];
+  steps: ScenarioStep[];
+  citations: ScenarioCitation[];
+  continuationRoutes: ContinuationRoute[];
+  checklist: ValidationChecklistItem[];
+};
+
+const unclearRequirementsScenario: ScenarioModel = {
+  id: 'unclear-requirements',
+  title: 'Unclear Requirements',
+  summary: '当需求还不清楚时，先探索，再规格化，最后进入 Phase 1 plan。',
+  nodes: [
+    {
+      id: 'intent',
+      title: '模糊目标',
+      subtitle: '只有大方向',
+      x: 70,
+      y: 118,
+      kind: 'input',
+      purpose: '收集用户最初的自然语言目标。',
+      input: '例如：我想做一个 Maestro 工作流百科网站。',
+      output: '得到 intent text、主要约束和可讨论的问题。',
+      nextAction: '如果边界不清，进入 brainstorm。',
+    },
+    {
+      id: 'brainstorm',
+      title: '探索方向',
+      subtitle: 'maestro-brainstorm',
+      x: 320,
+      y: 118,
+      kind: 'explore',
+      purpose: '把模糊目标拆成可讨论的产品方向、用户路径和风险。',
+      input: 'intent、现有项目状态、用户偏好。',
+      output: '候选需求、关键决策和后续规格化输入。',
+      nextAction: '如果方向稳定，进入 blueprint。',
+    },
+    {
+      id: 'blueprint',
+      title: '规格成型',
+      subtitle: 'maestro-blueprint',
+      x: 570,
+      y: 118,
+      kind: 'spec',
+      purpose: '把探索结果固化为 requirements、ADR 和 epics。',
+      input: 'brainstorm/grill 产物和用户确认的范围。',
+      output: '可追踪的 blueprint package。',
+      nextAction: '如果规格可执行，进入 phase analyze。',
+    },
+    {
+      id: 'analyze',
+      title: 'Phase 分析',
+      subtitle: 'maestro-analyze 1',
+      x: 820,
+      y: 118,
+      kind: 'spec',
+      purpose: '验证 Phase 1 是否可 GO，并锁定实现边界。',
+      input: 'roadmap、blueprint、代码现状。',
+      output: 'ANL-001 context package 和 GO/NO-GO 结论。',
+      nextAction: 'GO 后进入 plan。',
+    },
+    {
+      id: 'plan',
+      title: '执行计划',
+      subtitle: 'maestro-plan 1',
+      x: 570,
+      y: 340,
+      kind: 'plan',
+      purpose: '把 Phase 1 拆成可执行任务和验证标准。',
+      input: 'ANL-001 context-package、roadmap、项目 specs。',
+      output: 'plan.json 和 TASK 文件。',
+      nextAction: '确认后进入 execute。',
+    },
+    {
+      id: 'done',
+      title: '选择收尾路线',
+      subtitle: 'stop / quality / knowledge',
+      x: 320,
+      y: 340,
+      kind: 'terminal',
+      purpose: '在闭合节点选择停止、质量管线或知识沉淀。',
+      input: '执行证据、测试结果和是否仍有疑问。',
+      output: '用户选择下一条路线。',
+      nextAction: '只展示路线，不展开下游 pipeline 内部。',
+    },
+  ],
+  edges: [
+    { from: 'intent', to: 'brainstorm' },
+    { from: 'brainstorm', to: 'blueprint' },
+    { from: 'blueprint', to: 'analyze' },
+    { from: 'analyze', to: 'plan' },
+    { from: 'plan', to: 'done' },
+  ],
+  steps: [
+    {
+      id: 'start-brainstorm',
+      nodeId: 'brainstorm',
+      command: 'maestro-brainstorm',
+      condition: '目标方向不清，用户还在探索“做什么”和“为什么”。',
+      purpose: '发散需求并形成可讨论的候选范围。',
+      input: '自然语言目标、初始限制、用户偏好。',
+      output: '探索记录、关键问题、初步方案。',
+      nextAction: '当核心路径明确时，推进到 maestro-blueprint。',
+      choices: [
+        { id: 'to-blueprint', label: '方向已稳定，生成规格', condition: '核心体验和约束已经明确。', targetStepId: 'write-blueprint' },
+      ],
+      alternatives: [
+        { id: 'alt-grill', label: '先 grill 压力测试', condition: '方案听起来合理但还没被质疑。' },
+        { id: 'alt-analyze', label: '直接 analyze', condition: '已有 roadmap/phase，只缺实现判断。' },
+      ],
+      citations: ['cmd-brainstorm', 'guide-flow'],
+    },
+    {
+      id: 'write-blueprint',
+      nodeId: 'blueprint',
+      command: 'maestro-blueprint',
+      condition: '探索结果足够稳定，需要正式 PRD/ADR/Epic。',
+      purpose: '把讨论结果转成可追踪的规格包。',
+      input: 'brainstorm/grill 结果、用户确认的范围。',
+      output: 'blueprint context-package、requirements、architecture decisions。',
+      nextAction: '用 roadmap/analyze 判断第一阶段是否能执行。',
+      choices: [
+        { id: 'to-analyze', label: '规格可执行，分析 Phase 1', condition: '已有 Phase 1 目标和成功标准。', targetStepId: 'analyze-phase' },
+      ],
+      alternatives: [
+        { id: 'alt-roadmap', label: '先 roadmap', condition: '目标跨多个版本或里程碑。' },
+      ],
+      citations: ['cmd-blueprint', 'guide-flow'],
+    },
+    {
+      id: 'analyze-phase',
+      nodeId: 'analyze',
+      command: 'maestro-analyze 1',
+      condition: '已有 Phase 1，但仍需确认实现边界和风险。',
+      purpose: '评估 GO/NO-GO，锁定实现范围、限制和验证方式。',
+      input: 'roadmap、blueprint、代码现状。',
+      output: 'ANL-001 context package。',
+      nextAction: 'GO 后生成执行计划。',
+      choices: [
+        { id: 'to-plan', label: '分析结论为 GO，进入计划', condition: 'recommendation=GO 且 confidence 足够。', targetStepId: 'plan-phase' },
+      ],
+      alternatives: [
+        { id: 'alt-more-analysis', label: '补充分析', condition: '引用来源、验证门槛或范围仍不明确。' },
+      ],
+      citations: ['cmd-analyze', 'guide-flow'],
+    },
+    {
+      id: 'plan-phase',
+      nodeId: 'plan',
+      command: 'maestro-plan 1',
+      condition: '分析产物已完成，下一步需要可执行任务。',
+      purpose: '生成 plan.json 和 TASK 文件。',
+      input: 'ANL-001 context-package、roadmap、specs。',
+      output: 'Phase 1 execution plan。',
+      nextAction: '确认计划后执行，或在闭合节点选择路线。',
+      choices: [
+        { id: 'to-terminal', label: '计划完成，选择后续路线', condition: 'plan 已确认或需要停止。', targetStepId: 'terminal-routes' },
+      ],
+      alternatives: [
+        { id: 'alt-execute', label: '继续 maestro-execute 1', condition: '用户已确认计划并允许执行。' },
+      ],
+      citations: ['cmd-plan', 'guide-flow'],
+    },
+    {
+      id: 'terminal-routes',
+      nodeId: 'done',
+      command: 'route-choice',
+      condition: '当前 step 已到闭合点，需要决定是否继续。',
+      purpose: '让用户选择停止、质量管线或知识沉淀。',
+      input: '当前计划/执行证据。',
+      output: '下一条路线选择。',
+      nextAction: '选择 route，但不展开 pipeline 内部。',
+      choices: [
+        { id: 'route-stop', label: '停止', condition: '目标已经满足。', routeId: 'stop' },
+        { id: 'route-quality', label: '进入质量管线', condition: '需要 review/test/verify。', routeId: 'quality' },
+        { id: 'route-knowledge', label: '进入知识沉淀', condition: '需要固化经验或规则。', routeId: 'knowledge' },
+      ],
+      alternatives: [],
+      citations: ['cmd-ralph', 'codex-skill'],
+      terminalRoutes: ['stop', 'quality', 'knowledge'],
+    },
+  ],
+  citations: [
+    { id: 'cmd-brainstorm', label: 'Command definition', source: 'maestro-flow/.claude/commands/maestro-brainstorm.md', status: 'cited' },
+    { id: 'cmd-blueprint', label: 'Command definition', source: 'maestro-flow/.claude/commands/maestro-blueprint.md', status: 'cited' },
+    { id: 'cmd-analyze', label: 'Command definition', source: 'maestro-flow/.claude/commands/maestro-analyze.md', status: 'cited' },
+    { id: 'cmd-plan', label: 'Command definition', source: 'maestro-flow/.claude/commands/maestro-plan.md', status: 'cited' },
+    { id: 'cmd-ralph', label: 'Command definition', source: 'maestro-flow/.claude/commands/maestro-ralph.md', status: 'pending' },
+    { id: 'guide-flow', label: 'Guide sequence', source: 'maestro-flow/guide/*.md', status: 'pending' },
+    { id: 'codex-skill', label: 'Codex skill mirror', source: 'maestro-flow/.codex/skills/*/SKILL.md', status: 'platform-check' },
+  ],
+  continuationRoutes: [
+    { id: 'stop', label: 'Stop', description: '当前目标已完成，停止本轮链路。' },
+    { id: 'quality', label: 'Quality Pipeline', description: '继续进入 review、test 和 frontend verification。' },
+    { id: 'knowledge', label: 'Knowledge Capture', description: '把本轮经验沉淀为 specs、knowhow 或 wiki。' },
+  ],
+  checklist: [
+    { id: 'check-command', label: '我能说出当前推荐 command 及其原因。' },
+    { id: 'check-next', label: '我能根据输出条件选择下一步。' },
+    { id: 'check-route', label: '我能在闭合节点选择 Stop、Quality Pipeline 或 Knowledge Capture。' },
+  ],
+};
+
+function validateScenarioReferences(scenario: ScenarioModel) {
+  const stepIds = new Set(scenario.steps.map((step) => step.id));
+  const nodeIds = new Set(scenario.nodes.map((node) => node.id));
+  const routeIds = new Set(scenario.continuationRoutes.map((route) => route.id));
+
+  return scenario.steps.flatMap((step) => {
+    const messages: string[] = [];
+    if (!nodeIds.has(step.nodeId)) messages.push(`${step.id} points to missing node ${step.nodeId}`);
+    step.choices.forEach((choice) => {
+      if (choice.targetStepId && !stepIds.has(choice.targetStepId)) messages.push(`${choice.id} points to missing step ${choice.targetStepId}`);
+      if (choice.routeId && !routeIds.has(choice.routeId)) messages.push(`${choice.id} points to missing route ${choice.routeId}`);
+    });
+    step.terminalRoutes?.forEach((routeId) => {
+      if (!routeIds.has(routeId)) messages.push(`${step.id} points to missing route ${routeId}`);
+    });
+    return messages;
+  });
+}
+
+function validateCitationCoverage(scenario: ScenarioModel) {
+  const citationIds = new Set(scenario.citations.map((citation) => citation.id));
+  return scenario.steps.flatMap((step) =>
+    step.citations
+      .filter((citationId) => !citationIds.has(citationId))
+      .map((citationId) => `${step.id} references missing citation ${citationId}`),
   );
+}
+
+const scenarioValidation = {
+  references: validateScenarioReferences(unclearRequirementsScenario),
+  citations: validateCitationCoverage(unclearRequirementsScenario),
+};
+
+export function App() {
+  const [selectedScenarioId] = useState(unclearRequirementsScenario.id);
+  const [activeStepId, setActiveStepId] = useState(unclearRequirementsScenario.steps[0].id);
+  const [selectedNodeId, setSelectedNodeId] = useState(unclearRequirementsScenario.steps[0].nodeId);
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+
+  const scenario = selectedScenarioId === unclearRequirementsScenario.id ? unclearRequirementsScenario : unclearRequirementsScenario;
+  const activeStep = useMemo(
+    () => scenario.steps.find((step) => step.id === activeStepId) ?? scenario.steps[0],
+    [activeStepId, scenario.steps],
+  );
+  const selectedNode = useMemo(
+    () => scenario.nodes.find((node) => node.id === selectedNodeId) ?? scenario.nodes[0],
+    [selectedNodeId, scenario.nodes],
+  );
+  const activeNodeIds = useMemo(() => new Set(scenario.steps.slice(0, scenario.steps.findIndex((step) => step.id === activeStep.id) + 1).map((step) => step.nodeId)), [activeStep.id, scenario.steps]);
+  const activeCitationIds = new Set(activeStep.citations);
+  const completedChecks = scenario.checklist.filter((item) => checkedItems[item.id]).length;
+  const validationMessages = [...scenarioValidation.references, ...scenarioValidation.citations];
+
+  const activateNode = (nodeId: string) => {
+    setSelectedNodeId(nodeId);
+    const nodeStep = scenario.steps.find((step) => step.nodeId === nodeId);
+    if (nodeStep) setActiveStepId(nodeStep.id);
+  };
 
   return (
     <main className="app-shell">
@@ -112,33 +335,35 @@ function App() {
         <p className="eyebrow">Maestro Workflow Wiki</p>
         <h1>把复杂工作流变成可点击、可理解的地图</h1>
         <p className="hero-copy">
-          这个百科站独立于 `maestro-flow/docs-site`，专注解释 Maestro 如何从自然语言需求走到 session、Ralph 执行和 decision 回路。
+          这个百科站独立于 `maestro-flow/docs-site`，专注解释 Maestro 如何从自然语言需求走到 stepwise command choice。
         </p>
       </section>
 
-      <section className="workspace" aria-label="Maestro 交互流程图">
+      <section className="workspace" aria-label="Maestro 场景流程图">
         <div className="diagram-card">
           <div className="diagram-header">
             <div>
-              <p className="eyebrow">Interactive Flow</p>
-              <h2>点击节点查看输入、输出和使用建议</h2>
+              <p className="eyebrow">Scenario Path</p>
+              <h2>{scenario.title}</h2>
+              <p className="scenario-summary">{scenario.summary}</p>
             </div>
-            <span className="status-pill">MVP 原型</span>
+            <span className="status-pill">{scenario.id}</span>
           </div>
 
-          <svg viewBox="0 0 1080 520" role="img" aria-label="Maestro 编排流程">
+          <svg viewBox="0 0 1080 520" role="img" aria-label="Unclear Requirements 场景流程">
             <defs>
               <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
                 <path d="M0,0 L0,6 L9,3 z" fill="currentColor" />
               </marker>
             </defs>
-            {edges.map(([from, to]) => {
-              const source = nodes.find((node) => node.id === from)!;
-              const target = nodes.find((node) => node.id === to)!;
+            {scenario.edges.map(({ from, to }) => {
+              const source = scenario.nodes.find((node) => node.id === from)!;
+              const target = scenario.nodes.find((node) => node.id === to)!;
+              const isActive = activeNodeIds.has(from) && activeNodeIds.has(to);
               return (
                 <line
                   key={`${from}-${to}`}
-                  className="edge"
+                  className={`edge ${isActive ? 'edge-active' : ''}`}
                   x1={source.x + 150}
                   y1={source.y + 44}
                   x2={target.x + 10}
@@ -146,51 +371,150 @@ function App() {
                 />
               );
             })}
-            {nodes.map((node) => (
-              <g key={node.id} transform={`translate(${node.x} ${node.y})`}>
-                <rect
-                  className={`node node-${node.kind} ${node.id === selectedId ? 'selected' : ''}`}
-                  width="190"
-                  height="88"
-                  rx="20"
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`查看 ${node.title}`}
-                  onClick={() => setSelectedId(node.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      setSelectedId(node.id);
-                    }
-                  }}
-                />
-                <text className="node-title" x="24" y="35">{node.title}</text>
-                <text className="node-subtitle" x="24" y="62">{node.subtitle}</text>
-              </g>
-            ))}
+            {scenario.nodes.map((node) => {
+              const isSelected = node.id === selectedNodeId;
+              const isActive = node.id === activeStep.nodeId;
+              const isOnPath = activeNodeIds.has(node.id);
+              return (
+                <g key={node.id} transform={`translate(${node.x} ${node.y})`}>
+                  <rect
+                    className={`node node-${node.kind} ${isSelected ? 'selected' : ''} ${isActive ? 'node-active' : ''} ${isOnPath ? 'node-on-path' : ''}`}
+                    width="190"
+                    height="88"
+                    rx="20"
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`查看 ${node.title}`}
+                    onClick={() => activateNode(node.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        activateNode(node.id);
+                      }
+                    }}
+                  />
+                  <text className="node-title" x="24" y="35">{node.title}</text>
+                  <text className="node-subtitle" x="24" y="62">{node.subtitle}</text>
+                </g>
+              );
+            })}
           </svg>
         </div>
 
         <aside className="detail-panel" aria-live="polite">
           <p className="eyebrow">Selected Node</p>
           <h2>{selectedNode.title}</h2>
-          <p>{selectedNode.explanation}</p>
+          <p>{selectedNode.purpose}</p>
+
+          <section className="command-card" aria-label="当前推荐命令">
+            <p className="eyebrow">Recommended Command</p>
+            <code>{activeStep.command}</code>
+            <p>{activeStep.condition}</p>
+          </section>
+
           <dl>
-            <dt>输入</dt>
-            <dd>{selectedNode.input}</dd>
-            <dt>输出</dt>
-            <dd>{selectedNode.output}</dd>
-            <dt>使用建议</dt>
-            <dd>{selectedNode.tip}</dd>
+            <dt>Purpose</dt>
+            <dd>{activeStep.purpose}</dd>
+            <dt>Input</dt>
+            <dd>{activeStep.input}</dd>
+            <dt>Output</dt>
+            <dd>{activeStep.output}</dd>
+            <dt>Next Action</dt>
+            <dd>{activeStep.nextAction}</dd>
           </dl>
+
+          <section className="choice-group" aria-label="下一步选择">
+            <h3>Next Choices</h3>
+            {activeStep.choices.map((choice) => (
+              <button
+                key={choice.id}
+                className="choice-button"
+                type="button"
+                onClick={() => {
+                  if (choice.targetStepId) {
+                    const target = scenario.steps.find((step) => step.id === choice.targetStepId);
+                    if (target) {
+                      setActiveStepId(target.id);
+                      setSelectedNodeId(target.nodeId);
+                    }
+                  }
+                }}
+              >
+                <span>{choice.label}</span>
+                <small>{choice.condition}</small>
+              </button>
+            ))}
+          </section>
+
+          {activeStep.alternatives.length > 0 && (
+            <section className="alternatives" aria-label="备选路线">
+              <h3>Alternatives</h3>
+              {activeStep.alternatives.map((alternative) => (
+                <article key={alternative.id}>
+                  <strong>{alternative.label}</strong>
+                  <span>{alternative.condition}</span>
+                </article>
+              ))}
+            </section>
+          )}
+
+          <section className="source-list" aria-label="来源状态">
+            <h3>Source Status</h3>
+            {scenario.citations
+              .filter((citation) => activeCitationIds.has(citation.id))
+              .map((citation) => (
+                <span key={citation.id} className={`source-badge source-${citation.status}`} title={citation.source}>
+                  {citation.label}: {citation.status}
+                </span>
+              ))}
+          </section>
+
+          {activeStep.terminalRoutes && (
+            <section className="continuation-routes" aria-label="闭合路线">
+              <h3>Continuation Routes</h3>
+              {activeStep.terminalRoutes.map((routeId) => {
+                const route = scenario.continuationRoutes.find((item) => item.id === routeId)!;
+                return (
+                  <article key={route.id} className="continuation-route">
+                    <strong>{route.label}</strong>
+                    <span>{route.description}</span>
+                  </article>
+                );
+              })}
+            </section>
+          )}
+
+          <section className="validation-checklist" aria-label="本地验证清单">
+            <div className="checklist-header">
+              <h3>Validation Checklist</h3>
+              <span>{completedChecks}/{scenario.checklist.length}</span>
+            </div>
+            {scenario.checklist.map((item) => (
+              <label key={item.id} className="checklist-item">
+                <input
+                  type="checkbox"
+                  checked={Boolean(checkedItems[item.id])}
+                  onChange={(event) => setCheckedItems((current) => ({ ...current, [item.id]: event.target.checked }))}
+                />
+                <span>{item.label}</span>
+              </label>
+            ))}
+            <p className="validation-state">
+              {validationMessages.length === 0 ? 'Local scenario validation: 0 errors.' : validationMessages.join(' | ')}
+            </p>
+          </section>
         </aside>
       </section>
     </main>
   );
 }
 
-createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+const rootElement = document.getElementById('root');
+
+if (rootElement) {
+  createRoot(rootElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+}
