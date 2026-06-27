@@ -1,0 +1,41 @@
+{
+  "$schema": "analyze-explorations/1.0",
+  "session_id": "ANL-P1-scenario-map-mvp-2026-06-27",
+  "source": "maestro-delegate-cli-analysis",
+  "perspective": "independent-cli-analysis",
+  "overall_feasibility": {
+    "rating": "high",
+    "confidence": "high",
+    "summary": "Existing React/Vite app can support the MVP with pure frontend data model, SVG rendering, and local state. Main work is refactoring from static graph to scenario registry and step state machine."
+  },
+  "evidence": [
+    { "claim": "Root project is an independent Vite + React + TypeScript app.", "refs": ["package.json:6", "package.json:11", "vite.config.ts:4", "tsconfig.json:10"] },
+    { "claim": "Interactive flow graph data, rendering, and selectedId state are concentrated in src/main.tsx.", "refs": ["src/main.tsx:5", "src/main.tsx:18", "src/main.tsx:93", "src/main.tsx:102"] },
+    { "claim": "Existing SVG nodes already support click, Enter/Space, and detail panel updates.", "refs": ["src/main.tsx:129", "src/main.tsx:151", "src/main.tsx:156", "src/main.tsx:160", "src/main.tsx:174"] },
+    { "claim": "Stepwise Scenario Map constraints require scenario data separate from React rendering.", "refs": [".workflow/blueprint/BLP-stepwise-scenario-map-2026-06-27/context-package.json:55", ".workflow/blueprint/BLP-stepwise-scenario-map-2026-06-27/context-package.json:71"] },
+    { "claim": "maestro-flow can serve as upstream source reference for command semantics.", "refs": ["maestro-flow/src/commands/ralph.ts:1", "maestro-flow/src/ralph/status-store.ts:25"] }
+  ],
+  "recommendations": [
+    { "priority": "high", "area": "architecture", "action": "Create a scenario data module defining Scenario, ScenarioStep, ScenarioChoice, TerminalOption, and SourceRef.", "rationale": "Inline nodes/edges cannot satisfy data-driven scenario requirements.", "evidence_refs": ["src/main.tsx:18", ".workflow/blueprint/BLP-stepwise-scenario-map-2026-06-27/context-package.json:11"] },
+    { "priority": "high", "area": "state", "action": "Use local activeScenarioId, activeStepId, selectedNodeId, and optional visitedStepIds state; do not add a global store.", "rationale": "Current state is local and MVP does not need cross-page persistence.", "evidence_refs": ["src/main.tsx:103"] },
+    { "priority": "high", "area": "scope", "action": "Implement one unclear-requirements primary scenario slice first.", "rationale": "MVP validates the command-choice loop before broad workflow expansion.", "evidence_refs": [".workflow/roadmap.md:21", ".workflow/roadmap.md:25"] },
+    { "priority": "medium", "area": "ux", "action": "Keep alternatives, terminal routes, source badges, and validation in the detail panel while the SVG emphasizes the recommended path.", "rationale": "Avoids graph overload and matches ADR-002.", "evidence_refs": [".workflow/blueprint/BLP-stepwise-scenario-map-2026-06-27/architecture/ADR-002-detail-panel-secondary-routes.md:16"] }
+  ],
+  "risks": [
+    { "severity": "high", "risk": "Scenario schema may overfit the first scenario.", "mitigation": "Define generic schema first, then fill one scenario fixture.", "evidence_refs": [".workflow/roadmap.md:21"] },
+    { "severity": "high", "risk": "Users may mistake output conditions for live execution results.", "mitigation": "Use teaching language and avoid execute/run wording.", "evidence_refs": [".workflow/blueprint/BLP-stepwise-scenario-map-2026-06-27/context-package.json:88"] },
+    { "severity": "medium", "risk": "No test script exists for transition helpers.", "mitigation": "Use npm run build and local validation initially; add lightweight tests only if helpers become non-trivial.", "evidence_refs": ["package.json:6"] }
+  ],
+  "alternatives": [
+    { "option": "Keep single-file hardcoded graph", "verdict": "rejected", "reason": "Does not satisfy data-driven Scenario Model or stepwise choices." },
+    { "option": "Introduce React Flow", "verdict": "defer", "reason": "Current SVG is enough for MVP and avoids dependency overhead." },
+    { "option": "Pure frontend schema + React/SVG renderer", "verdict": "recommended", "reason": "Minimal and aligned with existing app." }
+  ],
+  "technical_solutions": [
+    { "round": 1, "solution": "Typed scenario data module plus local step state", "problem": "Static graph cannot express steps, choices, terminal routes, or citations.", "rationale": "Meets blueprint constraints with minimal app changes.", "alternatives": ["single-file hardcoding", "graph library"], "status": "validated", "evidence_refs": ["src/main.tsx:18", "src/main.tsx:103", "src/main.tsx:174"], "next_action": "Plan implementation tasks for Phase 1." }
+  ],
+  "confidence": {
+    "overall": "high",
+    "unknowns": ["Exact upstream source files for first scenario citations", "Validation checklist threshold"]
+  }
+}

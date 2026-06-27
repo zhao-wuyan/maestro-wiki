@@ -1,0 +1,172 @@
+{
+  "version": "3.1",
+  "project_name": "Maestro Workflow Wiki",
+  "status": "idle",
+  "current_milestone": "M1-stepwise-scenario-map-mvp",
+  "current_task_id": null,
+  "milestones": [
+    {
+      "id": "M1-stepwise-scenario-map-mvp",
+      "name": "Stepwise Scenario Map MVP",
+      "version": "v0.1",
+      "type": "standard",
+      "status": "active",
+      "phases": [
+        {
+          "id": 1,
+          "title": "Scenario Map MVP",
+          "status": "not_started",
+          "depends_on": [],
+          "requirements": [
+            "BLP REQ-001",
+            "BLP REQ-002",
+            "BLP REQ-003",
+            "BLP REQ-004",
+            "BLP REQ-005",
+            "BLP REQ-006",
+            "Project Active: command scenario guide",
+            "Project Active: interactive flow extension"
+          ]
+        }
+      ],
+      "phase_slugs": {
+        "1": "scenario-map-mvp"
+      },
+      "roadmap_ref": ".workflow/roadmap.md#milestone-1-stepwise-scenario-map-mvp-v01",
+      "created_at": "2026-06-27T04:45:00Z"
+    },
+    {
+      "id": "M2-workflow-knowledge-expansion",
+      "name": "Workflow Knowledge Expansion",
+      "version": "v0.2",
+      "type": "standard",
+      "status": "planned",
+      "phases": [
+        {
+          "id": 2,
+          "title": "Knowledge and Recommendation Expansion",
+          "status": "not_started",
+          "depends_on": [1],
+          "requirements": [
+            "Project Active: core concept encyclopedia",
+            "Project Active: command scenario guide",
+            "Project Active: interactive flow extension",
+            "Project Active: status.json example anatomy",
+            "Project Active: browser-side recommendation rules engine"
+          ]
+        }
+      ],
+      "phase_slugs": {
+        "2": "knowledge-and-recommendation-expansion"
+      },
+      "roadmap_ref": ".workflow/roadmap.md#milestone-2-workflow-knowledge-expansion-v02",
+      "created_at": "2026-06-27T04:45:00Z"
+    }
+  ],
+  "_milestone_schema": "{ id, name, type: 'standard'|'adhoc', status, phases[], phase_slugs{}, roadmap_ref, created_at }",
+  "artifacts": [
+    {
+      "id": "BRN-20260627-workflow-wiki-requirements",
+      "type": "brainstorm",
+      "name": "Maestro Workflow Wiki Requirements Exploration",
+      "path": "scratch/20260627-brainstorm-maestro-workflow-wiki-requirements",
+      "context_package": "scratch/20260627-brainstorm-maestro-workflow-wiki-requirements/context-package.json",
+      "created_at": "2026-06-27T03:56:18Z",
+      "status": "complete"
+    },
+    {
+      "id": "GRL-20260627-workflow-wiki-requirements-gaps",
+      "type": "grill",
+      "scope": "standalone",
+      "path": "scratch/20260627-grill-workflow-wiki-requirements-gaps",
+      "status": "completed",
+      "context_package": "scratch/20260627-grill-workflow-wiki-requirements-gaps/context-package.json",
+      "created_at": "2026-06-27T04:05:00Z",
+      "metadata": {
+        "topic": "看看当前需求是否还有漏洞或者完善的地方",
+        "depth": "standard",
+        "branches_completed": 5,
+        "decisions_locked": 10,
+        "decisions_open": 2,
+        "terms_defined": 11
+      }
+    },
+    {
+      "id": "BRN-20260627-stepwise-scenario-map",
+      "type": "brainstorm",
+      "name": "Stepwise Scenario Map Multi-role Brainstorm",
+      "path": "scratch/20260627-brainstorm-stepwise-scenario-map",
+      "context_package": "scratch/20260627-brainstorm-stepwise-scenario-map/context-package.json",
+      "created_at": "2026-06-27T04:18:00Z",
+      "status": "complete",
+      "metadata": {
+        "roles": ["product-manager", "ux-expert", "system-architect", "test-strategist", "ui-designer"],
+        "features": 6,
+        "review_findings_count": 3,
+        "resolutions_applied": 3
+      }
+    },
+    {
+      "id": "BLP-stepwise-scenario-map-2026-06-27",
+      "type": "blueprint",
+      "name": "Stepwise Scenario Map Blueprint",
+      "path": "blueprint/BLP-stepwise-scenario-map-2026-06-27",
+      "context_package": "blueprint/BLP-stepwise-scenario-map-2026-06-27/context-package.json",
+      "created_at": "2026-06-27T04:34:00Z",
+      "status": "complete",
+      "metadata": {
+        "readiness_score": 88,
+        "gate": "Pass",
+        "scope": "feature set",
+        "spec_type": "platform"
+      }
+    },
+    {
+      "id": "ANL-001",
+      "type": "analyze",
+      "scope": "phase",
+      "status": "completed",
+      "milestone": "M1-stepwise-scenario-map-mvp",
+      "phase": 1,
+      "path": "scratch/20260627-analyze-P1-scenario-map-mvp",
+      "context_package": "scratch/20260627-analyze-P1-scenario-map-mvp/context-package.json",
+      "harvested": false,
+      "created_at": "2026-06-27T05:05:00Z",
+      "completed_at": "2026-06-27T05:05:00Z",
+      "metadata": {
+        "recommendation": "GO",
+        "confidence": 0.87,
+        "dimensions": 6
+      }
+    }
+  ],
+  "last_updated": "2026-06-27T05:05:00Z",
+  "accumulated_context": {
+    "key_decisions": [
+      "Build an independent Vite + React wiki app in the root project.",
+      "Use maestro-flow submodule only as a reference source, not as the docs-site foundation.",
+      "Core workflow diagrams must be interactive, not static-only."
+    ],
+    "blockers": [],
+    "deferred": [
+      "Decide whether the site should be Chinese-only first or bilingual.",
+      "Decide whether future command recommendation should use browser rules or integrate an LLM backend.",
+      "Decide whether interactive flow diagrams need shareable custom chains.",
+      "Define the concrete completion condition for each stepwise command-selection scenario."
+    ]
+  },
+  "transition_history": [],
+  "milestone_history": [
+    {
+      "event": "roadmap_created",
+      "roadmap_ref": ".workflow/roadmap.md",
+      "source_artifact": "BLP-stepwise-scenario-map-2026-06-27",
+      "strategy": "progressive",
+      "milestones": [
+        "M1-stepwise-scenario-map-mvp",
+        "M2-workflow-knowledge-expansion"
+      ],
+      "created_at": "2026-06-27T04:45:00Z"
+    }
+  ]
+}

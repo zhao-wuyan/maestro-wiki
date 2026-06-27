@@ -1,0 +1,23 @@
+{
+  "$schema": "session-archive/1.0",
+  "session_id": "ANL-001",
+  "session_type": "analyze",
+  "session_path": "scratch/20260627-analyze-P1-scenario-map-mvp",
+  "lifecycle": {
+    "status": "sealed",
+    "sealed_at": "2026-06-27T05:05:00Z",
+    "archived_at": null,
+    "linked_milestone": "M1-stepwise-scenario-map-mvp"
+  },
+  "content_refs": [
+    { "type": "context-package", "path": "scratch/20260627-analyze-P1-scenario-map-mvp/context-package.json" },
+    { "type": "conclusions", "path": "scratch/20260627-analyze-P1-scenario-map-mvp/conclusions.json" },
+    { "type": "analysis", "path": "scratch/20260627-analyze-P1-scenario-map-mvp/analysis.md" },
+    { "type": "discussion", "path": "scratch/20260627-analyze-P1-scenario-map-mvp/discussion.md" }
+  ],
+  "extraction": {
+    "harvested": false,
+    "reason": "manual-seal-no-auto-harvest"
+  },
+  "pruned": null
+}

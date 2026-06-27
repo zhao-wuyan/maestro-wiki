@@ -1,0 +1,18 @@
+{
+  "source": "brainstorm:BRN-20260627-stepwise-scenario-map",
+  "requirements": [
+    "Scenario Model",
+    "Scenario Slice Navigation",
+    "Stepwise Command Choice",
+    "Continuation Route Panel",
+    "Upstream Citation Layer",
+    "Validation Checklist"
+  ],
+  "non_goals": [
+    "Real status.json parsing in MVP",
+    "Deep downstream quality or knowledge pipeline expansion in MVP",
+    "Reuse of maestro-flow/docs-site as product foundation",
+    "Full visual design system in this blueprint"
+  ],
+  "focus_areas": ["architecture model", "UX interaction", "source alignment", "testing validation"]
+}

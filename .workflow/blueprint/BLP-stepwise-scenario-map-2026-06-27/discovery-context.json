@@ -1,0 +1,29 @@
+{
+  "session_id": "BLP-stepwise-scenario-map-2026-06-27",
+  "input_type": "context-package",
+  "relevant_files": [
+    {
+      "path": "src/main.tsx",
+      "evidence": "Current app embeds static nodes/edges and tracks only selectedId; scenario state is missing."
+    },
+    {
+      "path": ".workflow/scratch/20260627-brainstorm-stepwise-scenario-map/context-package.json",
+      "evidence": "Provides feature decomposition, constraints, role insights, and open questions."
+    },
+    {
+      "path": "maestro-flow/",
+      "evidence": "Submodule is the source of truth for Maestro command-chain semantics."
+    }
+  ],
+  "patterns": [
+    "Vite + React + TypeScript frontend",
+    "Current SVG map renders static FlowNode and edge arrays",
+    "Detail panel already exists and can host secondary choices"
+  ],
+  "tech_stack": {
+    "language": "TypeScript",
+    "framework": "React 18 + Vite 6",
+    "storage": "none for MVP"
+  },
+  "upstream_context_loaded": true
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "context-package/1.0",
+  "source": {
+    "type": "analyze",
+    "artifact_id": "ANL-001",
+    "session_path": "scratch/20260627-analyze-P1-scenario-map-mvp",
+    "generated_at": "2026-06-27T05:05:00Z"
+  },
+  "requirements": [
+    {
+      "id": "ANL-P1-SCOPE-001",
+      "title": "Create data-driven Scenario Model and first unclear-requirements scenario fixture.",
+      "priority": "high",
+      "acceptance": "Scenario data expresses nodes, edges, steps, choices, terminal options, and source refs outside JSX.",
+      "ref": "conclusions.json#implementation_scope"
+    },
+    {
+      "id": "ANL-P1-SCOPE-002",
+      "title": "Implement active scenario slice and stepwise command-choice interaction.",
+      "priority": "high",
+      "acceptance": "Users can see current command, output conditions, next choices, and active path without executing commands.",
+      "ref": "conclusions.json#implementation_scope"
+    },
+    {
+      "id": "ANL-P1-SCOPE-003",
+      "title": "Add continuation routes, source badges, and local validation checklist.",
+      "priority": "medium",
+      "acceptance": "Terminal choices, cited/pending source status, and local comprehension checks appear in the detail panel.",
+      "ref": "conclusions.json#implementation_scope"
+    }
+  ],
+  "constraints": [
+    { "area": "architecture", "status": "locked", "constraint": "Scenario data must live outside React rendering components.", "ref": "context.md#locked" },
+    { "area": "scope", "status": "locked", "constraint": "Phase 1 should not introduce backend, login, LLM service, or real status.json parser.", "ref": "context.md#locked" },
+    { "area": "ux", "status": "locked", "constraint": "Alternatives, terminal routes, and source badges belong in the detail panel.", "ref": "context.md#locked" },
+    { "area": "source-alignment", "status": "locked", "constraint": "Citation policy prefers command definitions, then guide docs, then Codex skill mirrors.", "ref": "context.md#locked" },
+    { "area": "validation", "status": "open", "constraint": "Validation checklist pass threshold is implementation discretion.", "ref": "context.md#free" }
+  ],
+  "domain": {
+    "problem_statement": "Users need to choose Maestro commands step by step from scenario state.",
+    "audience": "Internal validators and future Maestro users learning command sequences."
+  },
+  "non_goals": [
+    { "title": "Full visual design system polish", "rationale": "Deferred until core scenario loop works.", "ref": "context.md#deferred" },
+    { "title": "Graph library adoption", "rationale": "Deferred until manual SVG layout becomes a blocker.", "ref": "context.md#deferred" },
+    { "title": "LLM-backed recommendation or real status parsing", "rationale": "Out of Phase 1 scope.", "ref": "context.md#deferred" }
+  ],
+  "insights": [
+    { "role": "analyzer", "area": "architecture", "summary": "The implementation gap is missing scenario semantics, not graph rendering capability.", "ref": "analysis.md" },
+    { "role": "analyzer", "area": "source-alignment", "summary": "Command definitions should be the primary citation source for scenario command facts.", "ref": "discussion.md#round-2-citation-source-deep-dive" }
+  ],
+  "open_questions": [
+    { "area": "validation", "question": "Should checklist completion be informational or required for MVP acceptance?", "options": ["informational", "all checks required"], "ref": "context.md#free" }
+  ],
+  "references": [
+    { "type": "discussion", "path": "discussion.md" },
+    { "type": "exploration", "path": "exploration-codebase.json" },
+    { "type": "explorations", "path": "explorations.json" },
+    { "type": "analysis", "path": "analysis.md" },
+    { "type": "conclusions", "path": "conclusions.json" },
+    { "type": "context", "path": "context.md" }
+  ]
+}

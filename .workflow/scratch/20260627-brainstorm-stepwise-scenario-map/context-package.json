@@ -1,0 +1,179 @@
+{
+  "$schema": "context-package/1.0",
+  "source": {
+    "type": "brainstorm",
+    "artifact_id": "BRN-20260627-stepwise-scenario-map",
+    "session_path": "scratch/20260627-brainstorm-stepwise-scenario-map",
+    "generated_at": "2026-06-27T04:18:00Z",
+    "upstream": "grill:GRL-20260627-workflow-wiki-requirements-gaps"
+  },
+  "requirements": [
+    {
+      "id": "F-001",
+      "title": "Scenario Model",
+      "description": "Define data shape for scenario slices, steps, choices, terminal options, and source citations.",
+      "priority": "must",
+      "acceptance": "A scenario can express the unclear-requirements path, current step, next command options, and stop/continue routes without hardcoding UI logic.",
+      "ref": "guidance-specification.md#10"
+    },
+    {
+      "id": "F-002",
+      "title": "Scenario Slice Navigation",
+      "description": "Render one active scenario slice at a time and allow switching at key nodes.",
+      "priority": "must",
+      "acceptance": "Users see a focused map for the active scenario and can switch to another scenario only from explicit transition points.",
+      "ref": "guidance-specification.md#10"
+    },
+    {
+      "id": "F-003",
+      "title": "Stepwise Command Choice",
+      "description": "Let users progress through command choices based on previous output conditions.",
+      "priority": "must",
+      "acceptance": "Users can follow first command, output condition, next command choices, and reach a closing node.",
+      "ref": "guidance-specification.md#10"
+    },
+    {
+      "id": "F-004",
+      "title": "Continuation Route Panel",
+      "description": "Present stop, quality pipeline, and knowledge-capture continuation choices as secondary actions.",
+      "priority": "must",
+      "acceptance": "Closing nodes show continuation choices in the detail panel without expanding downstream pipeline internals on the map.",
+      "ref": "guidance-specification.md#10"
+    },
+    {
+      "id": "F-005",
+      "title": "Upstream Citation Layer",
+      "description": "Attach `maestro-flow` source references to scenario facts and command sequences.",
+      "priority": "should",
+      "acceptance": "Each command sequence can cite an upstream workflow/source reference or be marked as pending citation.",
+      "ref": "guidance-specification.md#10"
+    },
+    {
+      "id": "F-006",
+      "title": "Validation Checklist",
+      "description": "Provide internal validation prompts to confirm users can choose the command sequence.",
+      "priority": "should",
+      "acceptance": "Users can self-check that they can choose the first command and subsequent commands until stopping or continuing.",
+      "ref": "guidance-specification.md#10"
+    }
+  ],
+  "constraints": [
+    {
+      "id": "C-001",
+      "area": "architecture",
+      "constraint": "Scenario data must be separated from React rendering logic.",
+      "rationale": "Current `src/main.tsx` embeds static nodes and edges inline, which blocks scalable scenario slices.",
+      "status": "locked",
+      "ref": "system-architect/analysis.md#2"
+    },
+    {
+      "id": "C-002",
+      "area": "ux",
+      "constraint": "The map must keep the recommended path primary and put alternatives, terminal routes, and source badges in the detail panel.",
+      "rationale": "This avoids choice overload while preserving continuation options.",
+      "status": "locked",
+      "ref": "cross-role-review.md#Findings"
+    },
+    {
+      "id": "C-003",
+      "area": "source-alignment",
+      "constraint": "Command names and sequence semantics must align with `maestro-flow`.",
+      "rationale": "The submodule is the command-chain source of truth.",
+      "status": "locked",
+      "ref": "guidance-specification.md#12"
+    }
+  ],
+  "domain": {
+    "problem_statement": "Users need to choose Maestro commands step by step from a scenario state, not receive a one-shot command recommendation.",
+    "audience": "Internal validators and future Maestro users learning command sequences.",
+    "terminology": [
+      {
+        "term": "Scenario Model",
+        "definition": "Data model for scenario slices, steps, choices, terminal options, transitions, and citations.",
+        "ref": "guidance-specification.md#2"
+      },
+      {
+        "term": "Scenario Slice",
+        "definition": "Focused workflow subset for one user scenario.",
+        "ref": "guidance-specification.md#2"
+      },
+      {
+        "term": "Continuation Route",
+        "definition": "Optional exit from a closing node into stop, quality, or knowledge-capture routes.",
+        "ref": "guidance-specification.md#2"
+      }
+    ]
+  },
+  "non_goals": [
+    {
+      "title": "Real status parsing in MVP",
+      "rationale": "The MVP explains output conditions but does not act as an execution-state assistant.",
+      "ref": "guidance-specification.md#3"
+    },
+    {
+      "title": "Visual design system in this brainstorm",
+      "rationale": "User selected separate visual design pass.",
+      "ref": "workflow-session.json#decisions"
+    }
+  ],
+  "insights": [
+    {
+      "role": "system-architect",
+      "area": "state-machine",
+      "summary": "State should be minimal: activeScenarioId, activeStepId, selectedNodeId, and optional visitedStepIds.",
+      "ref": "system-architect/analysis.md#3"
+    },
+    {
+      "role": "ux-expert",
+      "area": "orientation",
+      "summary": "The UX must answer where am I, why this command, what output matters, and what can I do next.",
+      "ref": "ux-expert/analysis.md#3"
+    },
+    {
+      "role": "test-strategist",
+      "area": "validation",
+      "summary": "Human validation must verify command-sequence comprehension, while automated tests verify data transitions.",
+      "ref": "test-strategist/analysis.md#3"
+    }
+  ],
+  "open_questions": [
+    {
+      "area": "upstream-citations",
+      "question": "Which exact `maestro-flow` files should cite the first scenario command sequence?",
+      "options": ["workflow markdown", "command files", "README chain docs"],
+      "ref": "product-manager/analysis.md#2"
+    },
+    {
+      "area": "validation-threshold",
+      "question": "What minimum internal validation pass threshold is required before roadmap implementation is considered successful?",
+      "options": ["qualitative", "task pass rate", "mixed"],
+      "ref": "test-strategist/analysis.md#2"
+    }
+  ],
+  "references": [
+    {
+      "type": "guidance",
+      "path": "guidance-specification.md"
+    },
+    {
+      "type": "role-analysis",
+      "path": "product-manager/analysis.md"
+    },
+    {
+      "type": "role-analysis",
+      "path": "ux-expert/analysis.md"
+    },
+    {
+      "type": "role-analysis",
+      "path": "system-architect/analysis.md"
+    },
+    {
+      "type": "role-analysis",
+      "path": "test-strategist/analysis.md"
+    },
+    {
+      "type": "role-analysis",
+      "path": "ui-designer/analysis.md"
+    }
+  ]
+}

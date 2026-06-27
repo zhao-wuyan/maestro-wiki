@@ -1,0 +1,134 @@
+{
+  "$schema": "context-package/1.0",
+  "source": {
+    "type": "grill",
+    "artifact_id": "GRL-20260627-workflow-wiki-requirements-gaps",
+    "session_path": "scratch/20260627-grill-workflow-wiki-requirements-gaps",
+    "generated_at": "2026-06-27T04:05:00Z"
+  },
+  "requirements": [
+    {
+      "id": "R-001",
+      "title": "Completion and Continuation Routes",
+      "description": "The map must represent stopping points plus optional continuation routes such as quality and knowledge capture.",
+      "priority": "must",
+      "ref": "grill-report.md#Q1.1"
+    },
+    {
+      "id": "R-002",
+      "title": "Scenario Model",
+      "description": "The app must use a scenario-oriented model with steps, choices, active state, terminal options, and transition metadata.",
+      "priority": "must",
+      "ref": "grill-report.md#Q2.1"
+    },
+    {
+      "id": "R-003",
+      "title": "Scenario Slicing",
+      "description": "The map should render one active scenario slice at a time rather than one global graph.",
+      "priority": "should",
+      "ref": "grill-report.md#Q5.1"
+    }
+  ],
+  "constraints": [
+    {
+      "id": "C-001",
+      "area": "scope",
+      "constraint": "The MVP must show closing/continuation choices but should not expand downstream quality or knowledge pipeline internals.",
+      "rationale": "This preserves optional routes without overloading the first map.",
+      "status": "locked",
+      "ref": "grill-report.md#Q1.2"
+    },
+    {
+      "id": "C-002",
+      "area": "data-model",
+      "constraint": "The MVP must introduce scenario-oriented data instead of relying only on selected node state.",
+      "rationale": "Stepwise command choice requires active step, choices, and terminal options.",
+      "status": "locked",
+      "ref": "grill-report.md#Q2.1"
+    },
+    {
+      "id": "C-003",
+      "area": "content-authority",
+      "constraint": "Scenario command facts must align with the `maestro-flow` submodule.",
+      "rationale": "The submodule is the source of truth for command-chain semantics.",
+      "status": "locked",
+      "ref": "grill-report.md#Q4.1"
+    },
+    {
+      "id": "C-004",
+      "area": "interaction",
+      "constraint": "The MVP should explain output conditions but must not require real `status.json` parsing.",
+      "rationale": "The first product is an educational wiki, not an execution-state assistant.",
+      "status": "locked",
+      "ref": "grill-report.md#Q5.2"
+    }
+  ],
+  "domain": {
+    "problem_statement": "The requirements need to avoid treating command choice as a single recommendation; users need to understand command sequences, optional exits, and continuation routes.",
+    "audience": "Internal validators and future users learning Maestro command selection.",
+    "terminology": [
+      {
+        "term": "Scenario Model",
+        "definition": "Data model that groups workflow nodes, edges, steps, current step, available choices, and terminal options for one user scenario.",
+        "code_ref": "src/main.tsx:5",
+        "status": "locked"
+      },
+      {
+        "term": "Continuation Route",
+        "definition": "Optional route from a closing node into another workflow path such as quality checks or knowledge capture.",
+        "code_ref": "new",
+        "status": "locked"
+      },
+      {
+        "term": "Scenario Slice",
+        "definition": "A focused subset of the workflow map for one user scenario, avoiding an unreadable global graph.",
+        "code_ref": "new",
+        "status": "locked"
+      }
+    ]
+  },
+  "non_goals": [
+    {
+      "title": "Deep downstream pipeline expansion in MVP",
+      "rationale": "The first version only shows continuation branch choices.",
+      "ref": "grill-report.md#Q1.2"
+    },
+    {
+      "title": "Real execution-state parsing in MVP",
+      "rationale": "The first version explains output conditions without parsing `status.json`.",
+      "ref": "grill-report.md#Q5.2"
+    }
+  ],
+  "insights": [
+    {
+      "area": "implementation-gap",
+      "summary": "Current UI supports node selection but lacks scenario selection, path highlighting, stepwise choices, terminal options, and cross-scenario transitions.",
+      "evidence": "src/main.tsx:102, src/main.tsx:135",
+      "ref": "grill-report.md#Discovery-Summary"
+    }
+  ],
+  "open_questions": [
+    {
+      "area": "role-analysis",
+      "question": "Which multi-role set should elaborate the next brainstorm?",
+      "options": ["product-manager", "ux-expert", "system-architect", "test-strategist"],
+      "ref": "grill-report.md#Open-Questions"
+    },
+    {
+      "area": "upstream-citations",
+      "question": "Which exact upstream `maestro-flow` files should be cited for each command path?",
+      "options": ["workflow markdown", "command files", "README chain docs"],
+      "ref": "grill-report.md#Open-Questions"
+    }
+  ],
+  "references": [
+    {
+      "type": "grill-report",
+      "path": "grill-report.md"
+    },
+    {
+      "type": "terminology",
+      "path": "terminology.md"
+    }
+  ]
+}

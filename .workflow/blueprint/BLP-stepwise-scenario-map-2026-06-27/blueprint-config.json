@@ -1,0 +1,98 @@
+{
+  "session_id": "BLP-stepwise-scenario-map-2026-06-27",
+  "seed_input": "brainstorm:BRN-20260627-stepwise-scenario-map",
+  "input_type": "context-package",
+  "timestamp": "2026-06-27T04:34:00Z",
+  "mode": "interactive",
+  "scope": "feature set",
+  "spec_type": "platform",
+  "complexity": "moderate",
+  "depth": "standard",
+  "focus_areas": ["架构模型", "UX 交互", "来源对齐", "测试验证"],
+  "iteration_count": 0,
+  "iteration_history": [],
+  "seed_analysis": {
+    "problem_statement": "Users need to choose Maestro commands step by step from a scenario state, not receive a one-shot command recommendation.",
+    "target_users": ["Internal validators", "Future Maestro users learning command sequences"],
+    "domain": "Interactive workflow education and command-sequence guidance",
+    "constraints": [
+      "Scenario data must be separated from React rendering logic.",
+      "Recommended path is primary; alternatives and terminal routes live in the detail panel.",
+      "Command names and sequence semantics must align with maestro-flow.",
+      "MVP does not parse real status.json files."
+    ],
+    "dimensions": ["product", "ux", "architecture", "testing", "source alignment"]
+  },
+  "has_codebase": true,
+  "source_context_package": "scratch/20260627-brainstorm-stepwise-scenario-map/context-package.json",
+  "decisions": [
+    {
+      "id": 1,
+      "decision": "Blueprint scope",
+      "choice": "功能集",
+      "source": "user"
+    },
+    {
+      "id": 2,
+      "decision": "Spec type",
+      "choice": "platform",
+      "source": "user"
+    },
+    {
+      "id": 3,
+      "decision": "Document depth",
+      "choice": "标准",
+      "source": "user"
+    },
+    {
+      "id": 4,
+      "decision": "Focus areas",
+      "choice": "架构模型, UX 交互, 来源对齐, 测试验证",
+      "source": "user"
+    }
+  ],
+  "phasesCompleted": [
+    {
+      "phase": 0,
+      "name": "session initialized",
+      "output_file": "blueprint-config.json",
+      "completed_at": "2026-06-27T04:34:00Z"
+    },
+    {
+      "phase": 1,
+      "name": "discovery",
+      "output_file": "discovery-context.json",
+      "completed_at": "2026-06-27T04:34:00Z"
+    },
+    {
+      "phase": 2,
+      "name": "product brief",
+      "output_file": "product-brief.md",
+      "completed_at": "2026-06-27T04:34:00Z"
+    },
+    {
+      "phase": 3,
+      "name": "requirements",
+      "output_file": "requirements/_index.md",
+      "completed_at": "2026-06-27T04:34:00Z"
+    },
+    {
+      "phase": 4,
+      "name": "architecture",
+      "output_file": "architecture/_index.md",
+      "completed_at": "2026-06-27T04:34:00Z"
+    },
+    {
+      "phase": 5,
+      "name": "epics",
+      "output_file": "epics/_index.md",
+      "completed_at": "2026-06-27T04:34:00Z"
+    },
+    {
+      "phase": 6,
+      "name": "readiness",
+      "output_file": "readiness-report.md",
+      "completed_at": "2026-06-27T04:34:00Z"
+    }
+  ]
+}

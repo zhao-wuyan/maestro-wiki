@@ -1,0 +1,105 @@
+{
+  "$schema": "context-package/1.0",
+  "source": {
+    "type": "blueprint",
+    "artifact_id": "BLP-stepwise-scenario-map-2026-06-27",
+    "session_path": "blueprint/BLP-stepwise-scenario-map-2026-06-27",
+    "generated_at": "2026-06-27T04:34:00Z"
+  },
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "title": "Scenario Model",
+      "priority": "must",
+      "acceptance": "Scenario data expresses unclear-requirements path, current step, choices, terminal options, and source refs.",
+      "ref": "requirements/REQ-001-scenario-model.md"
+    },
+    {
+      "id": "REQ-002",
+      "title": "Scenario Slice Navigation",
+      "priority": "must",
+      "acceptance": "Users see focused active scenario and explicit transition points.",
+      "ref": "requirements/REQ-002-scenario-slice-navigation.md"
+    },
+    {
+      "id": "REQ-003",
+      "title": "Stepwise Command Choice",
+      "priority": "must",
+      "acceptance": "Users follow command, condition, next choices, and closing node.",
+      "ref": "requirements/REQ-003-stepwise-command-choice.md"
+    },
+    {
+      "id": "REQ-004",
+      "title": "Continuation Route Panel",
+      "priority": "must",
+      "acceptance": "Closing nodes show stop, quality, and knowledge routes in detail panel.",
+      "ref": "requirements/REQ-004-continuation-route-panel.md"
+    },
+    {
+      "id": "REQ-005",
+      "title": "Upstream Citation Layer",
+      "priority": "should",
+      "acceptance": "Command facts align with maestro-flow and support citation status.",
+      "ref": "requirements/REQ-005-upstream-citation-layer.md"
+    },
+    {
+      "id": "REQ-006",
+      "title": "Validation Checklist",
+      "priority": "should",
+      "acceptance": "Internal users can self-check first command, next command, and stop/continue choices.",
+      "ref": "requirements/REQ-006-validation-checklist.md"
+    }
+  ],
+  "constraints": [
+    {
+      "id": "ADR-001",
+      "area": "architecture",
+      "constraint": "Scenario data must live outside React rendering components.",
+      "rationale": "Static inline arrays block scalable scenario slices.",
+      "status": "locked",
+      "ref": "architecture/ADR-001-data-driven-scenario-model.md"
+    },
+    {
+      "id": "ADR-002",
+      "area": "ux",
+      "constraint": "Secondary routes and source badges belong in the detail panel.",
+      "rationale": "Avoids choice overload while preserving continuation choices.",
+      "status": "locked",
+      "ref": "architecture/ADR-002-detail-panel-secondary-routes.md"
+    },
+    {
+      "id": "ADR-003",
+      "area": "source-alignment",
+      "constraint": "Command facts must align with maestro-flow and support SourceRef metadata.",
+      "rationale": "Submodule is command-chain source of truth.",
+      "status": "locked",
+      "ref": "architecture/ADR-003-source-citation-layer.md"
+    }
+  ],
+  "domain": {
+    "problem_statement": "Users need to choose Maestro commands step by step from scenario state.",
+    "audience": "Internal validators and future Maestro users learning command sequences.",
+    "terminology": [
+      { "term": "Scenario Model", "definition": "Data model for scenario slices, steps, choices, terminal options, transitions, and citations.", "ref": "glossary.json" },
+      { "term": "Scenario Slice", "definition": "Focused workflow subset for one user scenario.", "ref": "glossary.json" },
+      { "term": "Continuation Route", "definition": "Optional route from closing node into stop, quality, or knowledge capture.", "ref": "glossary.json" }
+    ]
+  },
+  "non_goals": [
+    { "title": "Real status parsing in MVP", "rationale": "MVP explains output conditions only.", "ref": "product-brief.md" },
+    { "title": "Full visual design system", "rationale": "Deferred to separate design workflow.", "ref": "product-brief.md" }
+  ],
+  "insights": [
+    { "role": "architecture", "area": "state", "summary": "Minimal state includes activeScenarioId, activeStepId, selectedNodeId, and optional visitedStepIds.", "ref": "architecture/_index.md" }
+  ],
+  "open_questions": [
+    { "area": "source-citation", "question": "Which exact maestro-flow files should cite the first scenario command sequence?", "options": ["workflow markdown", "command files", "README chain docs"], "ref": "readiness-report.md" }
+  ],
+  "references": [
+    { "type": "product-brief", "path": "product-brief.md" },
+    { "type": "requirements", "path": "requirements/_index.md" },
+    { "type": "architecture", "path": "architecture/_index.md" },
+    { "type": "epics", "path": "epics/_index.md" },
+    { "type": "readiness", "path": "readiness-report.md" }
+  ]
+}

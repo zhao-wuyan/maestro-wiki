@@ -1,0 +1,59 @@
+{
+  "$schema": "analyze-exploration-codebase/1.0",
+  "session_id": "ANL-P1-scenario-map-mvp-2026-06-27",
+  "source": "cli-explore-agent",
+  "scope": "phase",
+  "phase": 1,
+  "summary": "The existing app is a single-file React/SVG interactive map with hardcoded nodes and edges. Phase 1 can build on current click and keyboard seams by extracting Scenario Model data, adding step state, deriving active slice rendering, expanding the detail panel, and adding local validation.",
+  "relevant_files": [
+    { "path": "src/main.tsx", "reason": "Main React entry; contains hardcoded FlowNode data, edges, selectedId state, SVG map, and detail panel." },
+    { "path": "src/styles.css", "reason": "Central styling for app shell, diagram, nodes, edges, detail panel, and responsive layout." },
+    { "path": "package.json", "reason": "Build scripts and dependency surface; no test script currently exists." },
+    { "path": "tsconfig.json", "reason": "Strict TypeScript and resolveJsonModule support scenario fixtures." },
+    { "path": ".workflow/roadmap.md", "reason": "Phase 1 scope and success criteria." },
+    { "path": ".workflow/blueprint/BLP-stepwise-scenario-map-2026-06-27/requirements/REQ-001-scenario-model.md", "reason": "Scenario Model acceptance criteria." },
+    { "path": ".workflow/blueprint/BLP-stepwise-scenario-map-2026-06-27/architecture/ADR-002-detail-panel-secondary-routes.md", "reason": "Detail panel responsibility boundary." }
+  ],
+  "module_boundaries": [
+    { "boundary": "React rendering", "current_files": ["src/main.tsx"], "responsibilities": ["data definition", "selectedId state", "SVG rendering", "detail panel"], "mvp_seam": "Split into scenario data and rendering components." },
+    { "boundary": "Scenario data/model", "current_files": ["src/main.tsx"], "responsibilities": ["hardcoded nodes and edges"], "mvp_seam": "Introduce Scenario, ScenarioStep, ScenarioChoice, TerminalOption, SourceRef data outside JSX." },
+    { "boundary": "Styling", "current_files": ["src/styles.css"], "responsibilities": ["diagram and panel styles"], "mvp_seam": "Add active path, muted route, choice button, route card, citation badge, and checklist styles." }
+  ],
+  "call_chains": [
+    { "name": "App startup", "chain": ["index.html loads /src/main.tsx", "main.tsx imports React/createRoot/styles", "main.tsx renders <App /> into #root"] },
+    { "name": "Current node selection", "chain": ["src/main.tsx:103 initializes selectedId", "src/main.tsx:104 derives selectedNode", "src/main.tsx:149 maps nodes", "src/main.tsx:159 click sets selectedId", "src/main.tsx:160 Enter/Space sets selectedId", "src/main.tsx:174 renders detail panel"] },
+    { "name": "Target scenario interaction", "chain": ["Scenario data fixture", "activeScenario/currentStep state", "ScenarioMap active slice", "DetailPanel choices/routes/citations", "choice transition", "ValidationChecklist"] }
+  ],
+  "data_flows": [
+    { "name": "current_static_flow", "source": "src/main.tsx nodes/edges", "sink": "detail panel selectedNode", "limitation": "No scenario, step, choice, terminal option, or citationStatus." },
+    { "name": "target_scenario_model_flow", "source": "Scenario Model outside JSX", "sink": "ScenarioMap + DetailPanel + ValidationChecklist", "required_by": ["REQ-001", "REQ-002", "REQ-003", "REQ-004", "REQ-005", "REQ-006"] }
+  ],
+  "code_anchors": [
+    { "path": "src/main.tsx", "line": 5, "description": "FlowNode type is the current node model and should be replaced or expanded by Scenario Model types." },
+    { "path": "src/main.tsx", "line": 18, "description": "Hardcoded nodes are the extraction point for scenario data." },
+    { "path": "src/main.tsx", "line": 93, "description": "Hardcoded edges should become scenario slice transitions or visual edges." },
+    { "path": "src/main.tsx", "line": 103, "description": "selectedId is the current state seam; MVP needs activeScenarioId/currentStepId." },
+    { "path": "src/main.tsx", "line": 135, "description": "Edge rendering seam for active/inactive path classes." },
+    { "path": "src/main.tsx", "line": 151, "description": "Node className seam for current, active path, recommended, and muted states." },
+    { "path": "src/main.tsx", "line": 156, "description": "Existing keyboard support should be preserved for map nodes." },
+    { "path": "src/main.tsx", "line": 174, "description": "Detail panel seam for command choice, routes, and source badges." },
+    { "path": "src/styles.css", "line": 71, "description": "Two-column workspace can support map plus detail panel interactions." },
+    { "path": "package.json", "line": 6, "description": "Scripts include dev/build/preview only; no test script exists." },
+    { "path": "tsconfig.json", "line": 14, "description": "resolveJsonModule enables JSON fixtures if chosen." },
+    { "path": ".workflow/roadmap.md", "line": 21, "description": "Phase 1 goal anchor." },
+    { "path": ".workflow/roadmap.md", "line": 25, "description": "Phase 1 success criteria anchor." },
+    { "path": ".workflow/blueprint/BLP-stepwise-scenario-map-2026-06-27/architecture/ADR-002-detail-panel-secondary-routes.md", "line": 16, "description": "Detail panel hosts secondary alternatives, terminal routes, and source badges." }
+  ],
+  "risks": [
+    { "risk": "No test framework exists", "evidence": "package.json:6 has dev/build/preview only", "impact": "Automated scenario reference validation may need a lightweight strategy." },
+    { "risk": "ADR-001 appears to contain embedded patch text", "evidence": "cli-explore-agent reported ADR-001 content pollution", "impact": "Implementation should rely on independent ADR-002 and blueprint summary." },
+    { "risk": "Handwritten SVG coordinates may become brittle", "evidence": "src/main.tsx node data includes x/y coordinates", "impact": "MVP can keep manual layout but should make layout explicit in model." },
+    { "risk": "Source alignment needs real maestro-flow anchors", "evidence": "REQ-005 requires command facts align with maestro-flow", "impact": "Pending citations should not become permanent." }
+  ],
+  "implementation_seams": [
+    { "seam": "Extract scenario data", "location": "src/main.tsx:18", "suggestion": "Add typed scenario data module." },
+    { "seam": "Replace selectedId with step state", "location": "src/main.tsx:103", "suggestion": "Use activeScenarioId/currentStepId and derive selected node." },
+    { "seam": "Expand detail panel", "location": "src/main.tsx:174", "suggestion": "Render command, why, conditions, choices, terminal routes, and source badges." },
+    { "seam": "Add local validation checklist", "location": "src/main.tsx:187", "suggestion": "Local-only comprehension checks for first command, next command, and continuation route." }
+  ]
+}

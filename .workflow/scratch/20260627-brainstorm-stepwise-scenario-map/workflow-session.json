@@ -1,0 +1,47 @@
+{
+  "session_id": "20260627-brainstorm-stepwise-scenario-map",
+  "session_type": "brainstorm",
+  "mode": "auto-multirole-interactive",
+  "topic": "Maestro Workflow Wiki stepwise scenario map",
+  "from": "grill:GRL-20260627-workflow-wiki-requirements-gaps",
+  "created_at": "2026-06-27T04:18:00Z",
+  "selected_roles": [
+    "product-manager",
+    "ux-expert",
+    "system-architect",
+    "test-strategist",
+    "ui-designer"
+  ],
+  "decisions": [
+    {
+      "id": 1,
+      "decision": "Brainstorm mode",
+      "choice": "自动多角色",
+      "source": "user"
+    },
+    {
+      "id": 2,
+      "decision": "Selected roles",
+      "choice": "product-manager, ux-expert, system-architect, test-strategist, ui-designer",
+      "source": "user"
+    },
+    {
+      "id": 3,
+      "decision": "Visual design foundation",
+      "choice": "单独设计",
+      "source": "user"
+    }
+  ],
+  "feature_list": [
+    "F-001 Scenario Model",
+    "F-002 Scenario Slice Navigation",
+    "F-003 Stepwise Command Choice",
+    "F-004 Continuation Route Panel",
+    "F-005 Upstream Citation Layer",
+    "F-006 Validation Checklist"
+  ],
+  "review_findings_count": 3,
+  "resolutions_applied": 3,
+  "patches_skipped": 0,
+  "status": "complete"
+}

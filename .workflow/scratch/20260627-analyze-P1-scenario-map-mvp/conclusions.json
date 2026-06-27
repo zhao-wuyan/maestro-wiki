@@ -1,0 +1,127 @@
+{
+  "$schema": "analyze-conclusions/1.0",
+  "session_id": "ANL-P1-scenario-map-mvp-2026-06-27",
+  "recommendation": "GO",
+  "confidence": 0.87,
+  "scope": "phase",
+  "milestone": "M1-stepwise-scenario-map-mvp",
+  "phase": 1,
+  "key_conclusions": [
+    {
+      "id": "C1",
+      "summary": "Phase 1 can be delivered as a focused frontend refactor on the existing React/SVG app.",
+      "confidence": "high",
+      "evidence_refs": ["exploration-codebase.json#code_anchors", "explorations.json#overall_feasibility"]
+    },
+    {
+      "id": "C2",
+      "summary": "The root implementation gap is missing scenario semantics, not graph rendering capability.",
+      "confidence": "high",
+      "evidence_refs": ["src/main.tsx:18", "src/main.tsx:103", "src/main.tsx:174"]
+    },
+    {
+      "id": "C3",
+      "summary": "Citation source risk is manageable by citing command files first, guide docs second, and Codex skill mirrors for platform-specific behavior.",
+      "confidence": "medium-high",
+      "evidence_refs": ["discussion.md#round-2-citation-source-deep-dive"]
+    }
+  ],
+  "recommendations": [
+    {
+      "id": "R1",
+      "priority": "high",
+      "area": "architecture",
+      "action": "Create a typed scenario data module outside React rendering logic.",
+      "rationale": "This satisfies the data-driven Scenario Model requirement and avoids rework in Phase 2.",
+      "review_status": "accepted",
+      "steps": [
+        { "target": "src", "description": "Define Scenario, ScenarioStep, ScenarioChoice, TerminalOption, and SourceRef types." },
+        { "target": "src", "description": "Move the first unclear-requirements scenario into a fixture/module." }
+      ]
+    },
+    {
+      "id": "R2",
+      "priority": "high",
+      "area": "state",
+      "action": "Replace selected-only state with local scenario and step state.",
+      "rationale": "Stepwise choices need activeScenarioId and activeStepId while keeping implementation minimal.",
+      "review_status": "accepted",
+      "steps": [
+        { "target": "src/main.tsx", "description": "Derive selected node and active path from current scenario step." },
+        { "target": "src/main.tsx", "description": "Advance currentStepId when a choice is selected." }
+      ]
+    },
+    {
+      "id": "R3",
+      "priority": "high",
+      "area": "ux",
+      "action": "Use the detail panel for command choices, output conditions, terminal routes, source badges, and validation checklist.",
+      "rationale": "Matches ADR-002 and keeps the SVG map readable.",
+      "review_status": "accepted",
+      "steps": [
+        { "target": "src/main.tsx", "description": "Render command, why, output conditions, and next choices." },
+        { "target": "src/main.tsx", "description": "Render stop, quality, and knowledge continuation options at terminal steps." }
+      ]
+    },
+    {
+      "id": "R4",
+      "priority": "medium",
+      "area": "source-alignment",
+      "action": "Populate sourceRefs and citationStatus for command facts.",
+      "rationale": "Prevents drift from maestro-flow while allowing explicit pending status where anchors are not finalized.",
+      "review_status": "accepted",
+      "steps": [
+        { "target": "src", "description": "Add sourceRefs to scenario steps and choices." },
+        { "target": "src/main.tsx", "description": "Display cited or pending source badges in the detail panel." }
+      ]
+    }
+  ],
+  "implementation_scope": [
+    {
+      "objective": "Create data-driven Scenario Model and first unclear-requirements scenario fixture.",
+      "rationale": "Unlocks all Stepwise Scenario Map rendering and validation work.",
+      "priority": "high",
+      "target_files": ["src/main.tsx", "src/scenarios.ts"],
+      "acceptance_criteria": [
+        "Scenario data expresses nodes, edges, steps, choices, terminal options, and source refs.",
+        "Scenario data is not embedded directly in JSX rendering blocks.",
+        "Broken step references can be detected by local validation logic or build-time TypeScript checks."
+      ],
+      "change_summary": "Extract scenario semantics from `src/main.tsx` into typed data and helpers."
+    },
+    {
+      "objective": "Implement active scenario slice and stepwise command-choice interaction.",
+      "rationale": "Provides the core user journey for Phase 1.",
+      "priority": "high",
+      "target_files": ["src/main.tsx", "src/styles.css"],
+      "acceptance_criteria": [
+        "Users can see current command, relevance, output conditions, and next choices.",
+        "Choosing a next option advances the current step or terminal state without executing commands.",
+        "Active path is visually distinct from inactive routes."
+      ],
+      "change_summary": "Replace selected-only graph behavior with scenario step transitions and active path styling."
+    },
+    {
+      "objective": "Add continuation routes, source badges, and local validation checklist in the detail panel.",
+      "rationale": "Completes source trust, stopping/continuation choice, and comprehension validation requirements.",
+      "priority": "medium",
+      "target_files": ["src/main.tsx", "src/styles.css"],
+      "acceptance_criteria": [
+        "Terminal steps show stop, quality pipeline, and knowledge-capture route options.",
+        "Command facts display cited or pending source status.",
+        "Local validation checklist covers first command, next command, and continuation choice."
+      ],
+      "change_summary": "Expand the detail panel into the secondary interaction surface required by ADR-002."
+    }
+  ],
+  "decision_trail": [
+    { "decision": "Use full Phase 1 micro analysis", "source": "user input", "status": "locked" },
+    { "decision": "Deepen citation source risk before synthesis", "source": "user input", "status": "locked" },
+    { "decision": "Use command definitions plus guide docs plus Codex skill mirrors for citations", "source": "cli-explore-agent", "status": "locked" },
+    { "decision": "Keep graph library deferred", "source": "explorations.json", "status": "locked" }
+  ],
+  "residual_risks": [
+    { "risk": "Validation checklist threshold is not fully specified.", "severity": "low", "handling": "Leave as implementation-time Free decision." },
+    { "risk": "ADR-001 contains suspected patch pollution.", "severity": "low", "handling": "Do not rely on ADR-001 as sole implementation source." }
+  ]
+}

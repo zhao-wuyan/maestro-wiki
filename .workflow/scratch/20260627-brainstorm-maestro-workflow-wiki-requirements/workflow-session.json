@@ -1,0 +1,71 @@
+{
+  "session_id": "20260627-brainstorm-maestro-workflow-wiki-requirements",
+  "session_type": "brainstorm",
+  "mode": "interactive",
+  "topic": "根据当前已有的简略需求，询问用户一步步完善成清晰的项目需求、规范的需求文档等初始项目所需内容",
+  "created_at": "2026-06-27T03:56:18Z",
+  "selected_roles": [],
+  "feature_list": [],
+  "decisions": [
+    {
+      "id": 1,
+      "decision": "Brainstorm output depth",
+      "choice": "探索方向",
+      "source": "user"
+    },
+    {
+      "id": 2,
+      "decision": "First-stage target audience",
+      "choice": "内部验证",
+      "source": "user"
+    },
+    {
+      "id": 3,
+      "decision": "First core experience",
+      "choice": "流程地图",
+      "source": "user"
+    },
+    {
+      "id": 4,
+      "decision": "First interactive depth",
+      "choice": "路径高亮",
+      "source": "user"
+    },
+    {
+      "id": 5,
+      "decision": "First highlighted scenario",
+      "choice": "探索需求",
+      "source": "user"
+    },
+    {
+      "id": 6,
+      "decision": "First command recommendation surface",
+      "choice": "场景按钮",
+      "source": "user"
+    },
+    {
+      "id": 7,
+      "decision": "Flow node content model",
+      "choice": "五段解释",
+      "source": "user"
+    },
+    {
+      "id": 8,
+      "decision": "Primary MVP success criterion",
+      "choice": "会选命令",
+      "source": "user"
+    }
+  ],
+  "feature_list": [
+    "F-001 Scenario Path Selector",
+    "F-002 Interactive Workflow Map",
+    "F-003 Path Highlighting",
+    "F-004 Five-Part Node Explanation",
+    "F-005 Stepwise Next-Command Guide",
+    "F-006 Internal Validation Prompt",
+    "F-007 Future Recommendation Placeholder"
+  ],
+  "review_findings_count": null,
+  "resolutions_applied": null,
+  "status": "collecting_decisions"
+}

@@ -1,0 +1,41 @@
+{
+  "session_id": "BLP-stepwise-scenario-map-2026-06-27",
+  "terms": [
+    {
+      "canonical": "Scenario Model",
+      "definition": "Data model for scenario slices, steps, choices, terminal options, transitions, and source citations.",
+      "aliases": ["scenario data model"],
+      "category": "technical"
+    },
+    {
+      "canonical": "Scenario Slice",
+      "definition": "A focused workflow map subset for one user scenario, rendered independently from other scenarios.",
+      "aliases": ["active scenario path"],
+      "category": "core"
+    },
+    {
+      "canonical": "Stepwise Command Choice",
+      "definition": "The user journey of choosing a first command, reading output conditions, then choosing subsequent commands or exits.",
+      "aliases": ["command sequence guidance"],
+      "category": "core"
+    },
+    {
+      "canonical": "Continuation Route",
+      "definition": "A secondary route from a closing node into stop, quality, knowledge capture, or another scenario path.",
+      "aliases": ["terminal option", "exit route"],
+      "category": "core"
+    },
+    {
+      "canonical": "Upstream Citation",
+      "definition": "A source reference showing which maestro-flow artifact supports a command fact or sequence semantic.",
+      "aliases": ["source reference"],
+      "category": "technical"
+    },
+    {
+      "canonical": "Validation Checklist",
+      "definition": "Internal validation prompts that test whether users can choose command sequences from scenario states.",
+      "aliases": ["comprehension checklist"],
+      "category": "business"
+    }
+  ]
+}

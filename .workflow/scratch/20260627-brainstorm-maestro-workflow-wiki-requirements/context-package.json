@@ -1,0 +1,135 @@
+{
+  "$schema": "context-package/1.0",
+  "source": {
+    "type": "brainstorm",
+    "artifact_id": "BRN-20260627-workflow-wiki-requirements",
+    "session_path": "scratch/20260627-brainstorm-maestro-workflow-wiki-requirements",
+    "generated_at": "2026-06-27T03:56:18Z"
+  },
+  "requirements": [
+    {
+      "id": "F-001",
+      "title": "Scenario Path Selector",
+      "priority": "must",
+      "description": "Provide a visible scenario button for unclear requirements / idea exploration.",
+      "acceptance": "Selecting the scenario highlights the recommended path and surfaces `maestro-brainstorm` as the next command.",
+      "ref": "guidance-specification.md#10"
+    },
+    {
+      "id": "F-002",
+      "title": "Interactive Workflow Map",
+      "priority": "must",
+      "description": "Show Maestro flow nodes as clickable and keyboard-accessible map elements.",
+      "acceptance": "Users can select nodes and see the selected node reflected in the details panel.",
+      "ref": "guidance-specification.md#10"
+    },
+    {
+      "id": "F-003",
+      "title": "Path Highlighting",
+      "priority": "must",
+      "description": "Highlight the route for unclear requirements from intent input through brainstorm-oriented routing.",
+      "acceptance": "The highlighted nodes and edges visually differ from inactive paths.",
+      "ref": "guidance-specification.md#10"
+    },
+    {
+      "id": "F-004",
+      "title": "Five-Part Node Explanation",
+      "priority": "must",
+      "description": "Each relevant node explains what it does, input, output, next step, and common mistake.",
+      "acceptance": "Every highlighted node contains all five explanation fields.",
+      "ref": "guidance-specification.md#10"
+    },
+    {
+      "id": "F-005",
+      "title": "Stepwise Next-Command Guide",
+      "priority": "must",
+      "description": "After each highlighted command, show the output condition and the next command choices available from that state.",
+      "acceptance": "Users can follow a scenario from first command through subsequent command choices until the stated goal is satisfied.",
+      "ref": "guidance-specification.md#10"
+    },
+    {
+      "id": "F-006",
+      "title": "Internal Validation Prompt",
+      "priority": "should",
+      "description": "Capture whether internal users can choose the command sequence after using the map.",
+      "acceptance": "The page includes a simple feedback or checklist prompt for `I can choose the next command at each step until the goal is met`.",
+      "ref": "guidance-specification.md#10"
+    },
+    {
+      "id": "F-007",
+      "title": "Future Recommendation Placeholder",
+      "priority": "may",
+      "description": "Reserve space for future rule-based or agent-backed command recommendation.",
+      "acceptance": "UI does not imply free-form recommendation is available in MVP.",
+      "ref": "guidance-specification.md#10"
+    }
+  ],
+  "constraints": [
+    {
+      "id": "C-001",
+      "area": "product-boundary",
+      "constraint": "The site must remain independent from `maestro-flow/docs-site`.",
+      "rationale": "The original docs site targets project documentation, while this product validates interactive learning and command selection.",
+      "status": "locked",
+      "ref": "guidance-specification.md#3"
+    },
+    {
+      "id": "C-002",
+      "area": "interaction",
+      "constraint": "The MVP must prioritize scenario-based path highlighting and stepwise next-command selection for unclear requirements.",
+      "rationale": "Internal validation focuses on whether users can choose the first command and then continue choosing follow-up commands until the scenario goal is satisfied.",
+      "status": "locked",
+      "ref": "guidance-specification.md#5"
+    }
+  ],
+  "domain": {
+    "problem_statement": "Users face command selection uncertainty when Maestro requirements are still unclear.",
+    "audience": "Internal users validating the workflow wiki concept.",
+    "terminology": [
+      {
+        "term": "Interactive Flow Node",
+        "definition": "Clickable and keyboard-accessible visual node that exposes input, output, responsibility, and next action.",
+        "ref": "guidance-specification.md#2"
+      },
+      {
+        "term": "Scenario Path Selector",
+        "definition": "Explicit scenario button that highlights the relevant workflow path without natural-language parsing.",
+        "ref": "guidance-specification.md#10"
+      }
+    ]
+  },
+  "non_goals": [
+    {
+      "title": "Reuse maestro-flow docs-site",
+      "rationale": "Product positioning differs from the upstream documentation site.",
+      "ref": "guidance-specification.md#3"
+    },
+    {
+      "title": "LLM-backed recommendation in MVP",
+      "rationale": "Scenario buttons are enough for the first internal validation.",
+      "ref": "guidance-specification.md#7"
+    }
+  ],
+  "insights": [
+    {
+      "role": "product-direction",
+      "area": "mvp-focus",
+      "summary": "The first version should validate whether an interactive path map teaches internal users to choose a command sequence for unclear requirements, from first command through follow-up commands until the goal is met.",
+      "ref": "guidance-specification.md#6"
+    }
+  ],
+  "open_questions": [
+    {
+      "area": "future-scope",
+      "question": "Should later versions add free-form command recommendation through rules or an LLM-backed agent?",
+      "options": ["browser rules", "agent/LLM", "defer"],
+      "ref": "guidance-specification.md#10"
+    }
+  ],
+  "references": [
+    {
+      "type": "guidance",
+      "path": "guidance-specification.md"
+    }
+  ]
+}
