@@ -114,14 +114,15 @@
       "command_path": null,
       "milestone_id": null,
       "source_artifact_ref": null,
-      "status": "pending",
+      "status": "completed",
       "goal_ref": null,
-      "completion_confirmed": false,
-      "completion_status": null,
-      "completion_evidence": null,
-      "completed_at": null,
+      "completion_confirmed": true,
+      "completion_status": "DONE",
+      "completion_evidence": ".workflow/scratch/20260627-plan-P1-scenario-map-mvp/verification.json",
+      "completed_at": "2026-06-27T16:09:35.500Z",
       "deferred_reads": [],
-      "load": null
+      "load": null,
+      "concerns": null
     },
     {
       "index": 3,
@@ -170,14 +171,15 @@
       "command_path": null,
       "milestone_id": null,
       "source_artifact_ref": null,
-      "status": "pending",
+      "status": "completed",
       "goal_ref": null,
-      "completion_confirmed": false,
-      "completion_status": null,
-      "completion_evidence": null,
-      "completed_at": null,
+      "completion_confirmed": true,
+      "completion_status": "DONE",
+      "completion_evidence": ".workflow/scratch/20260627-review-P1-scenario-map-mvp/review.json",
+      "completed_at": "2026-06-27T16:09:52.695Z",
       "deferred_reads": [],
-      "load": null
+      "load": null,
+      "concerns": null
     },
     {
       "index": 5,
@@ -252,14 +254,18 @@
       "command_path": null,
       "milestone_id": null,
       "source_artifact_ref": null,
-      "status": "pending",
+      "status": "completed",
       "goal_ref": null,
-      "completion_confirmed": false,
-      "completion_status": null,
-      "completion_evidence": null,
-      "completed_at": null,
+      "completion_confirmed": true,
+      "completion_status": "DONE",
+      "completion_evidence": [
+        ".workflow/scratch/20260627-test-P1-scenario-map-mvp/uat.md",
+        ".workflow/scratch/20260627-test-P1-scenario-map-mvp/.tests/test-results.json"
+      ],
+      "completed_at": "2026-06-27T16:10:10.432Z",
       "deferred_reads": [],
-      "load": null
+      "load": null,
+      "concerns": null
     },
     {
       "index": 8,
@@ -304,14 +310,15 @@
       "command_path": null,
       "milestone_id": null,
       "source_artifact_ref": null,
-      "status": "pending",
+      "status": "completed",
       "goal_ref": null,
-      "completion_confirmed": false,
-      "completion_status": null,
-      "completion_evidence": null,
-      "completed_at": null,
+      "completion_confirmed": true,
+      "completion_status": "DONE",
+      "completion_evidence": ".workflow/scratch/20260627-test-P1-scenario-map-mvp/e2e-results.json",
+      "completed_at": "2026-06-27T16:10:27.703Z",
       "deferred_reads": [],
-      "load": null
+      "load": null,
+      "concerns": null
     },
     {
       "index": 10,
@@ -326,14 +333,20 @@
       "command_path": null,
       "milestone_id": null,
       "source_artifact_ref": null,
-      "status": "pending",
+      "status": "completed",
       "goal_ref": null,
-      "completion_confirmed": false,
-      "completion_status": null,
-      "completion_evidence": null,
-      "completed_at": null,
+      "completion_confirmed": true,
+      "completion_status": "DONE",
+      "completion_evidence": [
+        ".workflow/.maestro/ralph-20260627-104402/status.json",
+        ".workflow/scratch/20260627-plan-P1-scenario-map-mvp/verification.json",
+        ".workflow/scratch/20260627-test-P1-scenario-map-mvp/uat.md",
+        ".workflow/scratch/20260627-test-P1-scenario-map-mvp/e2e-results.json"
+      ],
+      "completed_at": "2026-06-27T16:10:48.917Z",
       "deferred_reads": [],
-      "load": null
+      "load": null,
+      "concerns": null
     },
     {
       "index": 11,
@@ -442,9 +455,9 @@
       "lifecycle": [
         "execute"
       ],
-      "status": "pending",
-      "completion_confirmed": false,
-      "completed_at": null
+      "status": "done",
+      "completion_confirmed": true,
+      "completed_at": "2026-06-27T16:10:48.917Z"
     },
     {
       "id": "G2",
@@ -455,9 +468,9 @@
       "lifecycle": [
         "test"
       ],
-      "status": "pending",
-      "completion_confirmed": false,
-      "completed_at": null
+      "status": "done",
+      "completion_confirmed": true,
+      "completed_at": "2026-06-27T16:10:48.917Z"
     },
     {
       "id": "G3",
@@ -468,12 +481,12 @@
       "lifecycle": [
         "frontend-verify"
       ],
-      "status": "pending",
-      "completion_confirmed": false,
-      "completed_at": null
+      "status": "done",
+      "completion_confirmed": true,
+      "completed_at": "2026-06-27T16:10:48.917Z"
     }
   ],
-  "task_decomposition_all_done": false,
+  "task_decomposition_all_done": true,
   "created_at": "2026-06-27T10:44:02Z",
   "updated_at": "2026-06-27T10:44:02Z"
 }

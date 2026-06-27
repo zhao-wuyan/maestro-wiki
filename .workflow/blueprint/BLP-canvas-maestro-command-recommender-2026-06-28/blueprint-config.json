@@ -1,0 +1,20 @@
+{
+  "session_id": "BLP-canvas-maestro-command-recommender-2026-06-28",
+  "created_at": "2026-06-28T00:00:00Z",
+  "input_type": "context-package",
+  "source": "brainstorm:BRN-20260628-canvas-maestro-command-recommender",
+  "scope": "feature set",
+  "spec_type": "platform",
+  "focus_areas": ["canvas interaction", "recommendation rules", "persistence", "sharing"],
+  "phase_state": {
+    "P0": "complete",
+    "P1": "complete",
+    "P1.5": "skipped-context-package",
+    "P2": "complete",
+    "P3": "complete",
+    "P4": "complete",
+    "P5": "complete",
+    "P6": "complete"
+  },
+  "upstream_context_package": "scratch/20260628-brainstorm-canvas-maestro-command-recommender/context-package.json"
+}

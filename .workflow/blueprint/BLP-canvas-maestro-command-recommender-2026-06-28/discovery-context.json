@@ -1,0 +1,15 @@
+{
+  "source": "context-package + code scan",
+  "relevant_files": [
+    { "path": "src/main.tsx", "evidence": "ScenarioModel is a single authored flow; active state uses selectedNodeId/activeStepId." },
+    { "path": "src/styles.css", "evidence": "workspace layout uses 1fr + 390px right sidebar." },
+    { "path": "maestro-flow/.codex/skills/maestro-help/catalog.json", "evidence": "Command catalog, workflow paths, and categories." },
+    { "path": "maestro-flow/.claude/commands/maestro-next.md", "evidence": "Lifecycle, scoring, routing, preconditions, and close-call behavior." }
+  ],
+  "patterns": [
+    "Current UI is data-driven but single-path.",
+    "Recommendation logic must be separated from React rendering.",
+    "Sharing/gallery expands beyond static-only local persistence."
+  ],
+  "tech_stack": ["Vite", "React", "TypeScript", "browser localStorage"]
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "context-package/1.0",
+  "source": {
+    "type": "brainstorm",
+    "artifact_id": "BRN-20260628-canvas-maestro-command-recommender",
+    "session_path": "scratch/20260628-brainstorm-canvas-maestro-command-recommender",
+    "generated_at": "2026-06-28T00:00:00Z"
+  },
+  "requirements": [
+    { "id": "F-001", "title": "Rule Update Protocol", "description": "Define the LLM-governed process for updating local rules from maestro-flow.", "priority": "must", "ref": "guidance-specification.md#10-feature-decomposition" },
+    { "id": "F-002", "title": "Command Rule Set", "description": "Create local command facts, scenario types, workflow paths, and recommendation rules with sourceRefs.", "priority": "must", "ref": "guidance-specification.md#10-feature-decomposition" },
+    { "id": "F-003", "title": "Stepwise Canvas Model", "description": "Replace fixed single-flow model with generated nodes, edges, recommendation groups, and branch-aware state.", "priority": "must", "ref": "guidance-specification.md#10-feature-decomposition" },
+    { "id": "F-004", "title": "Canvas Interaction UI", "description": "Redesign UI around a large canvas, initial scenario node, node-local choices, and lightweight evidence surfaces.", "priority": "must", "ref": "guidance-specification.md#10-feature-decomposition" },
+    { "id": "F-005", "title": "Route Persistence", "description": "Persist recent routes and favorites with recommendation evidence in browser storage.", "priority": "should", "ref": "guidance-specification.md#10-feature-decomposition" },
+    { "id": "F-006", "title": "Route Sharing and Gallery", "description": "Generate standalone share URLs, optionally publish routes to a public gallery, and manage/revoke shared content.", "priority": "should", "ref": "guidance-specification.md#10-feature-decomposition" }
+  ],
+  "constraints": [
+    { "id": "C-001", "area": "architecture", "constraint": "The app MUST introduce a local CommandRuleSet layer consumed by React.", "rationale": "Current ScenarioModel is one authored flow.", "status": "locked", "ref": "system-architect/analysis.md#2-decision-digest" },
+    { "id": "C-002", "area": "provenance", "constraint": "Rule provenance MUST cite maestro-flow submodule paths.", "rationale": "Rules need true upstream sources.", "status": "locked", "ref": "guidance-specification.md#5-architecture-decisions" },
+    { "id": "C-003", "area": "ux", "constraint": "Equal-rank recommendations MUST be shown as peer options, not forced into a fake primary command.", "rationale": "Avoid misleading users when rules are ambiguous.", "status": "locked", "ref": "ux-expert/analysis.md#2-decision-digest" },
+    { "id": "C-004", "area": "persistence", "constraint": "Saved routes MUST include schemaVersion, ruleVersion, name, scenario, command nodes, recommendation evidence, and sourceRefs.", "rationale": "Saved routes must remain understandable after UI/rule changes.", "status": "locked", "ref": "guidance-specification.md#7-data--persistence-decisions" },
+    { "id": "C-005", "area": "sharing", "constraint": "Shared route records MUST distinguish private share links, public gallery visibility, and revoked links.", "rationale": "Users requested separate link sharing, gallery publishing, gallery unpublishing, and link revocation.", "status": "locked", "ref": "guidance-specification.md#7-data--persistence-decisions" },
+    { "id": "C-006", "area": "canvas-annotation", "constraint": "Edges SHOULD support user-authored notes explaining why a command path was chosen.", "rationale": "Route readers need rationale on connections, not only node-level command evidence.", "status": "locked", "ref": "guidance-specification.md#6-ux-decisions" }
+  ],
+  "domain": {
+    "problem_statement": "Design a canvas-based Maestro command recommender that uses source-backed local rules from maestro-flow and supports stepwise, multi-branch route generation.",
+    "terminology": [
+      { "term": "CommandRuleSet", "definition": "Local data layer containing command facts, scenario types, workflow paths, and recommendation rules.", "ref": "system-architect/analysis.md#3-cross-cutting-foundations" },
+      { "term": "RecommendationGroup", "definition": "A ranked or equal-rank set of command candidates shown on a node.", "ref": "system-architect/analysis.md#3-cross-cutting-foundations" },
+      { "term": "SavedRoute", "definition": "Browser-persisted route with recommendation evidence and version metadata.", "ref": "guidance-specification.md#7-data--persistence-decisions" },
+      { "term": "SharedRoute", "definition": "Route map published to a standalone URL with optional gallery visibility.", "ref": "guidance-specification.md#7-data--persistence-decisions" },
+      { "term": "EdgeNote", "definition": "User-authored note on a connection explaining why a choice was made.", "ref": "guidance-specification.md#6-ux-decisions" }
+    ],
+    "audience": "Users learning which Maestro command or workflow path to choose",
+    "industry": "Developer tooling"
+  },
+  "non_goals": [
+    { "title": "Real project state parsing in MVP", "rationale": "MVP uses simulated browser-side state.", "ref": "guidance-specification.md#3-non-goals" },
+    { "title": "Browser runtime LLM recommendation", "rationale": "LLM assists updates, not runtime recommendation.", "ref": "guidance-specification.md#3-non-goals" },
+    { "title": "Public gallery in static-only MVP", "rationale": "Gallery requires online storage/API, moderation, and revocation semantics.", "ref": "guidance-specification.md#3-non-goals" }
+  ],
+  "insights": [
+    { "role": "system-architect", "area": "data-model", "summary": "Split rule data from canvas state to keep recommendation logic testable outside React.", "ref": "system-architect/analysis.md#3-cross-cutting-foundations" },
+    { "role": "ux-expert", "area": "interaction", "summary": "Stepwise branch growth should use node-local recommendation cards and compact evidence disclosure.", "ref": "ux-expert/analysis.md#3-cross-cutting-foundations" },
+    { "role": "product-manager", "area": "product", "summary": "The product promise is understandable command selection, not a static documentation sidebar.", "ref": "product-manager/analysis.md#3-cross-cutting-foundations" },
+    { "role": "system-architect", "area": "sharing", "summary": "Public gallery sharing is a distinct online capability beyond browser-local route persistence.", "ref": "guidance-specification.md#12-cross-role-resolutions" }
+  ],
+  "open_questions": [
+    { "area": "canvas-layout", "question": "Tree, swimlane, or auto-layout graph for parallel branches?", "options": ["tree", "swimlane", "auto-layout"], "ref": "guidance-specification.md#8-risks--constraints" },
+    { "area": "rule-storage", "question": "Should generated rules live in JSON or TypeScript?", "options": ["json", "typescript", "hybrid"], "ref": "system-architect/analysis.md#2-decision-digest" },
+    { "area": "sharing-backend", "question": "What backend/storage should host shared routes and gallery entries?", "options": ["showcase API", "custom lightweight API", "defer"], "ref": "guidance-specification.md#12-cross-role-resolutions" },
+    { "area": "gallery-moderation", "question": "What moderation or abuse controls are required for public gallery submissions?", "options": ["manual review", "report-only", "private beta"], "ref": "guidance-specification.md#8-risks--constraints" }
+  ],
+  "references": [
+    { "type": "guidance", "path": "guidance-specification.md" },
+    { "type": "role-analysis", "path": "product-manager/analysis.md" },
+    { "type": "role-analysis", "path": "system-architect/analysis.md" },
+    { "type": "role-analysis", "path": "ux-expert/analysis.md" },
+    { "type": "review", "path": "cross-role-review.md" }
+  ]
+}

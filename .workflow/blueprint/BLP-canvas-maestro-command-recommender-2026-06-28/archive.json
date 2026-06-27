@@ -1,0 +1,25 @@
+{
+  "$schema": "session-archive/1.0",
+  "session_id": "BLP-canvas-maestro-command-recommender-2026-06-28",
+  "session_type": "blueprint",
+  "session_path": "blueprint/BLP-canvas-maestro-command-recommender-2026-06-28",
+  "lifecycle": {
+    "status": "sealed",
+    "sealed_at": "2026-06-28T00:00:00Z",
+    "archived_at": null,
+    "linked_milestone": null
+  },
+  "content_refs": [
+    { "type": "context-package", "path": "context-package.json" },
+    { "type": "product-brief", "path": "product-brief.md" },
+    { "type": "requirements", "path": "requirements/_index.md" },
+    { "type": "architecture", "path": "architecture/_index.md" },
+    { "type": "epics", "path": "epics/_index.md" },
+    { "type": "readiness", "path": "readiness-report.md" }
+  ],
+  "extraction": {
+    "harvested": false,
+    "reason": "deferred"
+  },
+  "pruned": null
+}

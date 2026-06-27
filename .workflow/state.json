@@ -2,7 +2,7 @@
   "version": "3.1",
   "project_name": "Maestro Workflow Wiki",
   "status": "idle",
-  "current_milestone": "M1-stepwise-scenario-map-mvp",
+  "current_milestone": "M2-canvas-command-recommender-mvp",
   "current_task_id": null,
   "milestones": [
     {
@@ -10,22 +10,22 @@
       "name": "Stepwise Scenario Map MVP",
       "version": "v0.1",
       "type": "standard",
-      "status": "active",
+      "status": "completed",
       "phases": [
         {
           "id": 1,
           "title": "Scenario Map MVP",
-          "status": "not_started",
+          "status": "completed",
           "depends_on": [],
           "requirements": [
-            "BLP REQ-001",
-            "BLP REQ-002",
-            "BLP REQ-003",
-            "BLP REQ-004",
-            "BLP REQ-005",
-            "BLP REQ-006",
-            "Project Active: command scenario guide",
-            "Project Active: interactive flow extension"
+            "Previous BLP REQ-001",
+            "Previous BLP REQ-002",
+            "Previous BLP REQ-003",
+            "Previous BLP REQ-004",
+            "Previous BLP REQ-005",
+            "Previous BLP REQ-006",
+            "Project Validated: independent Vite + React site",
+            "Project Validated: MVP interactive flow diagram"
           ]
         }
       ],
@@ -36,18 +36,25 @@
       "created_at": "2026-06-27T04:45:00Z"
     },
     {
-      "id": "M2-workflow-knowledge-expansion",
-      "name": "Workflow Knowledge Expansion",
+      "id": "M2-canvas-command-recommender-mvp",
+      "name": "Canvas Command Recommender MVP",
       "version": "v0.2",
       "type": "standard",
-      "status": "planned",
+      "status": "active",
       "phases": [
         {
           "id": 2,
-          "title": "Knowledge and Recommendation Expansion",
+          "title": "Local Canvas Recommender",
           "status": "not_started",
           "depends_on": [1],
           "requirements": [
+            "BLP-canvas REQ-001",
+            "BLP-canvas REQ-002",
+            "BLP-canvas REQ-003",
+            "BLP-canvas REQ-004",
+            "BLP-canvas REQ-005",
+            "BLP-canvas NFR-001",
+            "BLP-canvas NFR-002",
             "Project Active: core concept encyclopedia",
             "Project Active: command scenario guide",
             "Project Active: interactive flow extension",
@@ -57,10 +64,33 @@
         }
       ],
       "phase_slugs": {
-        "2": "knowledge-and-recommendation-expansion"
+        "2": "local-canvas-recommender"
       },
-      "roadmap_ref": ".workflow/roadmap.md#milestone-2-workflow-knowledge-expansion-v02",
+      "roadmap_ref": ".workflow/roadmap.md#milestone-2-canvas-command-recommender-mvp-v02",
       "created_at": "2026-06-27T04:45:00Z"
+    },
+    {
+      "id": "M3-route-sharing-gallery",
+      "name": "Route Sharing and Gallery",
+      "version": "v0.3",
+      "type": "standard",
+      "status": "planned",
+      "phases": [
+        {
+          "id": 3,
+          "title": "Share and Gallery Integration",
+          "status": "not_started",
+          "depends_on": [2],
+          "requirements": [
+            "BLP-canvas REQ-006"
+          ]
+        }
+      ],
+      "phase_slugs": {
+        "3": "share-and-gallery-integration"
+      },
+      "roadmap_ref": ".workflow/roadmap.md#milestone-3-route-sharing-and-gallery-v03",
+      "created_at": "2026-06-28T00:00:00Z"
     }
   ],
   "_milestone_schema": "{ id, name, type: 'standard'|'adhoc', status, phases[], phase_slugs{}, roadmap_ref, created_at }",
@@ -268,21 +298,74 @@
         "integration_gaps": 0,
         "concerns": 0
       }
+    },
+    {
+      "id": "GRL-20260628-canvas-node-scenario-redesign",
+      "type": "grill",
+      "scope": "standalone",
+      "path": "scratch/20260628-grill-canvas-node-scenario-redesign",
+      "status": "completed",
+      "context_package": "scratch/20260628-grill-canvas-node-scenario-redesign/context-package.json",
+      "created_at": "2026-06-28T00:00:00Z",
+      "metadata": {
+        "topic": "Canvas node scenario redesign with source-backed recommendation rules",
+        "depth": "standard",
+        "branches_completed": 5,
+        "decisions_locked": 12,
+        "decisions_open": 3,
+        "terms_defined": 9
+      }
+    },
+    {
+      "id": "BRN-20260628-canvas-maestro-command-recommender",
+      "type": "brainstorm",
+      "name": "Canvas Maestro Command Recommender Brainstorm",
+      "path": "scratch/20260628-brainstorm-canvas-maestro-command-recommender",
+      "context_package": "scratch/20260628-brainstorm-canvas-maestro-command-recommender/context-package.json",
+      "created_at": "2026-06-28T00:00:00Z",
+      "status": "complete",
+      "metadata": {
+        "roles": ["product-manager", "system-architect", "ux-expert"],
+        "features": 6,
+        "review_findings_count": 3,
+        "resolutions_applied": 3,
+        "upstream": "GRL-20260628-canvas-node-scenario-redesign"
+      }
+    },
+    {
+      "id": "BLP-canvas-maestro-command-recommender-2026-06-28",
+      "type": "blueprint",
+      "name": "Canvas Maestro Command Recommender Blueprint",
+      "path": "blueprint/BLP-canvas-maestro-command-recommender-2026-06-28",
+      "context_package": "blueprint/BLP-canvas-maestro-command-recommender-2026-06-28/context-package.json",
+      "created_at": "2026-06-28T00:00:00Z",
+      "status": "complete",
+      "metadata": {
+        "readiness_score": 88,
+        "gate": "Pass",
+        "scope": "feature set",
+        "spec_type": "platform",
+        "upstream": "BRN-20260628-canvas-maestro-command-recommender"
+      }
     }
   ],
-  "last_updated": "2026-06-27T10:44:02Z",
+  "last_updated": "2026-06-28T00:00:00Z",
   "accumulated_context": {
     "key_decisions": [
       "Build an independent Vite + React wiki app in the root project.",
       "Use maestro-flow submodule only as a reference source, not as the docs-site foundation.",
       "Core workflow diagrams must be interactive, not static-only."
     ],
-    "blockers": [],
+    "blockers": [
+      "git push origin main is blocked by GitHub GH007 private email protection; fix GitHub email privacy or rewrite commit author metadata before pushing."
+    ],
     "deferred": [
       "Decide whether the site should be Chinese-only first or bilingual.",
-      "Decide whether future command recommendation should use browser rules or integrate an LLM backend.",
       "Decide whether interactive flow diagrams need shareable custom chains.",
-      "Define the concrete completion condition for each stepwise command-selection scenario."
+      "Define the concrete completion condition for each stepwise command-selection scenario.",
+      "Decide canvas branch layout style: tree, swimlane, or auto-layout graph.",
+      "Decide rule storage format: JSON, TypeScript, or hybrid generated rules.",
+      "Decide backend/storage approach for route sharing and public gallery."
     ]
   },
   "transition_history": [],
@@ -297,6 +380,32 @@
         "M2-workflow-knowledge-expansion"
       ],
       "created_at": "2026-06-27T04:45:00Z"
+    },
+    {
+      "event": "milestone_completed",
+      "milestone": "M1-stepwise-scenario-map-mvp",
+      "phase": 1,
+      "evidence": [
+        "scratch/20260627-plan-P1-scenario-map-mvp/verification.json",
+        "scratch/20260627-review-P1-scenario-map-mvp/review.json",
+        "scratch/20260627-test-P1-scenario-map-mvp/uat.md",
+        "scratch/20260627-test-P1-scenario-map-mvp/e2e-results.json",
+        "milestones/M1-stepwise-scenario-map-mvp/audit-report.md"
+      ],
+      "completed_at": "2026-06-27T16:10:48Z"
+    },
+    {
+      "event": "roadmap_revised",
+      "roadmap_ref": ".workflow/roadmap.md",
+      "source_artifact": "BLP-canvas-maestro-command-recommender-2026-06-28",
+      "strategy": "progressive",
+      "milestones": [
+        "M1-stepwise-scenario-map-mvp",
+        "M2-canvas-command-recommender-mvp",
+        "M3-route-sharing-gallery"
+      ],
+      "created_at": "2026-06-28T00:00:00Z",
+      "notes": "Preserved completed M1 and revised future roadmap around canvas recommender blueprint. Push attempted first and blocked by GH007 private email protection."
     }
   ]
 }

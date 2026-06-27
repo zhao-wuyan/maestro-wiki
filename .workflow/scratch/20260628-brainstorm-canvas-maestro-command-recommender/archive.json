@@ -1,0 +1,24 @@
+{
+  "$schema": "session-archive/1.0",
+  "session_id": "BRN-20260628-canvas-maestro-command-recommender",
+  "session_type": "brainstorm",
+  "session_path": "scratch/20260628-brainstorm-canvas-maestro-command-recommender",
+  "lifecycle": {
+    "status": "sealed",
+    "sealed_at": "2026-06-28T00:00:00Z",
+    "archived_at": null,
+    "linked_milestone": null
+  },
+  "content_refs": [
+    { "type": "context-package", "path": "context-package.json" },
+    { "type": "guidance", "path": "guidance-specification.md" },
+    { "type": "role-analysis", "path": "product-manager/analysis.md" },
+    { "type": "role-analysis", "path": "system-architect/analysis.md" },
+    { "type": "role-analysis", "path": "ux-expert/analysis.md" }
+  ],
+  "extraction": {
+    "harvested": false,
+    "reason": "deferred"
+  },
+  "pruned": null
+}

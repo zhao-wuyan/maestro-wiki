@@ -1,0 +1,10 @@
+{
+  "terms": [
+    { "term": "Canvas", "definition": "Main interaction surface for generated scenario and command nodes.", "category": "core" },
+    { "term": "CommandRuleSet", "definition": "Local source-backed rule layer consumed by the React UI.", "category": "technical" },
+    { "term": "RecommendationGroup", "definition": "Ranked or equal-rank command candidates presented on a node.", "category": "technical" },
+    { "term": "SavedRoute", "definition": "Browser-persisted route map with recommendation evidence and version metadata.", "category": "core" },
+    { "term": "SharedRoute", "definition": "Route map published to a standalone URL with optional gallery visibility.", "category": "core" },
+    { "term": "EdgeNote", "definition": "User-authored explanation on a connection between command nodes.", "category": "core" }
+  ]
+}

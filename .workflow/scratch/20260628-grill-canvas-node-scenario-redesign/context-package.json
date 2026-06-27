@@ -1,0 +1,148 @@
+{
+  "$schema": "context-package/1.0",
+  "source": {
+    "type": "grill",
+    "artifact_id": "GRL-20260628-canvas-node-scenario-redesign",
+    "session_path": "scratch/20260628-grill-canvas-node-scenario-redesign",
+    "generated_at": "2026-06-28T00:00:00Z"
+  },
+  "requirements": [
+    {
+      "id": "R-001",
+      "title": "Rule-backed canvas interaction",
+      "description": "Replace the right-sidebar scenario page with a large stepwise canvas where scenario and command choices generate nodes and branches.",
+      "priority": "must",
+      "ref": "grill-report.md#Q1.6"
+    },
+    {
+      "id": "R-002",
+      "title": "Local recommendation rule table",
+      "description": "Generate or curate a project-local rule table from maestro-flow sources for UI consumption.",
+      "priority": "must",
+      "ref": "grill-report.md#Q2.1"
+    },
+    {
+      "id": "R-003",
+      "title": "Browser-persisted route history and favorites",
+      "description": "Persist recent generated route maps and uncapped favorite routes in browser storage.",
+      "priority": "must",
+      "ref": "grill-report.md#Q2.3"
+    }
+  ],
+  "constraints": [
+    {
+      "id": "C-001",
+      "area": "ui",
+      "constraint": "The next implementation MUST be treated as a product-model redesign, not a cosmetic layout-only refactor.",
+      "rationale": "The current right-sidebar layout conflicts with the requested canvas interaction.",
+      "status": "locked",
+      "ref": "grill-report.md#Q1.6"
+    },
+    {
+      "id": "C-002",
+      "area": "rules",
+      "constraint": "Canvas recommendation rules MUST start from maestro-next lifecycle, scoring, precondition, routing-table, and workflow-cluster concepts.",
+      "rationale": "maestro-next already defines the closest recommendation algorithm.",
+      "status": "locked",
+      "ref": "grill-report.md#Q1.4"
+    },
+    {
+      "id": "C-003",
+      "area": "rules",
+      "constraint": "Canvas start-node scenario taxonomy SHOULD reuse maestro-help catalog/workflow data.",
+      "rationale": "maestro-help contains command categories, task patterns, workflow topology, and Path A-F definitions.",
+      "status": "locked",
+      "ref": "grill-report.md#Q1.5"
+    },
+    {
+      "id": "C-004",
+      "area": "persistence",
+      "constraint": "Saved routes MUST store recommendation evidence and SHOULD NOT require exact canvas coordinates for MVP.",
+      "rationale": "Users need to understand why recommendations were made without binding saved data to a UI layout version.",
+      "status": "locked",
+      "ref": "grill-report.md#Q2.4"
+    },
+    {
+      "id": "C-005",
+      "area": "integration",
+      "constraint": "MVP recommendation rules MUST run against browser-side simulated state, not real .workflow/state.json.",
+      "rationale": "The static browser UI cannot read local project files without a service or import flow.",
+      "status": "locked",
+      "ref": "grill-report.md#Q4.1"
+    },
+    {
+      "id": "C-006",
+      "area": "provenance",
+      "constraint": "Recommendation rules MUST cite maestro-flow submodule paths as provenance.",
+      "rationale": "The submodule is the true and updateable source of Maestro command behavior.",
+      "status": "locked",
+      "ref": "grill-report.md#Q4.2"
+    },
+    {
+      "id": "C-007",
+      "area": "canvas-state",
+      "constraint": "Canvas state MUST support multiple independently growing branches with an active branch selection.",
+      "rationale": "The requested interaction includes stepwise expansion and multi-branch operation.",
+      "status": "locked",
+      "ref": "grill-report.md#Q5.2"
+    }
+  ],
+  "domain": {
+    "problem_statement": "The current Maestro Workflow Wiki page does not match the desired canvas-based command recommendation interaction. The next version should use a large node canvas driven by source-backed local rules from maestro-flow.",
+    "terminology": [
+      { "term": "Canvas", "definition": "Main interaction surface where scenario and command nodes are arranged visually.", "code_ref": "src/main.tsx:353", "status": "open" },
+      { "term": "Initial Node", "definition": "First central node that classifies the user's task scenario before command recommendation.", "code_ref": "new", "status": "open" },
+      { "term": "Scenario Type", "definition": "Maestro-derived category such as project initialization, new requirement, source exploration, or test expansion.", "code_ref": "src/main.tsx:66", "status": "open" },
+      { "term": "Route Map", "definition": "A generated canvas path composed of selected scenario and command nodes.", "code_ref": "src/main.tsx:71", "status": "open" },
+      { "term": "Favorite Route", "definition": "A user-protected saved route map that is never overwritten by recent-history cleanup.", "code_ref": "new", "status": "open" }
+    ],
+    "audience": "Users learning which Maestro command or workflow path to choose",
+    "industry": "Developer tooling"
+  },
+  "non_goals": [
+    {
+      "title": "Real project state parsing in MVP",
+      "rationale": "MVP uses simulated browser-side state; real state import/service is future work.",
+      "ref": "grill-report.md#Q4.1"
+    },
+    {
+      "title": "LLM-backed runtime recommendation",
+      "rationale": "Rules are local and explainable; LLM assists rule updates via protocol, not browser-time inference.",
+      "ref": "grill-report.md#Q2.2"
+    }
+  ],
+  "insights": [
+    {
+      "area": "current-ui",
+      "summary": "The current page hardcodes a large right-side detail panel that conflicts with the desired canvas model.",
+      "evidence": "src/styles.css:78; src/main.tsx:404",
+      "ref": "grill-report.md#Discovery-Summary"
+    },
+    {
+      "area": "upstream-rules",
+      "summary": "maestro-help supplies catalog and workflow taxonomy while maestro-next supplies scoring and next-step recommendation concepts.",
+      "evidence": "maestro-flow/.codex/skills/maestro-help/catalog.json; maestro-flow/.claude/commands/maestro-next.md",
+      "ref": "grill-report.md#Q1.4"
+    }
+  ],
+  "open_questions": [
+    {
+      "area": "canvas-layout",
+      "question": "Should parallel branches be displayed as a tree, swimlanes, or auto-layout graph?",
+      "options": ["tree", "swimlanes", "auto-layout"],
+      "ref": "grill-report.md#Open-Questions"
+    },
+    {
+      "area": "schema",
+      "question": "What exact TypeScript schema names and fields should be used for command facts, recommendation rules, and saved route payloads?",
+      "options": ["CommandFact", "RecommendationRule", "SavedRoute"],
+      "ref": "grill-report.md#Open-Questions"
+    }
+  ],
+  "references": [
+    { "type": "grill-report", "path": "grill-report.md" },
+    { "type": "terminology", "path": "terminology.md" },
+    { "type": "source", "path": "maestro-flow/.codex/skills/maestro-help/catalog.json" },
+    { "type": "source", "path": "maestro-flow/.claude/commands/maestro-next.md" }
+  ]
+}
