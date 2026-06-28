@@ -347,6 +347,45 @@
         "spec_type": "platform",
         "upstream": "BRN-20260628-canvas-maestro-command-recommender"
       }
+    },
+    {
+      "id": "ANL-002",
+      "type": "analyze",
+      "scope": "phase",
+      "status": "completed",
+      "milestone": "M2-canvas-command-recommender-mvp",
+      "phase": 2,
+      "path": "scratch/20260628-analyze-P2-local-canvas-recommender",
+      "context_package": "scratch/20260628-analyze-P2-local-canvas-recommender/context-package.json",
+      "harvested": false,
+      "created_at": "2026-06-28T00:00:00Z",
+      "completed_at": "2026-06-28T00:00:00Z",
+      "metadata": {
+        "recommendation": "GO_WITH_CONCERNS",
+        "confidence": 0.75,
+        "dimensions": 6,
+        "warnings": ["W001", "W002"]
+      }
+    },
+    {
+      "id": "PLN-002",
+      "type": "plan",
+      "scope": "phase",
+      "status": "completed",
+      "milestone": "M2-canvas-command-recommender-mvp",
+      "phase": 2,
+      "path": "scratch/20260628-plan-P2-local-canvas-recommender",
+      "depends_on": ["ANL-002"],
+      "harvested": false,
+      "created_at": "2026-06-28T00:00:00Z",
+      "completed_at": "2026-06-28T00:00:00Z",
+      "metadata": {
+        "task_count": 3,
+        "wave_count": 3,
+        "confidence": 0.72,
+        "checker_status": "WARN",
+        "concerns": ["workflow-planner agent failed; inline fallback plan used"]
+      }
     }
   ],
   "last_updated": "2026-06-28T00:00:00Z",

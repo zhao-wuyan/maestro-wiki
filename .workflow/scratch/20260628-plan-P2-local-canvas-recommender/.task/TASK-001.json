@@ -1,0 +1,37 @@
+{
+  "$schema": "task/1.0",
+  "id": "TASK-001",
+  "title": "Define source-backed recommendation rules",
+  "type": "feature",
+  "priority": "high",
+  "phase": 2,
+  "goal_ref": "G1",
+  "files": ["src/main.tsx", "src/main.test.tsx"],
+  "read_first": [
+    "src/main.tsx",
+    "src/main.test.tsx",
+    ".workflow/scratch/20260628-analyze-P2-local-canvas-recommender/context.md",
+    ".workflow/scratch/20260628-analyze-P2-local-canvas-recommender/conclusions.json",
+    "maestro-flow/.codex/skills/maestro-help/catalog.json",
+    "maestro-flow/.claude/commands/maestro-next.md"
+  ],
+  "action": "Add local typed recommendation data and helpers in src/main.tsx: types CommandFact, SourceRef, RecommendationRule, RecommendationGroup, SimulatedProjectState, and a function recommendCommands(state: SimulatedProjectState): RecommendationGroup[]. The rule data must include sourceRef.path values that start with maestro-flow/ and must support equal-rank recommendations without selecting a fake primary command.",
+  "implementation": [
+    "Refactor current ScenarioModel-only data by adding CommandRuleSet-oriented types above App.",
+    "Add authored command facts for at least maestro-brainstorm, maestro-blueprint, maestro-analyze, maestro-plan, maestro-execute, quality-review, quality-test, and maestro-ralph-execute.",
+    "Add sourceRef entries pointing to maestro-flow/.codex/skills/maestro-help/catalog.json and maestro-flow/.claude/commands/maestro-next.md where applicable.",
+    "Add validateRuleSet(ruleSet) that returns string[] for missing command references, missing sourceRefs, and sourceRef.path not starting with maestro-flow/.",
+    "Add tests in src/main.test.tsx that assert recommendation data contains sourceRefs and equal-rank groups can contain more than one command."
+  ],
+  "depends_on": [],
+  "convergence": {
+    "criteria": [
+      "src/main.tsx contains 'type CommandFact'",
+      "src/main.tsx contains 'function recommendCommands'",
+      "src/main.tsx contains 'function validateRuleSet'",
+      "src/main.tsx contains 'maestro-flow/.codex/skills/maestro-help/catalog.json'",
+      "src/main.test.tsx contains 'equal-rank' or 'equal rank'",
+      "npm test exits 0"
+    ]
+  }
+}

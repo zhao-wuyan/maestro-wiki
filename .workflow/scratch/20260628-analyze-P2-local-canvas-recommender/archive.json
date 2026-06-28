@@ -1,0 +1,19 @@
+{
+  "$schema": "session-archive/1.0",
+  "session_id": "ANL-002",
+  "session_type": "analyze",
+  "session_path": "scratch/20260628-analyze-P2-local-canvas-recommender",
+  "lifecycle": {
+    "status": "sealed",
+    "sealed_at": "2026-06-28T00:00:00Z",
+    "linked_milestone": "M2-canvas-command-recommender-mvp"
+  },
+  "content_refs": [
+    { "type": "context-package", "path": "context-package.json" },
+    { "type": "analysis", "path": "analysis.md" },
+    { "type": "conclusions", "path": "conclusions.json" },
+    { "type": "context", "path": "context.md" },
+    { "type": "discussion", "path": "discussion.md" }
+  ],
+  "warnings": ["W001", "W002"]
+}

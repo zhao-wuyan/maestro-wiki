@@ -1,7 +1,7 @@
 {
   "session_id": "ralph-20260627-104402",
   "source": "ralph",
-  "status": "running",
+  "status": "completed",
   "ralph_protocol_version": "1",
   "active_step_index": null,
   "intent": "继续当前项目。参考 Roadmap: .workflow/roadmap.md；当前 milestone: M1-stepwise-scenario-map-mvp；当前 phase: 1 Scenario Map MVP；Analyze artifact: ANL-001 at .workflow/scratch/20260627-analyze-P1-scenario-map-mvp/context-package.json。接管后先判断下一步应执行 /maestro-plan 1 还是需要补充分析；若可推进，生成 Phase 1 plan，并在计划确认后执行。约束：不复用 maestro-flow/docs-site，不修改 maestro-flow 子模块，不引入后端/LLM/登录/real status.json parsing。",

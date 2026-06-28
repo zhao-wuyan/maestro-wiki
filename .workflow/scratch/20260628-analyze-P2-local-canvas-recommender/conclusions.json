@@ -1,0 +1,96 @@
+{
+  "$schema": "conclusions/1.0",
+  "artifact_id": "ANL-002",
+  "scope": "phase",
+  "phase": 2,
+  "milestone": "M2-canvas-command-recommender-mvp",
+  "recommendation": "GO_WITH_CONCERNS",
+  "confidence": "medium",
+  "confidence_score": 75,
+  "warnings": ["W001", "W002"],
+  "key_conclusions": [
+    {
+      "id": "C1",
+      "summary": "Phase 2 should start by defining typed local recommendation rules and validation helpers.",
+      "evidence": ["src/main.tsx:66", "src/main.tsx:273", "blueprint context REQ-001/REQ-002"],
+      "confidence": "medium"
+    },
+    {
+      "id": "C2",
+      "summary": "Current single active-step state must be replaced with branch-aware route state before canvas UI can be reliable.",
+      "evidence": ["src/main.tsx:306", "blueprint context REQ-003"],
+      "confidence": "medium"
+    },
+    {
+      "id": "C3",
+      "summary": "Sharing/gallery and real state parsing must remain deferred beyond Phase 2.",
+      "evidence": [".workflow/roadmap.md", "blueprint context non_goals"],
+      "confidence": "high"
+    }
+  ],
+  "recommendations": [
+    {
+      "id": "R1",
+      "priority": "high",
+      "action": "Create CommandRuleSet and recommendation engine helpers with sourceRef validation.",
+      "rationale": "Rules are the foundation for explainable recommendations and route evidence.",
+      "review_status": "accepted"
+    },
+    {
+      "id": "R2",
+      "priority": "high",
+      "action": "Introduce branch-aware canvas route state and render a canvas-first interaction.",
+      "rationale": "Current state supports only one active authored path.",
+      "review_status": "accepted"
+    },
+    {
+      "id": "R3",
+      "priority": "medium",
+      "action": "Add local saved route persistence with recent cap, favorite protection, and evidence snapshots.",
+      "rationale": "This satisfies Phase 2 persistence without backend or sharing.",
+      "review_status": "accepted"
+    }
+  ],
+  "implementation_scope": [
+    {
+      "id": "SCOPE-001",
+      "objective": "Define source-backed local recommendation rules and validation helpers.",
+      "priority": "high",
+      "target_files": ["src/main.tsx"],
+      "acceptance_criteria": [
+        "Recommendation facts cite maestro-flow source paths.",
+        "Validation detects missing sourceRefs and invalid command references.",
+        "Equal-rank recommendations can be represented without fake primary selection."
+      ]
+    },
+    {
+      "id": "SCOPE-002",
+      "objective": "Replace single-path scenario rendering with branch-aware canvas-first UI.",
+      "priority": "high",
+      "target_files": ["src/main.tsx", "src/styles.css", "src/main.test.tsx", "scripts/e2e-smoke.mjs"],
+      "acceptance_criteria": [
+        "Users can start from a central scenario/state node.",
+        "Users can expand multiple route branches.",
+        "Recommendation cards show rationale and source evidence."
+      ]
+    },
+    {
+      "id": "SCOPE-003",
+      "objective": "Persist local route history with favorites and evidence snapshots.",
+      "priority": "medium",
+      "target_files": ["src/main.tsx", "src/main.test.tsx"],
+      "acceptance_criteria": [
+        "Latest 10 non-favorite routes are retained.",
+        "Favorite routes are not evicted by recent cap.",
+        "Saved routes retain recommendation evidence."
+      ]
+    }
+  ],
+  "decision_trail": [
+    {
+      "decision": "Use staged migration instead of direct UI rewrite.",
+      "source": "exploration-codebase.json anchors",
+      "confidence": "medium"
+    }
+  ]
+}

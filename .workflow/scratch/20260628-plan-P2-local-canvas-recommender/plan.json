@@ -1,0 +1,42 @@
+{
+  "$schema": "plan/1.0",
+  "id": "PLN-002",
+  "title": "Phase 2 Local Canvas Recommender Plan",
+  "scope": "phase",
+  "milestone": "M2-canvas-command-recommender-mvp",
+  "phase": 2,
+  "source_artifact": "ANL-002",
+  "source_context": "scratch/20260628-analyze-P2-local-canvas-recommender/context-package.json",
+  "status": "planned_with_concerns",
+  "summary": "Implement Phase 2 as three vertical tasks: local rule foundation, canvas-first branch interaction, and route persistence.",
+  "approach": "Sequence rule/data contracts before UI replacement, then add persistence and verification. Keep maestro-flow read-only and defer sharing/gallery.",
+  "task_ids": ["TASK-001", "TASK-002", "TASK-003"],
+  "task_count": 3,
+  "complexity": "medium",
+  "tdd_mode": false,
+  "waves": [
+    { "id": "wave-1", "title": "Rule Foundation", "tasks": ["TASK-001"], "depends_on": [] },
+    { "id": "wave-2", "title": "Canvas Interaction", "tasks": ["TASK-002"], "depends_on": ["wave-1"] },
+    { "id": "wave-3", "title": "Route Persistence", "tasks": ["TASK-003"], "depends_on": ["wave-2"] }
+  ],
+  "confidence": {
+    "overall": 72,
+    "dimensions": {
+      "requirements_coverage": 86,
+      "task_quality": 78,
+      "dependency_correctness": 82,
+      "estimation_accuracy": 65,
+      "collision_safety": 76
+    },
+    "weakest_dimension": "estimation_accuracy",
+    "pressure_pass": "TASK-002 checked for UI-observable vertical slice coverage."
+  },
+  "checks": {
+    "checker_status": "WARN",
+    "collision_status": "clear",
+    "concerns": [
+      "workflow-planner agent failed with FOREIGN KEY constraint failed; plan was produced inline under tool constraint.",
+      "Analyzer evidence has W001/W002 due cli-explore-agent failure and delegate timeout."
+    ]
+  }
+}

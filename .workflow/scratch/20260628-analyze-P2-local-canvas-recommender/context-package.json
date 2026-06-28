@@ -1,0 +1,70 @@
+{
+  "$schema": "context-package/1.0",
+  "source": {
+    "type": "analyze",
+    "artifact_id": "ANL-002",
+    "session_path": "scratch/20260628-analyze-P2-local-canvas-recommender",
+    "generated_at": "2026-06-28T00:00:00Z"
+  },
+  "requirements": [
+    {
+      "id": "SCOPE-001",
+      "title": "Define source-backed local recommendation rules and validation helpers.",
+      "acceptance": [
+        "Recommendation facts cite maestro-flow source paths.",
+        "Validation detects missing sourceRefs and invalid command references.",
+        "Equal-rank recommendations can be represented without fake primary selection."
+      ],
+      "ref": "conclusions.json"
+    },
+    {
+      "id": "SCOPE-002",
+      "title": "Replace single-path scenario rendering with branch-aware canvas-first UI.",
+      "acceptance": [
+        "Users can start from a central scenario/state node.",
+        "Users can expand multiple route branches.",
+        "Recommendation cards show rationale and source evidence."
+      ],
+      "ref": "conclusions.json"
+    },
+    {
+      "id": "SCOPE-003",
+      "title": "Persist local route history with favorites and evidence snapshots.",
+      "acceptance": [
+        "Latest 10 non-favorite routes are retained.",
+        "Favorite routes are not evicted by recent cap.",
+        "Saved routes retain recommendation evidence."
+      ],
+      "ref": "conclusions.json"
+    }
+  ],
+  "constraints": [
+    { "status": "locked", "area": "rules", "constraint": "Introduce local CommandRuleSet before UI depends on recommendation output.", "ref": "context.md#locked" },
+    { "status": "locked", "area": "provenance", "constraint": "Recommendation facts and rules must cite maestro-flow/ source paths.", "ref": "context.md#locked" },
+    { "status": "locked", "area": "canvas", "constraint": "Canvas state must be branch-aware.", "ref": "context.md#locked" },
+    { "status": "open", "area": "layout", "constraint": "Use authored/simple coordinates or auto-layout at implementer discretion.", "ref": "context.md#free" }
+  ],
+  "domain": {
+    "problem_statement": "Implement Phase 2 Local Canvas Recommender for Maestro Workflow Wiki.",
+    "terminology": ["CommandRuleSet", "RecommendationGroup", "CanvasRoute", "SavedRoute", "EdgeNote"]
+  },
+  "non_goals": [
+    { "title": "Route sharing and public gallery", "rationale": "Deferred to Phase 3.", "ref": "context.md#deferred" },
+    { "title": "Real .workflow/state.json parsing", "rationale": "Static MVP uses simulated browser state.", "ref": "context.md#deferred" },
+    { "title": "Browser-runtime LLM calls", "rationale": "Recommendations must be local and explainable.", "ref": "context.md#locked" }
+  ],
+  "insights": [
+    { "role": "analyzer", "area": "implementation", "summary": "Plan should sequence rule/data contracts, branch-aware state, canvas UI, persistence, then tests." },
+    { "role": "analyzer", "area": "risk", "summary": "Independent agent/delegate evidence was incomplete; keep plan granular and validation-heavy." }
+  ],
+  "open_questions": [
+    { "area": "layout", "question": "Use authored coordinates, tree layout, swimlanes, or auto-layout for Phase 2 MVP?" }
+  ],
+  "references": [
+    { "type": "discussion", "path": "discussion.md" },
+    { "type": "analysis", "path": "analysis.md" },
+    { "type": "conclusions", "path": "conclusions.json" },
+    { "type": "context", "path": "context.md" },
+    { "type": "exploration", "path": "exploration-codebase.json" }
+  ]
+}

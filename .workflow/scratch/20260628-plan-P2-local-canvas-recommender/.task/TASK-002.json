@@ -1,0 +1,38 @@
+{
+  "$schema": "task/1.0",
+  "id": "TASK-002",
+  "title": "Build branch-aware canvas-first interaction",
+  "type": "feature",
+  "priority": "high",
+  "phase": 2,
+  "goal_ref": "G2",
+  "files": ["src/main.tsx", "src/styles.css", "src/main.test.tsx", "scripts/e2e-smoke.mjs"],
+  "read_first": [
+    "src/main.tsx",
+    "src/styles.css",
+    "src/main.test.tsx",
+    "scripts/e2e-smoke.mjs",
+    ".workflow/roadmap.md",
+    ".workflow/scratch/20260628-analyze-P2-local-canvas-recommender/context.md"
+  ],
+  "action": "Replace the fixed single-path scenario map and permanent 390px right detail panel with a canvas-first recommender surface. Add branch-aware state types CanvasNode, CanvasEdge, CanvasBranch, CanvasRouteState with activeBranchId. Render a central scenario/state node, recommendation command nodes, branch edges, evidence cards, and edge note controls. Remove the workspace grid dependency on grid-template-columns: minmax(0, 1fr) 390px.",
+  "implementation": [
+    "Create initial canvas state from simulated project state and recommendCommands output.",
+    "Add a UI control to expand a recommendation into a new branch and set activeBranchId.",
+    "Show recommendation rationale, confidence label, equal-rank status, and source evidence in contextual cards inside or below the canvas.",
+    "Add an edge note input or button-driven note editor so users can record why a route choice was made.",
+    "Refactor CSS so .workspace is canvas-first and no permanent large detail sidebar remains.",
+    "Update tests and e2e smoke to assert the central node, branch expansion, recommendation evidence, and edge notes are visible/useful."
+  ],
+  "depends_on": ["TASK-001"],
+  "convergence": {
+    "criteria": [
+      "src/main.tsx contains 'type CanvasBranch'",
+      "src/main.tsx contains 'activeBranchId'",
+      "src/main.tsx contains 'Edge note' or 'edge note'",
+      "src/styles.css does not contain 'grid-template-columns: minmax(0, 1fr) 390px'",
+      "src/main.test.tsx contains '[UI-observable]'",
+      "[UI-observable] npm run test:e2e exits 0 and verifies branch expansion plus recommendation evidence"
+    ]
+  }
+}

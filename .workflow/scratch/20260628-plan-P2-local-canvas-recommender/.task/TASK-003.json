@@ -1,0 +1,35 @@
+{
+  "$schema": "task/1.0",
+  "id": "TASK-003",
+  "title": "Persist local route history with evidence",
+  "type": "feature",
+  "priority": "medium",
+  "phase": 2,
+  "goal_ref": "G3",
+  "files": ["src/main.tsx", "src/main.test.tsx"],
+  "read_first": [
+    "src/main.tsx",
+    "src/main.test.tsx",
+    ".workflow/scratch/20260628-analyze-P2-local-canvas-recommender/context.md"
+  ],
+  "action": "Add browser localStorage persistence for saved routes. Define SavedRoute with id, title, createdAt, favorite, nodes, edges, evidence, ruleVersion, and schemaVersion. Persist recent non-favorite routes with latest 10 cap while preserving all favorites. Saved evidence must include recommendation rationale and sourceRefs.",
+  "implementation": [
+    "Add storage helpers loadSavedRoutes, saveRoute, toggleFavorite, and pruneRecentRoutes in src/main.tsx or a colocated helper if extraction is clearer.",
+    "Use a single localStorage key such as maestro-wiki.saved-routes.v1.",
+    "When saving the current route, include recommendation evidence with sourceRefs and ruleVersion.",
+    "Render saved recent/favorite routes in a compact local panel that does not reintroduce the large permanent right sidebar.",
+    "Add unit tests for latest 10 non-favorite cap, favorites preserved, and evidence retained."
+  ],
+  "depends_on": ["TASK-002"],
+  "convergence": {
+    "criteria": [
+      "src/main.tsx contains 'type SavedRoute'",
+      "src/main.tsx contains 'maestro-wiki.saved-routes.v1'",
+      "src/main.tsx contains 'schemaVersion'",
+      "src/main.tsx contains 'ruleVersion'",
+      "src/main.test.tsx contains 'latest 10'",
+      "src/main.test.tsx contains 'favorites'",
+      "npm test exits 0"
+    ]
+  }
+}

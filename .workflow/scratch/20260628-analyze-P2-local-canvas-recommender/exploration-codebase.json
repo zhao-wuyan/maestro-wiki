@@ -1,0 +1,62 @@
+{
+  "$schema": "exploration-codebase/1.0",
+  "phase": 2,
+  "topic": "Local Canvas Recommender",
+  "method": "manual-read-grep-after-cli-agent-failure",
+  "warnings": [
+    "W001: cli-explore-agent retry failed with FOREIGN KEY constraint failed; findings below are preparatory code anchors and are marked LOW CONFIDENCE for analyze gate purposes."
+  ],
+  "relevant_files": [
+    { "path": "src/main.tsx", "role": "Current single-scenario React implementation and validation helpers." },
+    { "path": "src/styles.css", "role": "Current two-column scenario map and detail panel styling." },
+    { "path": "src/main.test.tsx", "role": "Current Vitest interaction coverage for Phase 1 scenario map." },
+    { "path": "scripts/e2e-smoke.mjs", "role": "Current Playwright smoke path for rendered UI." },
+    { "path": "package.json", "role": "Validation scripts and frontend stack." }
+  ],
+  "module_boundaries": [
+    "Current app is concentrated in src/main.tsx; Phase 2 should extract rule/data/state helpers before replacing UI.",
+    "src/styles.css owns layout; grid-template-columns still encodes a permanent right sidebar.",
+    "Tests are app-level and should be extended around recommendation behavior, route persistence, and canvas interaction."
+  ],
+  "call_chains": [
+    {
+      "name": "Scenario choice progression",
+      "flow": ["activeStepId state", "activeStep useMemo", "Next Choices button", "setActiveStepId/setSelectedNodeId", "SVG path/detail panel update"]
+    },
+    {
+      "name": "Citation validation",
+      "flow": ["unclearRequirementsScenario.citations", "validateCitationCoverage", "scenarioValidation", "Local scenario validation UI"]
+    },
+    {
+      "name": "Current rendered evidence display",
+      "flow": ["activeStep.citations", "activeCitationIds", "source-list badges", "title attribute points to maestro-flow paths"]
+    }
+  ],
+  "data_flows": [
+    "Authored ScenarioModel data flows directly into App rendering; no separate recommendation engine exists yet.",
+    "State is single active path only; no branch collection or saved route state exists yet.",
+    "No localStorage reads/writes were found in src/."
+  ],
+  "code_anchors": [
+    { "file": "src/main.tsx", "line_start": 66, "line_end": 76, "summary": "ScenarioModel is the current authored data boundary; it is not a CommandRuleSet or branch-aware graph model." },
+    { "file": "src/main.tsx", "line_start": 78, "line_end": 162, "summary": "Unclear Requirements fixture hard-codes one linear scenario path and authored node coordinates." },
+    { "file": "src/main.tsx", "line_start": 273, "line_end": 304, "summary": "Validation helpers already check references and citation coverage; these can evolve into rule/sourceRef validation." },
+    { "file": "src/main.tsx", "line_start": 306, "line_end": 324, "summary": "App state tracks one active step and one selected node; Phase 2 needs branch-aware route state." },
+    { "file": "src/main.tsx", "line_start": 404, "line_end": 470, "summary": "Permanent detail panel hosts command, choices, alternatives, and source status; Phase 2 should replace this with canvas-first contextual surfaces." },
+    { "file": "src/styles.css", "line_start": 78, "line_end": 86, "summary": "Workspace layout uses a fixed 390px side panel column, conflicting with canvas-first direction." },
+    { "file": "src/main.test.tsx", "line_start": 6, "line_end": 48, "summary": "Current tests cover Phase 1 scenario choices and keyboard activation, but not rules, branches, localStorage, or evidence persistence." },
+    { "file": "package.json", "line_start": 6, "line_end": 12, "summary": "Validation commands available: npm test, npm run test:e2e, npm run build." }
+  ],
+  "gaps": [
+    "No CommandRuleSet schema or rule validation module exists.",
+    "No recommendation engine exists; command choice is authored per ScenarioStep.",
+    "No branch-aware canvas route state exists.",
+    "No route persistence/localStorage implementation exists.",
+    "UI still depends on a permanent right detail panel."
+  ],
+  "risks": [
+    "Doing UI first may bake in the wrong state shape; define rule and canvas state contracts first.",
+    "Replacing the whole single file at once risks test regression; plan should sequence data/rules, state, UI, persistence, tests.",
+    "SourceRef claims can drift unless validated against maestro-flow paths."
+  ]
+}
