@@ -21,26 +21,88 @@ async function waitForServer() {
   throw new Error('Vite preview did not start in time');
 }
 
+function assert(condition, message) {
+  if (!condition) throw new Error(`[UI-observable] e2e assertion failed: ${message}`);
+}
+
 try {
   await waitForServer();
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(baseUrl, { waitUntil: 'networkidle' });
 
-  await page.getByText('maestro-brainstorm').first().waitFor();
-  await page.getByRole('button', { name: /方向已稳定/ }).click();
-  await page.getByText('maestro-blueprint').first().waitFor();
-  await page.getByRole('button', { name: /规格可执行/ }).click();
-  await page.getByText('maestro-analyze 1').first().waitFor();
-  await page.getByRole('button', { name: /分析结论为 GO/ }).click();
-  await page.getByText('maestro-plan 1').first().waitFor();
-  await page.getByRole('button', { name: /计划完成/ }).click();
+  // [UI-observable] empty initial state shows scenario selector + guidance copy
+  await page.getByTestId('scenario-label').waitFor();
+  await page.getByTestId('guidance-overlay').waitFor();
+  const guidanceText = await page.getByTestId('guidance-overlay').textContent();
+  assert(guidanceText && guidanceText.includes('选择场景'), 'guidance copy visible in empty initial state');
 
-  await page.getByText('Stop', { exact: true }).waitFor();
-  await page.getByText('Quality Pipeline', { exact: true }).waitFor();
-  await page.getByText('Knowledge Capture', { exact: true }).waitFor();
-  await page.getByRole('checkbox', { name: /当前推荐 command/ }).check();
-  await page.getByText('1/3').waitFor();
+  const intentNode = page.getByRole('button', { name: '查看 模糊目标' });
+  await intentNode.waitFor();
+  const brainstormAbsent = await page.getByRole('button', { name: '查看 探索方向' }).count();
+  assert(brainstormAbsent === 0, 'brainstorm node hidden before scenario selection');
+
+  // [UI-observable] canvas fills viewport horizontally
+  const canvasShell = page.locator('.canvas-shell');
+  await canvasShell.waitFor();
+  const shellBox = await canvasShell.boundingBox();
+  const viewportSize = page.viewportSize();
+  assert(shellBox, 'canvas-shell bounding box exists');
+  assert(Math.abs(shellBox.width - viewportSize.width) < 4, `canvas-shell fills viewport width (got ${shellBox.width}, viewport ${viewportSize.width})`);
+  assert(shellBox.height > viewportSize.height * 0.6, `canvas-shell fills most of viewport height (got ${shellBox.height}, viewport ${viewportSize.height})`);
+
+  // [UI-observable] pan/zoom works — wheel zoom changes transform scale
+  const transformGroup = page.getByTestId('canvas-transform-group');
+  await transformGroup.waitFor();
+  const initialScale = await transformGroup.getAttribute('data-transform-scale');
+  const svg = page.locator('.canvas-shell svg');
+  await svg.hover();
+  await page.mouse.wheel(0, -300);
+  await wait(80);
+  const zoomedScale = await transformGroup.getAttribute('data-transform-scale');
+  assert(Number(zoomedScale) > Number(initialScale), `wheel zoom increases scale (initial=${initialScale}, after=${zoomedScale})`);
+
+  // pan via pointer drag
+  const panInitialX = await transformGroup.getAttribute('data-transform-x');
+  await page.mouse.move(400, 400);
+  await page.mouse.down();
+  await page.mouse.move(560, 460, { steps: 8 });
+  await page.mouse.up();
+  await wait(80);
+  const panFinalX = await transformGroup.getAttribute('data-transform-x');
+  assert(Number(panFinalX) > Number(panInitialX), `pointer drag pans transform-x (initial=${panInitialX}, after=${panFinalX})`);
+
+  // [UI-observable] fullscreen toggle hides hero
+  const heroHeading = page.getByRole('heading', { name: /把复杂工作流变成可点击/ });
+  await heroHeading.waitFor();
+  const heroVisibleBefore = await heroHeading.isVisible();
+  assert(heroVisibleBefore, 'hero visible before fullscreen');
+
+  await page.getByRole('button', { name: '进入全屏' }).click();
+  await wait(120);
+  const heroDisplay = await page.locator('.app-shell.is-fullscreen .hero').evaluate((el) => window.getComputedStyle(el).display);
+  assert(heroDisplay === 'none', `hero hidden in fullscreen (display=${heroDisplay})`);
+
+  // exit fullscreen
+  await page.getByRole('button', { name: '退出全屏' }).click();
+  await wait(120);
+  const heroVisibleAfter = await heroHeading.isVisible();
+  assert(heroVisibleAfter, 'hero visible after exiting fullscreen');
+
+  // [UI-observable] selecting scenario hides guidance copy and reveals next node
+  await page.getByRole('button', { name: '查看 模糊目标' }).click();
+  await wait(120);
+  const guidanceGone = await page.getByTestId('guidance-overlay').count();
+  assert(guidanceGone === 0, 'guidance copy disappears after first scenario selection');
+  await page.getByRole('button', { name: '查看 探索方向' }).waitFor();
+
+  // [UI-observable] on-canvas choice button advances active step
+  await page.getByRole('button', { name: '查看 探索方向' }).click();
+  await wait(80);
+  await page.getByRole('button', { name: '方向已稳定，生成规格' }).click();
+  await wait(80);
+  await page.getByRole('button', { name: '查看 规格成型' }).waitFor();
 
   await browser.close();
 } finally {

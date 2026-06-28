@@ -36,5 +36,11 @@
       "src/main.test.tsx contains 'equal-rank' or 'equal rank'",
       "npm test exits 0"
     ]
+  },
+  "status": "completed",
+  "meta": {
+    "completed_at": "2026-06-28T18:50:00Z",
+    "commit": "b1c1117fcdd1a4bd7be4a04291fb70d173e0e486",
+    "summary_path": ".workflow/scratch/20260628-plan-P2-local-canvas-recommender/.summaries/TASK-001-summary.md"
   }
 }

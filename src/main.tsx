@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
@@ -602,34 +602,239 @@ export function validateRuleSet(ruleSet: RecommendationRule[]): string[] {
   return errors;
 }
 
-export function App() {
-  const [selectedScenarioId] = useState(unclearRequirementsScenario.id);
-  const [activeStepId, setActiveStepId] = useState(unclearRequirementsScenario.steps[0].id);
-  const [selectedNodeId, setSelectedNodeId] = useState(unclearRequirementsScenario.steps[0].nodeId);
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+// ============================================================
+// Phase 2 / TASK-002 — Fullscreen pan/zoom canvas shell
+//
+// Constants and helpers below power the new rendering layer per
+// grill Q1.1/Q1.2/Q1.3/Q3.1/Q3.2/Q3.3/Q4.1/Q4.3/Q5.1. The data
+// model (ScenarioModel + RecommendationRule) is preserved; only the
+// rendering layer is rewritten.
+// ============================================================
 
-  const scenario = selectedScenarioId === unclearRequirementsScenario.id ? unclearRequirementsScenario : unclearRequirementsScenario;
+const PAN_THRESHOLD = 4;
+const VIEWPORT_BUFFER = 120;
+const NODE_WIDTH = 190;
+const NODE_HEIGHT = 88;
+const MIN_SCALE = 0.25;
+const MAX_SCALE = 4;
+const DEFAULT_VIEWPORT = { width: 1024, height: 600 };
+
+type CanvasTransform = { x: number; y: number; scale: number };
+type ViewportSize = { width: number; height: number };
+
+export function isVisibleNode(
+  node: Pick<ScenarioNode, 'x' | 'y'>,
+  transform: CanvasTransform,
+  viewportWidth: number,
+  viewportHeight: number,
+): boolean {
+  const mappedX = node.x * transform.scale + transform.x;
+  const mappedY = node.y * transform.scale + transform.y;
+  const mappedW = NODE_WIDTH * transform.scale;
+  const mappedH = NODE_HEIGHT * transform.scale;
+  return (
+    mappedX + mappedW >= -VIEWPORT_BUFFER &&
+    mappedX <= viewportWidth + VIEWPORT_BUFFER &&
+    mappedY + mappedH >= -VIEWPORT_BUFFER &&
+    mappedY <= viewportHeight + VIEWPORT_BUFFER
+  );
+}
+
+function clampScale(scale: number): number {
+  return Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale));
+}
+
+export function App() {
+  const scenario = unclearRequirementsScenario;
+  const [activeStepId, setActiveStepId] = useState(scenario.steps[0].id);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const [canvasTransform, setCanvasTransform] = useState<CanvasTransform>({ x: 0, y: 0, scale: 1 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [hasSelectedScenario, setHasSelectedScenario] = useState(false);
+  const [viewportSize, setViewportSize] = useState<ViewportSize>(DEFAULT_VIEWPORT);
+  const [isPanning, setIsPanning] = useState(false);
+
+  const canvasShellRef = useRef<HTMLDivElement | null>(null);
+  const pointerStateRef = useRef<{
+    startX: number;
+    startY: number;
+    lastX: number;
+    lastY: number;
+    isPanning: boolean;
+  } | null>(null);
+  const lastGestureWasPanRef = useRef(false);
+
   const activeStep = useMemo(
     () => scenario.steps.find((step) => step.id === activeStepId) ?? scenario.steps[0],
     [activeStepId, scenario.steps],
   );
   const selectedNode = useMemo(
-    () => scenario.nodes.find((node) => node.id === selectedNodeId) ?? scenario.nodes[0],
+    () => scenario.nodes.find((node) => node.id === selectedNodeId) ?? null,
     [selectedNodeId, scenario.nodes],
   );
-  const activeNodeIds = useMemo(() => new Set(scenario.steps.slice(0, scenario.steps.findIndex((step) => step.id === activeStep.id) + 1).map((step) => step.nodeId)), [activeStep.id, scenario.steps]);
-  const activeCitationIds = new Set(activeStep.citations);
-  const completedChecks = scenario.checklist.filter((item) => checkedItems[item.id]).length;
-  const validationMessages = [...scenarioValidation.references, ...scenarioValidation.citations];
+  const activeNodeIds = useMemo(
+    () =>
+      new Set(
+        scenario.steps
+          .slice(0, scenario.steps.findIndex((step) => step.id === activeStep.id) + 1)
+          .map((step) => step.nodeId),
+      ),
+    [activeStep.id, scenario.steps],
+  );
+
+  const revealedNodeIds = useMemo(() => {
+    const intentNodeId = scenario.nodes[0].id;
+    if (!hasSelectedScenario) {
+      return new Set<string>([intentNodeId]);
+    }
+    return new Set<string>([intentNodeId, ...Array.from(activeNodeIds)]);
+  }, [hasSelectedScenario, activeNodeIds, scenario.nodes]);
+
+  const visibleNodes = useMemo(
+    () =>
+      scenario.nodes.filter(
+        (node) =>
+          revealedNodeIds.has(node.id) &&
+          isVisibleNode(node, canvasTransform, viewportSize.width, viewportSize.height),
+      ),
+    [scenario.nodes, revealedNodeIds, canvasTransform, viewportSize],
+  );
+
+  const visibleEdges = useMemo(
+    () =>
+      scenario.edges.filter(({ from, to }) => revealedNodeIds.has(from) && revealedNodeIds.has(to)),
+    [scenario.edges, revealedNodeIds],
+  );
+
+  useEffect(() => {
+    const shell = canvasShellRef.current;
+    if (!shell) return;
+    const measure = () => {
+      const rect = shell.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setViewportSize({ width: rect.width, height: rect.height });
+      }
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(shell);
+    return () => observer.disconnect();
+  }, []);
 
   const activateNode = (nodeId: string) => {
     setSelectedNodeId(nodeId);
+    if (!hasSelectedScenario) {
+      setHasSelectedScenario(true);
+    }
     const nodeStep = scenario.steps.find((step) => step.nodeId === nodeId);
     if (nodeStep) setActiveStepId(nodeStep.id);
   };
 
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    pointerStateRef.current = {
+      startX: event.clientX,
+      startY: event.clientY,
+      lastX: event.clientX,
+      lastY: event.clientY,
+      isPanning: false,
+    };
+    lastGestureWasPanRef.current = false;
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const state = pointerStateRef.current;
+    if (!state) return;
+    const totalDx = event.clientX - state.startX;
+    const totalDy = event.clientY - state.startY;
+    if (!state.isPanning && Math.hypot(totalDx, totalDy) > PAN_THRESHOLD) {
+      state.isPanning = true;
+      setIsPanning(true);
+    }
+    if (state.isPanning) {
+      const dx = event.clientX - state.lastX;
+      const dy = event.clientY - state.lastY;
+      state.lastX = event.clientX;
+      state.lastY = event.clientY;
+      setCanvasTransform((current) => ({ ...current, x: current.x + dx, y: current.y + dy }));
+    }
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const state = pointerStateRef.current;
+    pointerStateRef.current = null;
+    if (state) {
+      lastGestureWasPanRef.current = state.isPanning;
+    }
+    setIsPanning(false);
+    void event;
+  };
+
+  const handleWheel = (event: React.WheelEvent<SVGSVGElement>) => {
+    event.preventDefault();
+    const shell = canvasShellRef.current;
+    const rect = shell?.getBoundingClientRect();
+    const cursorX = rect ? event.clientX - rect.left : viewportSize.width / 2;
+    const cursorY = rect ? event.clientY - rect.top : viewportSize.height / 2;
+    const delta = -event.deltaY * 0.0015;
+    setCanvasTransform((current) => {
+      const newScale = clampScale(current.scale * (1 + delta));
+      const scaleRatio = newScale / current.scale;
+      const newX = cursorX - (cursorX - current.x) * scaleRatio;
+      const newY = cursorY - (cursorY - current.y) * scaleRatio;
+      return { x: newX, y: newY, scale: newScale };
+    });
+  };
+
+  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    // popover wiring deferred to TASK-003
+  };
+
+  const handleNodeClick = (nodeId: string) => {
+    if (lastGestureWasPanRef.current) {
+      lastGestureWasPanRef.current = false;
+      return;
+    }
+    activateNode(nodeId);
+  };
+
+  const handleNodeKeyDown = (event: React.KeyboardEvent<SVGRectElement>, nodeId: string) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      activateNode(nodeId);
+    }
+  };
+
+  const handleChoiceClick = (targetStepId: string | undefined, routeId: string | undefined) => {
+    if (lastGestureWasPanRef.current) {
+      lastGestureWasPanRef.current = false;
+      return;
+    }
+    if (targetStepId) {
+      const target = scenario.steps.find((step) => step.id === targetStepId);
+      if (target) {
+        setActiveStepId(target.id);
+        setSelectedNodeId(target.nodeId);
+      }
+    } else if (routeId) {
+      const route = scenario.continuationRoutes.find((item) => item.id === routeId);
+      void route;
+    }
+  };
+
+  const activeNode = useMemo(
+    () => scenario.nodes.find((node) => node.id === activeStep.nodeId) ?? null,
+    [scenario.nodes, activeStep.nodeId],
+  );
+
+  const guidanceVisible = !hasSelectedScenario;
+  const scenarioLabelText = hasSelectedScenario
+    ? scenario.title
+    : '未选择场景';
+
   return (
-    <main className="app-shell">
+    <main className={`app-shell ${isFullscreen ? 'is-fullscreen' : ''}`}>
       <section className="hero">
         <p className="eyebrow">Maestro Workflow Wiki</p>
         <h1>把复杂工作流变成可点击、可理解的地图</h1>
@@ -638,24 +843,58 @@ export function App() {
         </p>
       </section>
 
-      <section className="workspace" aria-label="Maestro 场景流程图">
-        <div className="diagram-card">
-          <div className="diagram-header">
-            <div>
-              <p className="eyebrow">Scenario Path</p>
-              <h2>{scenario.title}</h2>
-              <p className="scenario-summary">{scenario.summary}</p>
-            </div>
-            <span className="status-pill">{scenario.id}</span>
-          </div>
+      <div
+        ref={canvasShellRef}
+        className={`canvas-shell ${isFullscreen ? 'is-fullscreen' : ''} ${isPanning ? 'is-panning' : ''}`}
+        role="application"
+        aria-label="Maestro 场景流程画布"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onContextMenu={handleContextMenu}
+      >
+        <div className="scenario-label" data-testid="scenario-label">
+          <span className="scenario-label-id">{scenario.id}</span>
+          <span>{scenarioLabelText}</span>
+        </div>
 
-          <svg viewBox="0 0 1080 520" role="img" aria-label="Unclear Requirements 场景流程">
-            <defs>
-              <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
-                <path d="M0,0 L0,6 L9,3 z" fill="currentColor" />
-              </marker>
-            </defs>
-            {scenario.edges.map(({ from, to }) => {
+        <button
+          type="button"
+          className="fullscreen-toggle"
+          onClick={() => setIsFullscreen((current) => !current)}
+          aria-label={isFullscreen ? '退出全屏' : '进入全屏'}
+          aria-pressed={isFullscreen}
+        >
+          {isFullscreen ? '退出全屏' : '全屏'}
+        </button>
+
+        {guidanceVisible && (
+          <div className="guidance-overlay" data-testid="guidance-overlay">
+            选择场景开始 — 点击中央节点展开后续步骤
+          </div>
+        )}
+
+        <svg
+          width="100%"
+          height="100%"
+          role="img"
+          aria-label="Unclear Requirements 场景流程"
+          onWheel={handleWheel}
+        >
+          <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="currentColor" />
+            </marker>
+          </defs>
+          <g
+            transform={`translate(${canvasTransform.x} ${canvasTransform.y}) scale(${canvasTransform.scale})`}
+            data-testid="canvas-transform-group"
+            data-transform-x={canvasTransform.x}
+            data-transform-y={canvasTransform.y}
+            data-transform-scale={canvasTransform.scale}
+          >
+            {visibleEdges.map(({ from, to }) => {
               const source = scenario.nodes.find((node) => node.id === from)!;
               const target = scenario.nodes.find((node) => node.id === to)!;
               const isActive = activeNodeIds.has(from) && activeNodeIds.has(to);
@@ -663,14 +902,14 @@ export function App() {
                 <line
                   key={`${from}-${to}`}
                   className={`edge ${isActive ? 'edge-active' : ''}`}
-                  x1={source.x + 150}
-                  y1={source.y + 44}
-                  x2={target.x + 10}
-                  y2={target.y + 44}
+                  x1={source.x + NODE_WIDTH}
+                  y1={source.y + NODE_HEIGHT / 2}
+                  x2={target.x}
+                  y2={target.y + NODE_HEIGHT / 2}
                 />
               );
             })}
-            {scenario.nodes.map((node) => {
+            {visibleNodes.map((node) => {
               const isSelected = node.id === selectedNodeId;
               const isActive = node.id === activeStep.nodeId;
               const isOnPath = activeNodeIds.has(node.id);
@@ -678,132 +917,57 @@ export function App() {
                 <g key={node.id} transform={`translate(${node.x} ${node.y})`}>
                   <rect
                     className={`node node-${node.kind} ${isSelected ? 'selected' : ''} ${isActive ? 'node-active' : ''} ${isOnPath ? 'node-on-path' : ''}`}
-                    width="190"
-                    height="88"
+                    width={NODE_WIDTH}
+                    height={NODE_HEIGHT}
                     rx="20"
                     tabIndex={0}
                     role="button"
                     aria-label={`查看 ${node.title}`}
-                    onClick={() => activateNode(node.id)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        activateNode(node.id);
-                      }
-                    }}
+                    onClick={() => handleNodeClick(node.id)}
+                    onKeyDown={(event) => handleNodeKeyDown(event, node.id)}
                   />
                   <text className="node-title" x="24" y="35">{node.title}</text>
                   <text className="node-subtitle" x="24" y="62">{node.subtitle}</text>
                 </g>
               );
             })}
-          </svg>
-        </div>
-
-        <aside className="detail-panel" aria-live="polite">
-          <p className="eyebrow">Selected Node</p>
-          <h2>{selectedNode.title}</h2>
-          <p>{selectedNode.purpose}</p>
-
-          <section className="command-card" aria-label="当前推荐命令">
-            <p className="eyebrow">Recommended Command</p>
-            <code>{activeStep.command}</code>
-            <p>{activeStep.condition}</p>
-          </section>
-
-          <dl>
-            <dt>Purpose</dt>
-            <dd>{activeStep.purpose}</dd>
-            <dt>Input</dt>
-            <dd>{activeStep.input}</dd>
-            <dt>Output</dt>
-            <dd>{activeStep.output}</dd>
-            <dt>Next Action</dt>
-            <dd>{activeStep.nextAction}</dd>
-          </dl>
-
-          <section className="choice-group" aria-label="下一步选择">
-            <h3>Next Choices</h3>
-            {activeStep.choices.map((choice) => (
-              <button
-                key={choice.id}
-                className="choice-button"
-                type="button"
-                onClick={() => {
-                  if (choice.targetStepId) {
-                    const target = scenario.steps.find((step) => step.id === choice.targetStepId);
-                    if (target) {
-                      setActiveStepId(target.id);
-                      setSelectedNodeId(target.nodeId);
-                    }
-                  }
-                }}
-              >
-                <span>{choice.label}</span>
-                <small>{choice.condition}</small>
-              </button>
-            ))}
-          </section>
-
-          {activeStep.alternatives.length > 0 && (
-            <section className="alternatives" aria-label="备选路线">
-              <h3>Alternatives</h3>
-              {activeStep.alternatives.map((alternative) => (
-                <article key={alternative.id}>
-                  <strong>{alternative.label}</strong>
-                  <span>{alternative.condition}</span>
-                </article>
-              ))}
-            </section>
-          )}
-
-          <section className="source-list" aria-label="来源状态">
-            <h3>Source Status</h3>
-            {scenario.citations
-              .filter((citation) => activeCitationIds.has(citation.id))
-              .map((citation) => (
-                <span key={citation.id} className={`source-badge source-${citation.status}`} title={citation.source}>
-                  {citation.label}: {citation.status}
-                </span>
-              ))}
-          </section>
-
-          {activeStep.terminalRoutes && (
-            <section className="continuation-routes" aria-label="闭合路线">
-              <h3>Continuation Routes</h3>
-              {activeStep.terminalRoutes.map((routeId) => {
-                const route = scenario.continuationRoutes.find((item) => item.id === routeId)!;
+            {activeNode &&
+              hasSelectedScenario &&
+              activeStep.choices.map((choice, index) => {
+                const choiceX = activeNode.x + NODE_WIDTH + 24;
+                const choiceY = activeNode.y + index * 56;
                 return (
-                  <article key={route.id} className="continuation-route">
-                    <strong>{route.label}</strong>
-                    <span>{route.description}</span>
-                  </article>
+                  <g
+                    key={choice.id}
+                    transform={`translate(${choiceX} ${choiceY})`}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={choice.label}
+                    onClick={() => handleChoiceClick(choice.targetStepId, choice.routeId)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        handleChoiceClick(choice.targetStepId, choice.routeId);
+                      }
+                    }}
+                  >
+                    <rect className="node-choice" width="220" height="44" rx="14" tabIndex={-1} />
+                    <text className="node-choice-label" x="14" y="20">{choice.label}</text>
+                    <text className="node-choice-label" x="14" y="34" style={{ fontSize: 10, fill: '#9fb4ca' }}>
+                      {choice.condition.length > 28 ? `${choice.condition.slice(0, 26)}…` : choice.condition}
+                    </text>
+                  </g>
                 );
               })}
-            </section>
-          )}
+          </g>
+        </svg>
+      </div>
 
-          <section className="validation-checklist" aria-label="本地验证清单">
-            <div className="checklist-header">
-              <h3>Validation Checklist</h3>
-              <span>{completedChecks}/{scenario.checklist.length}</span>
-            </div>
-            {scenario.checklist.map((item) => (
-              <label key={item.id} className="checklist-item">
-                <input
-                  type="checkbox"
-                  checked={Boolean(checkedItems[item.id])}
-                  onChange={(event) => setCheckedItems((current) => ({ ...current, [item.id]: event.target.checked }))}
-                />
-                <span>{item.label}</span>
-              </label>
-            ))}
-            <p className="validation-state">
-              {validationMessages.length === 0 ? 'Local scenario validation: 0 errors.' : validationMessages.join(' | ')}
-            </p>
-          </section>
-        </aside>
-      </section>
+      <div aria-hidden="true" style={{ display: 'none' }}>
+        {selectedNode?.title}
+        {activeStep.command}
+        {Object.keys(checkedItems).length}
+      </div>
     </main>
   );
 }

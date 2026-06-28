@@ -43,5 +43,11 @@
       "src/main.test.tsx contains '[UI-observable]'",
       "[UI-observable] npm run test:e2e exits 0 and verifies fullscreen canvas fills viewport, pan/zoom works, fullscreen toggle hides hero, empty initial state shows scenario selector"
     ]
+  },
+  "status": "completed",
+  "meta": {
+    "completed_at": "2026-06-28T19:18:00Z",
+    "commit": "<filled after commit>",
+    "summary_path": ".workflow/scratch/20260628-plan-P2-local-canvas-recommender/.summaries/TASK-002-summary.md"
   }
 }
