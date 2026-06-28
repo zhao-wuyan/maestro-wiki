@@ -168,6 +168,44 @@ try {
   const stopKind = await stopBranch.getAttribute('data-branch-kind');
   assert(stopKind === 'route', `terminal route branch has data-branch-kind=route (got ${stopKind})`);
 
+  // [UI-observable] saved-routes floating entry renders and opens routes list
+  // without reintroducing a permanent right sidebar (grill Q5.2 / C-014)
+  const savedRoutesToggle = page.getByRole('button', { name: '查看已保存的路线' });
+  await savedRoutesToggle.waitFor();
+  assert(await savedRoutesToggle.isVisible(), 'saved-routes floating entry renders in canvas');
+
+  // verify no permanent right sidebar (detail-panel) exists before opening popover
+  const detailPanelCount = await page.locator('.detail-panel').count();
+  assert(detailPanelCount === 0, 'no permanent detail-panel sidebar reintroduced');
+
+  // canvas-shell fills viewport width before opening saved-routes popover
+  const shellBoxBefore = await canvasShell.boundingBox();
+  assert(Math.abs(shellBoxBefore.width - viewportSize.width) < 4, 'canvas-shell fills viewport width before saved-routes popover');
+
+  await savedRoutesToggle.click();
+  await wait(120);
+  const savedRoutesPopover = page.getByTestId('saved-routes-popover');
+  await savedRoutesPopover.waitFor();
+  assert(await savedRoutesPopover.isVisible(), 'saved-routes popover opens on click');
+
+  // empty state shows "暂无路线" before any route is saved
+  const emptyState = await page.getByTestId('saved-routes-empty').count();
+  assert(emptyState > 0, 'saved-routes popover shows empty state when no routes saved');
+
+  // save current route — should add entry to list
+  await page.getByTestId('save-current-route-button').click();
+  await wait(100);
+  const listCount = await page.getByTestId('saved-routes-list').count();
+  assert(listCount > 0, 'saved-routes list renders after saving current route');
+  const listText = await page.getByTestId('saved-routes-list').textContent();
+  assert(listText && listText.length > 0, 'saved-routes list contains route entry');
+
+  // no permanent right sidebar reintroduced after popover opens + route saved
+  const detailPanelAfterCount = await page.locator('.detail-panel').count();
+  assert(detailPanelAfterCount === 0, 'no permanent detail-panel sidebar after saving route');
+  const shellBoxAfter = await canvasShell.boundingBox();
+  assert(Math.abs(shellBoxAfter.width - viewportSize.width) < 4, 'canvas-shell still fills viewport width after saved-routes popover opens (no permanent sidebar)');
+
   await browser.close();
 } finally {
   server.kill('SIGTERM');

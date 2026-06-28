@@ -1,8 +1,20 @@
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
-import { App, authoredRules, recommendCommands, validateRuleSet, isVisibleNode } from './main';
-import type { RecommendationRule, SimulatedProjectState } from './main';
+import { describe, expect, it, beforeEach } from 'vitest';
+import {
+  App,
+  authoredRules,
+  recommendCommands,
+  validateRuleSet,
+  isVisibleNode,
+  loadSavedRoutes,
+  saveRoute,
+  toggleFavorite,
+  pruneRecentRoutes,
+  _resetRouteStorageState,
+  RECENT_ROUTE_CAP,
+} from './main';
+import type { RecommendationRule, SimulatedProjectState, SavedRoute } from './main';
 
 describe('Maestro Workflow Wiki fullscreen canvas shell', () => {
   it('[UI-observable] renders hero, fullscreen button, scenario label, and empty initial canvas with guidance copy', () => {
@@ -394,5 +406,215 @@ describe('Local canvas recommender rules (TASK-001)', () => {
 
   it('validateRuleSet passes for the authored rule set', () => {
     expect(validateRuleSet(authoredRules)).toEqual([]);
+  });
+});
+
+describe('Local route history persistence (TASK-004)', () => {
+  beforeEach(() => {
+    _resetRouteStorageState();
+  });
+
+  function makeRoute(overrides: Partial<SavedRoute> = {}): SavedRoute {
+    return {
+      id: 'route-default',
+      name: 'Default Route',
+      createdAt: '2026-06-28T12:00:00.000Z',
+      favorite: false,
+      scenarioId: 'unclear-requirements',
+      selectedCommandNodes: ['brainstorm'],
+      primaryRecommendations: ['maestro-brainstorm'],
+      secondaryRecommendations: ['maestro-blueprint'],
+      recommendationReasons: ['purpose text', 'condition text'],
+      sourceRefs: [
+        { path: 'maestro-flow/.claude/commands/maestro-brainstorm.md', label: 'cmd', status: 'cited' },
+      ],
+      schemaVersion: 1,
+      ruleVersion: 'M2-P2-rules-v1',
+      ...overrides,
+    };
+  }
+
+  it(`pruneRecentRoutes caps non-favorite recent routes at RECENT_ROUTE_CAP=20 (FIFO, oldest evicted)`, () => {
+    expect(RECENT_ROUTE_CAP).toBe(20);
+    const routes: SavedRoute[] = [];
+    for (let i = 0; i < 25; i += 1) {
+      routes.push(
+        makeRoute({
+          id: `rec-${i}`,
+          name: `Recent ${i}`,
+          createdAt: new Date(2026, 5, 28, 12, 0, i).toISOString(),
+          favorite: false,
+        }),
+      );
+    }
+    const pruned = pruneRecentRoutes(routes);
+    expect(pruned.length).toBe(20);
+    const ids = pruned.map((r) => r.id);
+    // Oldest 5 (rec-0..rec-4) evicted; newest 20 (rec-5..rec-24) retained
+    expect(ids).not.toContain('rec-0');
+    expect(ids).not.toContain('rec-4');
+    expect(ids).toContain('rec-5');
+    expect(ids).toContain('rec-24');
+  });
+
+  it('pruneRecentRoutes preserves all favorites beyond RECENT_ROUTE_CAP=20 cap', () => {
+    const routes: SavedRoute[] = [];
+    for (let i = 0; i < 25; i += 1) {
+      routes.push(
+        makeRoute({
+          id: `fav-${i}`,
+          name: `Favorite ${i}`,
+          createdAt: new Date(2026, 5, 28, 12, 0, i).toISOString(),
+          favorite: true,
+        }),
+      );
+    }
+    for (let i = 0; i < 25; i += 1) {
+      routes.push(
+        makeRoute({
+          id: `rec-${i}`,
+          name: `Recent ${i}`,
+          createdAt: new Date(2026, 5, 28, 12, 0, i).toISOString(),
+          favorite: false,
+        }),
+      );
+    }
+    const pruned = pruneRecentRoutes(routes);
+    // 25 favorites (all preserved) + 20 most-recent non-favorites = 45
+    expect(pruned.length).toBe(45);
+    expect(pruned.filter((r) => r.favorite).length).toBe(25);
+    expect(pruned.filter((r) => !r.favorite).length).toBe(20);
+  });
+
+  it('saveRoute + loadSavedRoutes preserves evidence fields (sourceRefs, recommendationReasons, schemaVersion, ruleVersion)', () => {
+    const route = makeRoute({
+      id: 'evidence-test',
+      name: 'Evidence Test Route',
+      primaryRecommendations: ['maestro-brainstorm'],
+      secondaryRecommendations: ['maestro-blueprint'],
+      recommendationReasons: ['reason A', 'reason B'],
+      sourceRefs: [
+        { path: 'maestro-flow/.claude/commands/maestro-brainstorm.md', label: 'brainstorm cmd', status: 'cited' },
+        { path: 'maestro-flow/.codex/skills/maestro-help/catalog.json', label: 'catalog', status: 'cited' },
+      ],
+      schemaVersion: 1,
+      ruleVersion: 'M2-P2-rules-v1',
+    });
+    saveRoute(route);
+    const loaded = loadSavedRoutes();
+    expect(loaded).not.toBeNull();
+    expect(loaded!.length).toBe(1);
+    const retrieved = loaded![0];
+    expect(retrieved.sourceRefs.length).toBe(2);
+    expect(retrieved.sourceRefs[0].path).toBe('maestro-flow/.claude/commands/maestro-brainstorm.md');
+    expect(retrieved.recommendationReasons).toEqual(['reason A', 'reason B']);
+    expect(retrieved.primaryRecommendations).toContain('maestro-brainstorm');
+    expect(retrieved.secondaryRecommendations).toContain('maestro-blueprint');
+    expect(retrieved.schemaVersion).toBe(1);
+    expect(retrieved.ruleVersion).toBe('M2-P2-rules-v1');
+  });
+
+  it('degrades to in-session memory when localStorage.setItem throws (QuotaExceededError)', () => {
+    _resetRouteStorageState();
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = () => {
+      throw new DOMException('quota exceeded', 'QuotaExceededError');
+    };
+    try {
+      saveRoute(makeRoute({ id: 'fallback-test', name: 'Fallback Test' }));
+      const loaded = loadSavedRoutes();
+      // Should still return the route from session memory fallback
+      expect(loaded).not.toBeNull();
+      expect(loaded!.length).toBe(1);
+      expect(loaded![0].id).toBe('fallback-test');
+    } finally {
+      Storage.prototype.setItem = originalSetItem;
+      _resetRouteStorageState();
+    }
+  });
+
+  it('degrades to in-session memory when localStorage.getItem throws (SecurityError)', () => {
+    _resetRouteStorageState();
+    const originalGetItem = Storage.prototype.getItem;
+    Storage.prototype.getItem = () => {
+      throw new DOMException('security error', 'SecurityError');
+    };
+    try {
+      const loaded = loadSavedRoutes();
+      // Should return null or empty array from fallback, not throw
+      expect(loaded).not.toBeNull();
+      expect(Array.isArray(loaded)).toBe(true);
+    } finally {
+      Storage.prototype.getItem = originalGetItem;
+      _resetRouteStorageState();
+    }
+  });
+
+  it('toggleFavorite flips favorite flag and persists', () => {
+    saveRoute(makeRoute({ id: 'toggle-test', favorite: false }));
+    toggleFavorite('toggle-test');
+    const loaded = loadSavedRoutes();
+    expect(loaded).not.toBeNull();
+    const route = loaded!.find((r) => r.id === 'toggle-test');
+    expect(route).toBeDefined();
+    expect(route!.favorite).toBe(true);
+  });
+
+  it('[UI-observable] renders saved-routes floating entry and opens routes list popover', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const toggle = screen.getByRole('button', { name: '查看已保存的路线' });
+    expect(toggle).toBeInTheDocument();
+
+    await user.click(toggle);
+
+    expect(screen.getByTestId('saved-routes-popover')).toBeInTheDocument();
+    expect(screen.getByTestId('saved-routes-empty')).toHaveTextContent('暂无路线');
+  });
+
+  it('[UI-observable] saving current route adds an entry to the saved routes list', async () => {
+    _resetRouteStorageState();
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    await user.click(screen.getByRole('button', { name: '查看已保存的路线' }));
+    await user.click(screen.getByTestId('save-current-route-button'));
+
+    const list = screen.getByTestId('saved-routes-list');
+    expect(list).toHaveTextContent('maestro-brainstorm');
+    expect(screen.queryByTestId('saved-routes-empty')).not.toBeInTheDocument();
+    _resetRouteStorageState();
+  });
+
+  it('[UI-observable] toggle favorite moves route from Recent to Favorites section', async () => {
+    _resetRouteStorageState();
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    await user.click(screen.getByRole('button', { name: '查看已保存的路线' }));
+    await user.click(screen.getByTestId('save-current-route-button'));
+
+    // Route appears in Recent section
+    expect(screen.getByTestId('saved-routes-recent')).toHaveTextContent('maestro-brainstorm');
+
+    // Click favorite toggle (non-favorite route uses "收藏路线" label)
+    await user.click(screen.getByRole('button', { name: '收藏路线' }));
+
+    // Route now appears in Favorites section
+    expect(screen.getByTestId('saved-routes-favorites')).toHaveTextContent('maestro-brainstorm');
+    _resetRouteStorageState();
+  });
+
+  it('[UI-observable] save-current-route button is disabled before scenario selection', () => {
+    render(<App />);
+
+    const toggle = screen.getByRole('button', { name: '查看已保存的路线' });
+    fireEvent.click(toggle);
+
+    const saveButton = screen.getByTestId('save-current-route-button') as HTMLButtonElement;
+    expect(saveButton.disabled).toBe(true);
   });
 });

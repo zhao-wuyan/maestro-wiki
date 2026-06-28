@@ -603,6 +603,112 @@ export function validateRuleSet(ruleSet: RecommendationRule[]): string[] {
 }
 
 // ============================================================
+// Phase 2 / TASK-004 — Local route history persistence (grill Q5.2 / C-014)
+//
+// localStorage-backed route history with FIFO eviction. Recent (non-favorite)
+// routes are capped at RECENT_ROUTE_CAP=20; favorites have no cap. Each
+// SavedRoute stores recommendation evidence (selected command nodes, primary
+// and secondary recommendations, reasons, sourceRefs) and MUST NOT store
+// canvas coordinates (grill C-014). All localStorage access is wrapped in
+// try/catch and degrades to a module-level session memory store on failure
+// (QuotaExceededError / SecurityError / general exceptions).
+// ============================================================
+
+export type SavedRoute = {
+  id: string;
+  name: string;
+  createdAt: string;
+  favorite: boolean;
+  scenarioId: string;
+  selectedCommandNodes: string[];
+  primaryRecommendations: string[];
+  secondaryRecommendations: string[];
+  recommendationReasons: string[];
+  sourceRefs: SourceRef[];
+  schemaVersion: number;
+  ruleVersion: string;
+};
+
+export const RECENT_ROUTE_CAP = 20;
+const STORAGE_KEY = 'maestro-wiki.saved-routes.v1';
+const SCHEMA_VERSION = 1;
+const RULE_VERSION = 'M2-P2-rules-v1';
+
+// Module-level session memory fallback (grill C-014: degrade to in-session
+// memory when localStorage is unavailable or throws).
+let sessionStore: SavedRoute[] = [];
+let usingSessionFallback = false;
+
+export function _resetRouteStorageState(): void {
+  // Test-only helper: resets module-level storage state so unit tests can
+  // isolate scenarios without leakage from prior test cases.
+  sessionStore = [];
+  usingSessionFallback = false;
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // ignore — localStorage may be mocked to throw in tests
+  }
+}
+
+export function loadSavedRoutes(): SavedRoute[] | null {
+  try {
+    if (usingSessionFallback) {
+      return sessionStore.slice();
+    }
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw === null) return null;
+    const parsed = JSON.parse(raw) as SavedRoute[];
+    if (!Array.isArray(parsed)) return null;
+    return parsed;
+  } catch (error) {
+    // QuotaExceededError, SecurityError, or general parse/access failure:
+    // activate session fallback so subsequent reads/writes keep working.
+    usingSessionFallback = true;
+    return sessionStore.slice();
+  }
+}
+
+export function pruneRecentRoutes(routes: SavedRoute[]): SavedRoute[] {
+  const favorites = routes.filter((route) => route.favorite);
+  const recent = routes
+    .filter((route) => !route.favorite)
+    .slice()
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, RECENT_ROUTE_CAP);
+  return [...favorites, ...recent];
+}
+
+function persistRoutes(routes: SavedRoute[]): void {
+  try {
+    if (usingSessionFallback) {
+      sessionStore = routes.slice();
+      return;
+    }
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(routes));
+  } catch (error) {
+    // QuotaExceededError or SecurityError — flip into session fallback
+    // and keep operating on in-session memory (grill C-014).
+    usingSessionFallback = true;
+    sessionStore = routes.slice();
+  }
+}
+
+export function saveRoute(route: SavedRoute): void {
+  const current = loadSavedRoutes() ?? [];
+  const next = pruneRecentRoutes([...current, route]);
+  persistRoutes(next);
+}
+
+export function toggleFavorite(id: string): void {
+  const current = loadSavedRoutes() ?? [];
+  const next = current.map((route) =>
+    route.id === id ? { ...route, favorite: !route.favorite } : route,
+  );
+  persistRoutes(next);
+}
+
+// ============================================================
 // Phase 2 / TASK-002 — Fullscreen pan/zoom canvas shell
 //
 // Constants and helpers below power the new rendering layer per
@@ -665,6 +771,8 @@ export function App() {
   const [viewportSize, setViewportSize] = useState<ViewportSize>(DEFAULT_VIEWPORT);
   const [isPanning, setIsPanning] = useState(false);
   const [popover, setPopover] = useState<{ nodeId: string; x: number; y: number } | null>(null);
+  const [savedRoutesOpen, setSavedRoutesOpen] = useState(false);
+  const [savedRoutes, setSavedRoutes] = useState<SavedRoute[]>([]);
 
   const canvasShellRef = useRef<HTMLDivElement | null>(null);
   const pointerStateRef = useRef<{
@@ -787,6 +895,19 @@ export function App() {
     [scenario.edges, revealedNodeIds],
   );
 
+  const savedRoutesFavorites = useMemo(
+    () => savedRoutes.filter((route) => route.favorite),
+    [savedRoutes],
+  );
+  const savedRoutesRecent = useMemo(
+    () =>
+      savedRoutes
+        .filter((route) => !route.favorite)
+        .slice()
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [savedRoutes],
+  );
+
   useEffect(() => {
     const shell = canvasShellRef.current;
     if (!shell) return;
@@ -815,6 +936,12 @@ export function App() {
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStepId]);
+
+  // Load saved routes from localStorage on mount (grill Q5.2 / C-014).
+  useEffect(() => {
+    const loaded = loadSavedRoutes();
+    if (loaded) setSavedRoutes(loaded);
+  }, []);
 
   const activateNode = (nodeId: string) => {
     setSelectedNodeId(nodeId);
@@ -970,6 +1097,41 @@ export function App() {
     setPopover(null);
   };
 
+  const handleSaveCurrentRoute = () => {
+    if (!hasSelectedScenario || !activeStep) return;
+    const citations = activeStep.citations
+      .map((citationId) => scenario.citations.find((c) => c.id === citationId))
+      .filter((c): c is ScenarioCitation => c !== undefined);
+    const sourceRefs: SourceRef[] = citations.map((c) => ({
+      path: c.source,
+      label: c.label,
+      status: c.status,
+    }));
+    const route: SavedRoute = {
+      id: `route-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: `${scenario.title} \u2014 ${activeStep.command}`,
+      createdAt: new Date().toISOString(),
+      favorite: false,
+      scenarioId: scenario.id,
+      selectedCommandNodes: [activeStep.nodeId],
+      primaryRecommendations: [activeStep.command],
+      secondaryRecommendations: activeStep.alternatives.map((alt) => alt.label),
+      recommendationReasons: [activeStep.purpose, activeStep.condition],
+      sourceRefs,
+      schemaVersion: SCHEMA_VERSION,
+      ruleVersion: RULE_VERSION,
+    };
+    saveRoute(route);
+    const reloaded = loadSavedRoutes();
+    setSavedRoutes(reloaded ?? []);
+  };
+
+  const handleToggleFavorite = (id: string) => {
+    toggleFavorite(id);
+    const reloaded = loadSavedRoutes();
+    setSavedRoutes(reloaded ?? []);
+  };
+
   const activeNode = useMemo(
     () => scenario.nodes.find((node) => node.id === activeStep.nodeId) ?? null,
     [scenario.nodes, activeStep.nodeId],
@@ -1028,6 +1190,16 @@ export function App() {
           aria-pressed={isFullscreen}
         >
           {isFullscreen ? '退出全屏' : '全屏'}
+        </button>
+
+        <button
+          type="button"
+          className="saved-routes-toggle"
+          onClick={() => setSavedRoutesOpen(true)}
+          aria-label="查看已保存的路线"
+          data-testid="saved-routes-toggle"
+        >
+          历史路线
         </button>
 
         {guidanceVisible && (
@@ -1232,6 +1404,97 @@ export function App() {
                 })}
               </ul>
             </div>
+          </div>
+        )}
+
+        {savedRoutesOpen && (
+          <div
+            className="saved-routes-popover"
+            data-testid="saved-routes-popover"
+            role="dialog"
+            aria-label="已保存的路线列表"
+          >
+            <button
+              type="button"
+              className="popover-close"
+              onClick={() => setSavedRoutesOpen(false)}
+              aria-label="关闭路线列表"
+            >
+              {'\u00d7'}
+            </button>
+
+            <h3>已保存路线</h3>
+
+            <button
+              type="button"
+              className="save-current-route-button"
+              onClick={handleSaveCurrentRoute}
+              disabled={!hasSelectedScenario}
+              data-testid="save-current-route-button"
+            >
+              保存当前路线
+            </button>
+
+            {savedRoutes.length === 0 ? (
+              <p className="saved-routes-empty" data-testid="saved-routes-empty">
+                暂无路线
+              </p>
+            ) : (
+              <div className="saved-routes-list" data-testid="saved-routes-list">
+                {savedRoutesFavorites.length > 0 && (
+                  <div className="saved-routes-section" data-testid="saved-routes-favorites">
+                    <h4>Favorites</h4>
+                    {savedRoutesFavorites.map((route) => (
+                      <div key={route.id} className="saved-route-item">
+                        <button
+                          type="button"
+                          className="favorite-toggle"
+                          onClick={() => handleToggleFavorite(route.id)}
+                          aria-label="取消收藏"
+                        >
+                          {'\u2605'}
+                        </button>
+                        <div className="saved-route-info">
+                          <span className="saved-route-name">{route.name}</span>
+                          <span className="saved-route-meta">
+                            {route.scenarioId} {'\u00b7'} {new Date(route.createdAt).toLocaleDateString()}
+                          </span>
+                          <span className="saved-route-commands">
+                            {route.primaryRecommendations.join(', ')}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {savedRoutesRecent.length > 0 && (
+                  <div className="saved-routes-section" data-testid="saved-routes-recent">
+                    <h4>Recent</h4>
+                    {savedRoutesRecent.map((route) => (
+                      <div key={route.id} className="saved-route-item">
+                        <button
+                          type="button"
+                          className="favorite-toggle"
+                          onClick={() => handleToggleFavorite(route.id)}
+                          aria-label="收藏路线"
+                        >
+                          {'\u2606'}
+                        </button>
+                        <div className="saved-route-info">
+                          <span className="saved-route-name">{route.name}</span>
+                          <span className="saved-route-meta">
+                            {route.scenarioId} {'\u00b7'} {new Date(route.createdAt).toLocaleDateString()}
+                          </span>
+                          <span className="saved-route-commands">
+                            {route.primaryRecommendations.join(', ')}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
