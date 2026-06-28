@@ -1,14 +1,24 @@
 {
   "$schema": "phase-index/1.0",
-  "status": "planning",
+  "status": "verified",
   "phase": 2,
   "milestone": "M2-canvas-command-recommender-mvp",
-  "updated_at": "2026-06-28T00:00:00Z",
+  "updated_at": "2026-06-28T20:30:00Z",
   "plan": {
-    "task_ids": ["TASK-001", "TASK-002", "TASK-003", "TASK-004"],
+    "task_ids": [
+      "TASK-001",
+      "TASK-002",
+      "TASK-003",
+      "TASK-004"
+    ],
     "task_count": 4,
     "complexity": "medium",
-    "waves": ["wave-1", "wave-2", "wave-3", "wave-4"],
+    "waves": [
+      "wave-1",
+      "wave-2",
+      "wave-3",
+      "wave-4"
+    ],
     "executor_assignments": {},
     "confidence": 80
   }

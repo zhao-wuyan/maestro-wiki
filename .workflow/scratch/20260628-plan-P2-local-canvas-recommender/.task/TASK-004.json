@@ -36,5 +36,17 @@
       "npm test exits 0",
       "[UI-observable] npm run test:e2e exits 0 and verifies saved-routes floating entry renders and opens routes list without reintroducing a permanent right sidebar"
     ]
+  },
+  "status": "completed",
+  "meta": {
+    "commit": "cfef604",
+    "completed_at": "2026-06-28T20:20:00Z",
+    "summary_path": ".workflow/scratch/20260628-plan-P2-local-canvas-recommender/.summaries/TASK-004-summary.md",
+    "tests_total": 32,
+    "tests_passed": 32,
+    "e2e_exit_code": 0,
+    "tsc_exit_code": 0,
+    "build_exit_code": 0,
+    "convergence_all_pass": true
   }
 }
