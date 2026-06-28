@@ -2,7 +2,7 @@
 
 **Phase**: M2 Phase 2 — Canvas Command Recommender (节点 popover + 画布分支导航 + 泳道布局)
 **Status**: completed
-**Commit**: (filled post-commit)
+**Commit**: 444c092
 **Completed at**: 2026-06-28T19:43:00Z
 
 ## Modified Files

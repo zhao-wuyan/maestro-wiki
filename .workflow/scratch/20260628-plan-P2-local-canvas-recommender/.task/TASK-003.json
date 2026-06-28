@@ -42,7 +42,7 @@
   "status": "completed",
   "meta": {
     "completed_at": "2026-06-28T19:43:00Z",
-    "commit": "(filled post-commit)",
+    "commit": "444c092",
     "summary_path": ".workflow/scratch/20260628-plan-P2-local-canvas-recommender/.summaries/TASK-003-summary.md"
   }
 }
