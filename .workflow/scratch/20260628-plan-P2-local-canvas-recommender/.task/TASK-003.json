@@ -1,35 +1,42 @@
 {
   "$schema": "task/1.0",
   "id": "TASK-003",
-  "title": "Persist local route history with evidence",
+  "title": "Implement node popover and canvas branch navigation",
   "type": "feature",
-  "priority": "medium",
+  "priority": "high",
   "phase": 2,
-  "goal_ref": "G3",
-  "files": ["src/main.tsx", "src/main.test.tsx"],
+  "goal_ref": "G2",
+  "files": ["src/main.tsx", "src/styles.css", "src/main.test.tsx", "scripts/e2e-smoke.mjs"],
   "read_first": [
     "src/main.tsx",
+    "src/styles.css",
     "src/main.test.tsx",
+    "scripts/e2e-smoke.mjs",
+    ".workflow/scratch/20260628-grill-fullscreen-canvas-layout/context-package.json",
     ".workflow/scratch/20260628-analyze-P2-local-canvas-recommender/context.md"
   ],
-  "action": "Add browser localStorage persistence for saved routes. Define SavedRoute with id, title, createdAt, favorite, nodes, edges, evidence, ruleVersion, and schemaVersion. Persist recent non-favorite routes with latest 10 cap while preserving all favorites. Saved evidence must include recommendation rationale and sourceRefs.",
+  "action": "Build node popover and canvas branch navigation covering grill Q2.1 (evidence in popover), Q2.2 (continuation routes as canvas branches), Q2.3 (validation checklist in popover), Q3.1 (popover via onContextMenu right-click/long-press), and Q4.2 (swimlane branch layout). Concretely: node onContextMenu (right-click or long-press) calls preventDefault and opens popover rendering the recommendation evidence cluster (Recommended Command card, Purpose/Input/Output/Next Action as dl, Alternatives list, Source Status citations) plus Validation Checklist with checkedItems retained per step. Main canvas常驻 contains only node frames + navigation branches, MUST NOT persist evidence text. Migrate Next Choices to clickable canvas branch options emitted from the active node (reuse choice.targetStepId to advance setActiveStepId + setSelectedNodeId). Render Continuation Routes (stop/quality/knowledge) as terminal node canvas branch options (reuse terminalRoutes data), unified with Next Choices mechanism; MUST NOT be a standalone panel or popover-internal buttons. Branch layout: main path extends rightward along horizontal axis with y aligned; alternative/parallel branches (from alternatives field) offset up/down (swimlane feel); selected highlights main line, unselected secondary styled lower-saturation/thinner-stroke; compute coordinates via geometry rules using constants MAIN_LINE_GAP (horizontal spacing on main line) and BRANCH_OFFSET (vertical offset for branches, alternating up/down); no graphics library.",
   "implementation": [
-    "Add storage helpers loadSavedRoutes, saveRoute, toggleFavorite, and pruneRecentRoutes in src/main.tsx or a colocated helper if extraction is clearer.",
-    "Use a single localStorage key such as maestro-wiki.saved-routes.v1.",
-    "When saving the current route, include recommendation evidence with sourceRefs and ruleVersion.",
-    "Render saved recent/favorite routes in a compact local panel that does not reintroduce the large permanent right sidebar.",
-    "Add unit tests for latest 10 non-favorite cap, favorites preserved, and evidence retained."
+    "In src/main.tsx: implement onContextMenu handler on node elements calling e.preventDefault() and setting popover state {nodeId, x, y}; support long-press (touchstart + timeout) for touch devices; render popover absolutely positioned at event coordinates.",
+    "Popover content: Recommended Command card (command name + rank/confidence), Purpose/Input/Output/Next Action as <dl>, Alternatives list, Source Status with sourceRefs (from TASK-001 RecommendationGroup), and Validation Checklist with checkedItems retained per step (Record<stepId, string[]>).",
+    "Migrate Next Choices: remove className=\"choice-button\" panel rendering; for the active node, render outgoing edges as clickable canvas branch elements; onClick advances choice.targetStepId via setActiveStepId and setSelectedNodeId.",
+    "Continuation Routes: for terminal nodes, render stop/quality/knowledge as canvas branch options reusing terminalRoutes data; same click mechanism as Next Choices; MUST NOT render as separate panel or popover buttons.",
+    "Layout constants: MAIN_LINE_GAP (e.g. 220) horizontal spacing for main path nodes with shared y; BRANCH_OFFSET (e.g. 90) vertical offset for alternative/parallel branches, alternating +offset/-offset for successive branches; compute node x = stepIndex * MAIN_LINE_GAP, node y = mainLineY + branchSign * BRANCH_OFFSET; pure arithmetic, no graphics library.",
+    "Styling: selected/main-line nodes full saturation + standard stroke; unselected/secondary nodes lower saturation + thinner stroke (e.g. opacity 0.55, stroke-width 1).",
+    "Ensure main canvas常驻 renders only node frames + branch edges; evidence text appears exclusively inside popover.",
+    "Update src/main.test.tsx with [UI-observable] assertions and scripts/e2e-smoke.mjs to verify: right-click opens popover with evidence cluster, clicking a canvas branch advances step, terminal routes render as branches, checkedItems persist per step."
   ],
   "depends_on": ["TASK-002"],
   "convergence": {
     "criteria": [
-      "src/main.tsx contains 'type SavedRoute'",
-      "src/main.tsx contains 'maestro-wiki.saved-routes.v1'",
-      "src/main.tsx contains 'schemaVersion'",
-      "src/main.tsx contains 'ruleVersion'",
-      "src/main.test.tsx contains 'latest 10'",
-      "src/main.test.tsx contains 'favorites'",
-      "npm test exits 0"
+      "src/main.tsx contains 'onContextMenu' handler opening popover",
+      "src/main.tsx contains 'preventDefault' in context menu handler",
+      "src/main.tsx contains 'checkedItems' retained per step",
+      "src/main.tsx contains 'MAIN_LINE_GAP' or 'BRANCH_OFFSET' branch layout constants",
+      "src/main.tsx does not contain 'className=\"choice-button\"' as panel button (migrated to canvas branch)",
+      "src/main.tsx contains terminalRoutes rendered as canvas branch options",
+      "src/main.test.tsx contains '[UI-observable]'",
+      "[UI-observable] npm run test:e2e exits 0 and verifies right-click popover shows evidence, canvas branch navigation advances step, terminal routes render as branches"
     ]
   }
 }

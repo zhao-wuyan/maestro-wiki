@@ -1,0 +1,51 @@
+{
+  "$schema": "session-archive/1.0",
+  "session_id": "GRL-20260628-fullscreen-canvas-layout",
+  "session_type": "grill",
+  "session_path": "scratch/20260628-grill-fullscreen-canvas-layout",
+  "lifecycle": {
+    "status": "sealed",
+    "sealed_at": "2026-06-28T00:00:00Z",
+    "archived_at": null,
+    "linked_milestone": null
+  },
+  "content_refs": [
+    { "type": "grill-report", "path": "grill-report.md" },
+    { "type": "terminology", "path": "terminology.md" },
+    { "type": "context-package", "path": "context-package.json" }
+  ],
+  "extraction": {
+    "harvested": true,
+    "harvested_at": "2026-06-28T00:00:00Z",
+    "spec_ids": [
+      "spec-20260628-满屏画布布局-顶部仅保留hero",
+      "spec-20260628-满屏画布-detail-panel移除导航上画布",
+      "spec-20260628-满屏画布-真铺满可平移缩放",
+      "spec-20260628-节点popover承载推荐证据",
+      "spec-20260628-Continuation Routes上画布分支",
+      "spec-20260628-Validation Checklist入popover",
+      "spec-20260628-右键popover手势消歧",
+      "spec-20260628-画布全屏切换按钮",
+      "spec-20260628-画布空态初始场景选择节点",
+      "spec-20260628-满屏画布并入M2替换M1",
+      "spec-20260628-并行分支水平主线泳道布局",
+      "spec-20260628-场景上下文左上角悬浮标签",
+      "spec-20260628-画布视口裁剪虚拟化",
+      "spec-20260628-route history localStorage持久化"
+    ],
+    "knowhow_ids": [
+      "knowhow-20260628-满屏画布风险-触屏无右键",
+      "knowhow-20260628-满屏画布风险-虚拟化平移闪烁",
+      "knowhow-20260628-满屏画布风险-M1测试失效",
+      "knowhow-20260628-满屏画布风险-场景枚举耦合",
+      "knowhow-20260628-canvas",
+      "knowhow-20260628-stepwise-nav",
+      "knowhow-20260628-recommendation-evidence",
+      "knowhow-20260628-interaction-logic",
+      "knowhow-20260628-page-layout"
+    ],
+    "domain_ids": [],
+    "skipped_count": 0
+  },
+  "pruned": null
+}

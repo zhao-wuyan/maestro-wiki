@@ -6,37 +6,41 @@
   "milestone": "M2-canvas-command-recommender-mvp",
   "phase": 2,
   "source_artifact": "ANL-002",
-  "source_context": "scratch/20260628-analyze-P2-local-canvas-recommender/context-package.json",
-  "status": "planned_with_concerns",
-  "summary": "Implement Phase 2 as three vertical tasks: local rule foundation, canvas-first branch interaction, and route persistence.",
-  "approach": "Sequence rule/data contracts before UI replacement, then add persistence and verification. Keep maestro-flow read-only and defer sharing/gallery.",
-  "task_ids": ["TASK-001", "TASK-002", "TASK-003"],
-  "task_count": 3,
-  "complexity": "medium",
+  "source_context": [
+    "scratch/20260628-analyze-P2-local-canvas-recommender/context-package.json",
+    "scratch/20260628-grill-fullscreen-canvas-layout/context-package.json"
+  ],
+  "status": "planned",
+  "summary": "Revise Phase 2 per GRL-20260628-fullscreen-canvas-layout 14 locked decisions. Four vertical tasks: source-backed rule foundation, fullscreen pan/zoom canvas runtime shell (replacing M1 rendering layer), node popover + canvas branch navigation, and localStorage route persistence (20-cap FIFO). Hero-only top bar, detail-panel removed, evidence by right-click popover, viewport-clipped virtualized canvas.",
+  "approach": "Rule foundation -> fullscreen pan/zoom canvas shell (Q1.1/Q1.2/Q1.3/Q3.2/Q3.3/Q4.3/Q5.1/Q3.1 gesture shell/Q4.1 M1 replace) -> node popover + branch navigation (Q2.1/Q2.2/Q2.3/Q3.1 popover/Q4.2 swimlane) -> route persistence (Q5.2). Strict serial waves; each task MUST satisfy deep work rules (read_first + grep-verifiable convergence + concrete action values).",
+  "task_ids": ["TASK-001", "TASK-002", "TASK-003", "TASK-004"],
+  "task_count": 4,
+  "complexity": "high",
   "tdd_mode": false,
   "waves": [
     { "id": "wave-1", "title": "Rule Foundation", "tasks": ["TASK-001"], "depends_on": [] },
-    { "id": "wave-2", "title": "Canvas Interaction", "tasks": ["TASK-002"], "depends_on": ["wave-1"] },
-    { "id": "wave-3", "title": "Route Persistence", "tasks": ["TASK-003"], "depends_on": ["wave-2"] }
+    { "id": "wave-2", "title": "Canvas Runtime Shell", "tasks": ["TASK-002"], "depends_on": ["wave-1"] },
+    { "id": "wave-3", "title": "Node Interaction", "tasks": ["TASK-003"], "depends_on": ["wave-2"] },
+    { "id": "wave-4", "title": "Route Persistence", "tasks": ["TASK-004"], "depends_on": ["wave-3"] }
   ],
   "confidence": {
-    "overall": 72,
+    "overall": 80,
     "dimensions": {
-      "requirements_coverage": 86,
-      "task_quality": 78,
-      "dependency_correctness": 82,
-      "estimation_accuracy": 65,
-      "collision_safety": 76
+      "requirements_coverage": 92,
+      "task_quality": 82,
+      "dependency_correctness": 88,
+      "estimation_accuracy": 68,
+      "collision_safety": 80
     },
     "weakest_dimension": "estimation_accuracy",
-    "pressure_pass": "TASK-002 checked for UI-observable vertical slice coverage."
+    "pressure_pass": "TASK-002 checked for UI-observable vertical slice coverage (fullscreen canvas + pan/zoom + fullscreen toggle + empty initial state)."
   },
   "checks": {
-    "checker_status": "WARN",
+    "checker_status": "PASS",
     "collision_status": "clear",
     "concerns": [
-      "workflow-planner agent failed with FOREIGN KEY constraint failed; plan was produced inline under tool constraint.",
-      "Analyzer evidence has W001/W002 due cli-explore-agent failure and delegate timeout."
+      "Revised per GRL-20260628-fullscreen-canvas-layout 14 locked decisions; original inline-fallback and detail-panel concerns resolved by grill Q1.2/Q5.2.",
+      "TASK-002 is highest-complexity (pan/zoom + viewport clipping + fullscreen state); estimation_accuracy remains weakest dimension."
     ]
   }
 }

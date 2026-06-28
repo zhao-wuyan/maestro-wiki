@@ -1,0 +1,40 @@
+{
+  "$schema": "task/1.0",
+  "id": "TASK-004",
+  "title": "Persist local route history with evidence",
+  "type": "feature",
+  "priority": "medium",
+  "phase": 2,
+  "goal_ref": "G3",
+  "files": ["src/main.tsx", "src/main.test.tsx"],
+  "read_first": [
+    "src/main.tsx",
+    "src/main.test.tsx",
+    ".workflow/scratch/20260628-grill-fullscreen-canvas-layout/context-package.json",
+    ".workflow/scratch/20260628-analyze-P2-local-canvas-recommender/context.md"
+  ],
+  "action": "Implement localStorage route persistence per grill Q5.2 (revising original 'latest 10' to 20-cap FIFO). Define SavedRoute with id, name, createdAt, favorite, scenarioId, selectedCommandNodes, primaryRecommendations, secondaryRecommendations, recommendationReasons, sourceRefs, schemaVersion, and ruleVersion. Use localStorage key maestro-wiki.saved-routes.v1. recent (non-favorite) routes capped at 20 with FIFO eviction (RECENT_ROUTE_CAP=20); favorites have no cap. Each entry MUST store recommendation evidence (scenario choice, selected command nodes, primary+secondary recommendations, recommendation reasons, sourceRefs) and MUST NOT store canvas absolute coordinates. Read/write MUST be fault-tolerant: on localStorage quota-exceeded/disabled/security-error, degrade to in-session memory (Map or array). Saved routes access UI MUST NOT reintroduce a permanent large right sidebar; use an in-canvas floating entry or popover trigger to keep canvas pure.",
+  "implementation": [
+    "In src/main.tsx: define 'type SavedRoute' with fields id, name, createdAt (ISO string), favorite (boolean), scenarioId, selectedCommandNodes (string[]), primaryRecommendations, secondaryRecommendations, recommendationReasons (string[]), sourceRefs (SourceRef[]), schemaVersion (number), ruleVersion (string). MUST NOT include canvas x/y coordinate fields.",
+    "Add storage helpers loadSavedRoutes(): SavedRoute[] | null, saveRoute(route: SavedRoute): void, toggleFavorite(id: string): void, pruneRecentRoutes(routes: SavedRoute[]): SavedRoute[] applying RECENT_ROUTE_CAP=20 FIFO eviction to non-favorite entries while preserving all favorites.",
+    "Use single localStorage key 'maestro-wiki.saved-routes.v1'; JSON.stringify the SavedRoute[] array.",
+    "Wrap all localStorage access in try/catch (catching QuotaExceededError, SecurityError, and general exceptions); on failure, fall back to a module-level session memory store (e.g. let sessionStore: SavedRoute[] = []) and continue operating.",
+    "Render saved routes access via an in-canvas floating button or popover trigger (reusing TASK-002 floating-button style); MUST NOT reintroduce a permanent right sidebar or detail-panel-like aside.",
+    "Add unit tests in src/main.test.tsx: assert RECENT_ROUTE_CAP=20 cap on recent routes (insert 25 non-favorite, expect 20 retained, oldest evicted), assert favorites preserved beyond 20 cap, assert evidence fields (sourceRefs/recommendationReasons) retained, assert fallback to session memory when localStorage throws."
+  ],
+  "depends_on": ["TASK-003"],
+  "convergence": {
+    "criteria": [
+      "src/main.tsx contains 'type SavedRoute'",
+      "src/main.tsx contains 'maestro-wiki.saved-routes.v1'",
+      "src/main.tsx contains 'schemaVersion' and 'ruleVersion'",
+      "src/main.tsx contains 'RECENT_ROUTE_CAP' set to 20 or '20' as recent cap",
+      "src/main.tsx contains fallback to session memory on localStorage failure (try/catch with sessionStore or in-memory fallback)",
+      "src/main.tsx 'type SavedRoute' definition block contains none of 'canvasX', 'canvasY', 'absoluteX', 'absoluteY' (no canvas coordinate fields)",
+      "src/main.test.tsx contains 'recent' and '20' cap assertion",
+      "src/main.test.tsx contains 'favorites' preserved assertion",
+      "npm test exits 0",
+      "[UI-observable] npm run test:e2e exits 0 and verifies saved-routes floating entry renders and opens routes list without reintroducing a permanent right sidebar"
+    ]
+  }
+}

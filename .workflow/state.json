@@ -375,16 +375,36 @@
       "milestone": "M2-canvas-command-recommender-mvp",
       "phase": 2,
       "path": "scratch/20260628-plan-P2-local-canvas-recommender",
-      "depends_on": ["ANL-002"],
+      "depends_on": ["ANL-002", "GRL-20260628-fullscreen-canvas-layout"],
       "harvested": false,
       "created_at": "2026-06-28T00:00:00Z",
       "completed_at": "2026-06-28T00:00:00Z",
       "metadata": {
-        "task_count": 3,
-        "wave_count": 3,
-        "confidence": 0.72,
-        "checker_status": "WARN",
-        "concerns": ["workflow-planner agent failed; inline fallback plan used"]
+        "task_count": 4,
+        "wave_count": 4,
+        "confidence": 80,
+        "checker_status": "PASS",
+        "revised_per": "GRL-20260628-fullscreen-canvas-layout (14 locked decisions)",
+        "concerns": ["revised: original inline-fallback plan replaced with grill-aligned 4-task structure"]
+      }
+    },
+    {
+      "id": "GRL-20260628-fullscreen-canvas-layout",
+      "type": "grill",
+      "scope": "standalone",
+      "path": "scratch/20260628-grill-fullscreen-canvas-layout",
+      "status": "completed",
+      "context_package": "scratch/20260628-grill-fullscreen-canvas-layout/context-package.json",
+      "created_at": "2026-06-28T00:00:00Z",
+      "metadata": {
+        "topic": "单一满屏画布布局 — 只保留顶部标题和项目简介，移除其他所有页面布局元素",
+        "depth": "standard",
+        "branches_completed": 5,
+        "decisions_locked": 14,
+        "decisions_open": 0,
+        "terms_defined": 9,
+        "upstream_related": "GRL-20260628-canvas-node-scenario-redesign",
+        "closed_upstream_open_questions": 2
       }
     }
   ],

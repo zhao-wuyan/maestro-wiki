@@ -1,7 +1,7 @@
 {
   "$schema": "task/1.0",
   "id": "TASK-002",
-  "title": "Build branch-aware canvas-first interaction",
+  "title": "Build fullscreen pan-zoom canvas runtime shell",
   "type": "feature",
   "priority": "high",
   "phase": 2,
@@ -13,26 +13,35 @@
     "src/main.test.tsx",
     "scripts/e2e-smoke.mjs",
     ".workflow/roadmap.md",
+    ".workflow/scratch/20260628-grill-fullscreen-canvas-layout/context-package.json",
     ".workflow/scratch/20260628-analyze-P2-local-canvas-recommender/context.md"
   ],
-  "action": "Replace the fixed single-path scenario map and permanent 390px right detail panel with a canvas-first recommender surface. Add branch-aware state types CanvasNode, CanvasEdge, CanvasBranch, CanvasRouteState with activeBranchId. Render a central scenario/state node, recommendation command nodes, branch edges, evidence cards, and edge note controls. Remove the workspace grid dependency on grid-template-columns: minmax(0, 1fr) 390px.",
+  "action": "Replace M1 rendering layer per grill Q4.1 (no backward compat) while preserving ScenarioModel/ScenarioNode/ScenarioStep data fields. Implement fullscreen pan/zoom canvas shell covering Q1.1 (hero-only top), Q1.2 (detail-panel removed), Q1.3 (fill viewport + pan/zoom), Q3.2 (fullscreen toggle), Q3.3 (empty initial state), Q4.3 (floating scenario label), Q5.1 (viewport clipping), Q3.1 gesture shell (pan/zoom/click threshold), and Q4.1 (M1 replace). Concretely: remove .app-shell max-width:1180px and padding:56px 0; remove .workspace grid-template-columns: minmax(0, 1fr) 390px; remove entire .detail-panel aside; remove .diagram-header (h2/scenario-summary/status-pill); keep .hero (h1+hero-copy) persistent at top. Canvas container fills viewport horizontally and from below hero to viewport bottom vertically. Replace fixed viewBox=\"0 0 1080 520\" with dynamic coordinate system via canvasTransform state {x, y, scale} applied through SVG <g transform>. Left-drag pans (PAN_THRESHOLD distinguishes click vs pan), wheel zooms, left-click selects node (activateNode retained), right-click preventDefault reserved for TASK-003 popover. Top-right floating transparent fullscreen button toggles isFullscreen (hero hidden when fullscreen); isFullscreen纳入 canvas state model. Top-left floating transparent scenario label shows current scenario.id/title, symmetric to fullscreen button. Initial state: empty canvas + centered scenario selector start node + guidance copy; guidance copy disappears after first scenario selection. Viewport clipping: only render nodes whose absolute x/y mapped through canvasTransform fall within viewport plus VIEWPORT_BUFFER margin; pure geometry, no graphics library.",
   "implementation": [
-    "Create initial canvas state from simulated project state and recommendCommands output.",
-    "Add a UI control to expand a recommendation into a new branch and set activeBranchId.",
-    "Show recommendation rationale, confidence label, equal-rank status, and source evidence in contextual cards inside or below the canvas.",
-    "Add an edge note input or button-driven note editor so users can record why a route choice was made.",
-    "Refactor CSS so .workspace is canvas-first and no permanent large detail sidebar remains.",
-    "Update tests and e2e smoke to assert the central node, branch expansion, recommendation evidence, and edge notes are visible/useful."
+    "In src/styles.css: delete the rule setting max-width on .app-shell (1180px) and padding:56px 0; delete .workspace grid-template-columns: minmax(0, 1fr) 390px; delete .detail-panel block; delete .diagram-header block; keep .hero h1+hero-copy styling; add .canvas-shell { width:100vw; height: calc(100vh - <hero-height>); } and .canvas-shell.is-fullscreen { height:100vh; } with hero hidden via display:none when isFullscreen.",
+    "In src/main.tsx: introduce state canvasTransform: {x:number, y:number, scale:number} defaulting to {x:0,y:0,scale:1}; introduce isFullscreen:boolean state; apply transform via <g transform={`translate(${canvasTransform.x} ${canvasTransform.y}) scale(${canvasTransform.scale})`}> on the canvas layer.",
+    "Add PAN_THRESHOLD constant (e.g. 4px) and pointer handlers: onPointerDown records start, onPointerMove pans when movement > PAN_THRESHOLD, onPointerUp selects node if movement <= PAN_THRESHOLD (click) else commits pan; onWheel adjusts scale (clamp 0.25..4); onContextMenu calls e.preventDefault() (popover wiring deferred to TASK-003).",
+    "Add VIEWPORT_BUFFER constant (e.g. 120px); write isVisibleNode(node, canvasTransform, viewportWidth, viewportHeight) computing mapped coordinates and testing against [-VIEWPORT_BUFFER, viewportWidth+VIEWPORT_BUFFER] x [-VIEWPORT_BUFFER, viewportHeight+VIEWPORT_BUFFER]; render only visible nodes.",
+    "Render top-right floating transparent button with onClick toggling setIsFullscreen; render top-left floating transparent scenario label reading active scenario.id/title; hide label or show 'no scenario' when none selected.",
+    "Initial render: empty canvas with centered scenario selector start node (from ScenarioModel root) plus guidance copy text node; on first scenario selection set a hasSelectedScenario flag that unmounts guidance copy.",
+    "Preserve ScenarioModel/ScenarioNode/ScenarioStep type fields unchanged (grill Q4.1: data model retained, only rendering rewritten). Do not introduce any graphics/layout library.",
+    "Update src/main.test.tsx with [UI-observable] assertions and scripts/e2e-smoke.mjs to verify: canvas fills viewport, pan/zoom works, fullscreen toggle hides hero, empty initial state shows scenario selector, guidance copy disappears after selection."
   ],
   "depends_on": ["TASK-001"],
   "convergence": {
     "criteria": [
-      "src/main.tsx contains 'type CanvasBranch'",
-      "src/main.tsx contains 'activeBranchId'",
-      "src/main.tsx contains 'Edge note' or 'edge note'",
+      "src/styles.css does not contain 'max-width: 1180px' and does not contain '1180px'",
       "src/styles.css does not contain 'grid-template-columns: minmax(0, 1fr) 390px'",
+      "src/main.tsx does not contain 'className=\"detail-panel\"'",
+      "src/main.tsx does not contain 'diagram-header'",
+      "src/main.tsx contains 'canvasTransform' with pan and zoom transform state",
+      "src/main.tsx contains 'isFullscreen' toggle state",
+      "src/main.tsx contains 'onContextMenu' with preventDefault",
+      "src/main.tsx contains 'VIEWPORT_BUFFER' viewport clipping logic",
+      "src/main.tsx contains 'PAN_THRESHOLD' drag threshold",
+      "src/main.tsx contains floating scenario label reading scenario.id or scenario.title",
       "src/main.test.tsx contains '[UI-observable]'",
-      "[UI-observable] npm run test:e2e exits 0 and verifies branch expansion plus recommendation evidence"
+      "[UI-observable] npm run test:e2e exits 0 and verifies fullscreen canvas fills viewport, pan/zoom works, fullscreen toggle hides hero, empty initial state shows scenario selector"
     ]
   }
 }

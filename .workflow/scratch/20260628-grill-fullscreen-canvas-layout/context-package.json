@@ -1,0 +1,179 @@
+{
+  "$schema": "context-package/1.0",
+  "source": {
+    "type": "grill",
+    "artifact_id": "GRL-20260628-fullscreen-canvas-layout",
+    "session_path": "scratch/20260628-grill-fullscreen-canvas-layout",
+    "generated_at": "2026-06-28T00:00:00Z"
+  },
+  "requirements": [
+    {
+      "id": "R-001",
+      "title": "顶部仅保留站点级 hero",
+      "description": "页面顶部只保留 .hero 的 h1 + hero-copy（站点标题和简介），移除 .diagram-header 的 h2/scenario-summary/status-pill。",
+      "priority": "must",
+      "ref": "grill-report.md#Q1.1"
+    },
+    {
+      "id": "R-002",
+      "title": "移除 detail-panel，导航上画布",
+      "description": "删除整个 .detail-panel（390px 右栏）；Next Choices 迁移为活动节点发出的可点击画布分支选项；节点点击选中(activateNode)保留。",
+      "priority": "must",
+      "ref": "grill-report.md#Q1.2"
+    },
+    {
+      "id": "R-003",
+      "title": "满屏可平移缩放画布",
+      "description": "移除 .app-shell 的 1180px 上限和 56px padding；画布横向占满视口、纵向占满 hero 以下到视口底；画布为可平移(pan)/缩放(zoom)虚拟大面，替换固定 viewBox 1080x520。",
+      "priority": "must",
+      "ref": "grill-report.md#Q1.3"
+    },
+    {
+      "id": "R-004",
+      "title": "推荐证据由节点 popover 承载",
+      "description": "Recommended Command/Purpose/Input/Output/Next Action/Alternatives/Source Status 由节点 onContextMenu 弹出 popover 显示；主画布常驻只含节点框+导航分支。",
+      "priority": "must",
+      "ref": "grill-report.md#Q2.1"
+    },
+    {
+      "id": "R-005",
+      "title": "Continuation Routes 上画布",
+      "description": "terminal 节点的 stop/quality/knowledge 路线作为画布分支选项呈现，与 Next Choices 统一导航机制。",
+      "priority": "must",
+      "ref": "grill-report.md#Q2.2"
+    },
+    {
+      "id": "R-006",
+      "title": "Validation Checklist 入 popover",
+      "description": "Validation Checklist 并入活动节点 popover 证据簇下方；checkedItems state 按 step 保留。",
+      "priority": "must",
+      "ref": "grill-report.md#Q2.3"
+    },
+    {
+      "id": "R-007",
+      "title": "右键 popover + 手势消歧",
+      "description": "popover 由节点 onContextMenu(右键/长按)触发；左键 click 选中节点；左键拖拽平移(位移阈值区分 click/pan)；滚轮/双指缩放。",
+      "priority": "must",
+      "ref": "grill-report.md#Q3.1"
+    },
+    {
+      "id": "R-008",
+      "title": "全屏切换按钮",
+      "description": "hero 常驻顶部；右上角悬浮透明全屏按钮切换画布全屏模式(hero 隐藏)。",
+      "priority": "must",
+      "ref": "grill-report.md#Q3.2"
+    },
+    {
+      "id": "R-009",
+      "title": "空态初始画布",
+      "description": "画布初始为空，中央放置场景选择起始节点 + 引导文案；选中场景后逐步展开后续节点。",
+      "priority": "must",
+      "ref": "grill-report.md#Q3.3"
+    },
+    {
+      "id": "R-010",
+      "title": "并入 M2 替换 M1",
+      "description": "本轮布局/交互重写并入 M2 画布重构(PLN-002)，替换 M1 代码不保留向后兼容；数据模型字段保留仅渲染层重写。",
+      "priority": "must",
+      "ref": "grill-report.md#Q4.1"
+    },
+    {
+      "id": "R-011",
+      "title": "水平主线+上下分支布局",
+      "description": "主路径沿水平轴右展，备选/并行分支向上下偏移(泳道感)；选中高亮主线，未选次级样式；不引入图形库，用几何规则计算坐标。",
+      "priority": "must",
+      "ref": "grill-report.md#Q4.2"
+    },
+    {
+      "id": "R-012",
+      "title": "场景上下文悬浮标签",
+      "description": "场景上下文作画布左上角轻量悬浮标签，与右上角全屏按钮对称，透明样式，场景切换时更新。",
+      "priority": "must",
+      "ref": "grill-report.md#Q4.3"
+    },
+    {
+      "id": "R-013",
+      "title": "视口裁剪虚拟化",
+      "description": "仅渲染 transform 矩阵映射后落在当前视口内的节点(含缓冲边距)；平移/缩放时动态加载/卸载；基于坐标+transform 几何运算，不依赖图形库。",
+      "priority": "must",
+      "ref": "grill-report.md#Q5.1"
+    },
+    {
+      "id": "R-014",
+      "title": "route history localStorage 持久化",
+      "description": "route history 用 localStorage，recent routes 上限(20条)FIFO 淘汰，favorites 无上限；每条存推荐证据不存画布坐标；读写容错降级会话内存。",
+      "priority": "must",
+      "ref": "grill-report.md#Q5.2"
+    }
+  ],
+  "constraints": [
+    { "id": "C-001", "area": "layout", "constraint": "顶部 MUST 只保留 .hero 的 h1+hero-copy；.diagram-header 的 h2/scenario-summary/status-pill MUST 移除", "rationale": "用户要求只有标题+简介+大画布", "status": "locked", "ref": "grill-report.md#Q1.1" },
+    { "id": "C-002", "area": "layout", "constraint": ".detail-panel 整体 MUST 移除；步进导航 MUST 迁移到画布上为活动节点分支选项；activateNode 选中语义 MUST 保留", "rationale": "字面删除 detail-panel 会丢失唯一步进驱动", "status": "locked", "ref": "grill-report.md#Q1.2" },
+    { "id": "C-003", "area": "layout", "constraint": ".app-shell max-width:1180px 与 padding:56px 0 MUST 移除；画布 MUST 横向占满视口、纵向占满 hero 以下到视口底；固定 viewBox MUST 替换为可动态调整坐标系(含 pan/zoom transform)", "rationale": "真铺满+可平移缩放", "status": "locked", "ref": "grill-report.md#Q1.3" },
+    { "id": "C-004", "area": "data-model", "constraint": "推荐证据簇 MUST 由节点承载通过 onContextMenu 弹 popover 显示；主画布常驻 MUST 只含节点框与导航分支；证据数据 MUST 保留在数据模型供 popover 渲染", "rationale": "对齐上轮决策#6(MUST 保存推荐证据)", "status": "locked", "ref": "grill-report.md#Q2.1" },
+    { "id": "C-005", "area": "data-model", "constraint": "Continuation Routes MUST 作为 terminal 节点画布分支选项；MUST NOT 作为独立面板或 popover 内按钮；terminalRoutes 数据 MUST 保留", "rationale": "导航模型统一", "status": "locked", "ref": "grill-report.md#Q2.2" },
+    { "id": "C-006", "area": "data-model", "constraint": "Validation Checklist MUST 并入节点 popover 置于证据下方；checkedItems MUST 按 step 保留；MUST NOT 作为独立常驻控件", "rationale": "自检状态保留且画布纯净", "status": "locked", "ref": "grill-report.md#Q2.3" },
+    { "id": "C-007", "area": "interaction", "constraint": "popover MUST 由 onContextMenu 触发，MUST NOT 用 hover 或左键 click；左键 click 选中、左键拖拽平移(位移阈值区分)、滚轮缩放；右键菜单 MUST preventDefault", "rationale": "消解 pan/click/hover 手势冲突", "status": "locked", "ref": "grill-report.md#Q3.1" },
+    { "id": "C-008", "area": "interaction", "constraint": "hero MUST 常驻顶部；MUST 提供右上角悬浮透明全屏按钮切换画布全屏模式；全屏状态 MUST 纳入画布状态模型", "rationale": "小屏空间争抢+用户要全屏", "status": "locked", "ref": "grill-report.md#Q3.2" },
+    { "id": "C-009", "area": "interaction", "constraint": "画布初始态 MUST 为空+中心场景选择节点+引导文案；选中后 MUST 逐步展开(决策#10)；MUST NOT 一次性渲染全场景；引导文案首次选择后消失", "rationale": "对齐上轮决策#1 场景重构", "status": "locked", "ref": "grill-report.md#Q3.3" },
+    { "id": "C-010", "area": "integration", "constraint": "本轮决策 MUST 并入 M2(PLN-002)与上轮决策#1 合并；M1 App 及 styles MUST 被替换不保留兼容；数据模型字段 MUST 保留仅渲染层重写", "rationale": "避免重复重写+保留数据", "status": "locked", "ref": "grill-report.md#Q4.1" },
+    { "id": "C-011", "area": "layout", "constraint": "主路径 MUST 沿水平轴右展 y 对齐；分支 MUST 上下偏移；选中高亮主线未选次级；坐标 MUST 几何规则计算 MUST NOT 引入图形库", "rationale": "关闭上轮 open question tree/swimlane/auto-layout", "status": "locked", "ref": "grill-report.md#Q4.2" },
+    { "id": "C-012", "area": "layout", "constraint": "场景上下文 MUST 作画布左上角悬浮标签与全屏按钮对称；标签至少含场景标识；场景切换更新；空态隐藏或显示未选择", "rationale": "diagram-header 移除后场景上下文去向", "status": "locked", "ref": "grill-report.md#Q4.3" },
+    { "id": "C-013", "area": "performance", "constraint": "画布 MUST 视口裁剪虚拟化仅渲染可见节点(含缓冲)；平移缩放时动态计算可见集；MUST 基于坐标+transform 几何运算 MUST NOT 依赖图形库；节点保留绝对 x/y 供裁剪", "rationale": "节点增长性能", "status": "locked", "ref": "grill-report.md#Q5.1" },
+    { "id": "C-014", "area": "persistence", "constraint": "route history MUST 用 localStorage；recent 上限(20条)FIFO favorites 无上限；每条 MUST 存推荐证据 MUST NOT 存画布坐标；读写 MUST 容错降级会话内存", "rationale": "对齐上轮决策#5+#6", "status": "locked", "ref": "grill-report.md#Q5.2" }
+  ],
+  "domain": {
+    "problem_statement": "用户要求将 Maestro Workflow Wiki 页面布局重构为只有顶部标题(h1)+项目简介(hero-copy)+一块满屏大画布，移除所有其他页面布局元素（含右侧 390px detail-panel），画布需真铺满视口且可平移缩放。现有代码(.app-shell 1180px 上限、.workspace 双栏、.detail-panel、固定 viewBox SVG)均与此诉求冲突，且 detail-panel 内藏着步进导航唯一驱动与受上轮决策#6约束的推荐证据，不可静默丢弃。",
+    "terminology": [
+      { "term": "大画布 (canvas)", "definition": "占据视口主体、可平移缩放、承载节点图的虚拟大面（非固定 viewBox SVG）", "code_ref": "src/main.tsx:353 (将被替换); src/styles.css:28 (max-width 将移除)", "status": "locked" },
+      { "term": "顶部标题 (top title)", "definition": "页面顶部 .hero 的 h1 站点标题", "code_ref": "src/main.tsx:336", "status": "locked" },
+      { "term": "项目简介 (project intro)", "definition": ".hero 的 hero-copy 站点级一句话简介", "code_ref": "src/main.tsx:338", "status": "locked" },
+      { "term": "页面布局 (page layout)", "definition": "标题/简介之外的容器与分区（本轮全部移除，仅留左上场景标签+右上全屏按钮悬浮）", "code_ref": "src/styles.css:28; src/styles.css:78; src/main.tsx:404", "status": "locked" },
+      { "term": "铺满屏幕 (fill screen)", "definition": "画布横向占满视口、纵向占满 hero 以下到视口底，可全屏切换", "code_ref": "src/styles.css:29 (将移除 max-width)", "status": "locked" },
+      { "term": "节点 (node)", "definition": "画布上可点击方块，代表一个命令/步骤", "code_ref": "src/main.tsx:14 (ScenarioNode type); src/styles.css:140 (.node class)", "status": "locked" },
+      { "term": "交互逻辑 (interaction logic)", "definition": "节点右键弹 popover、左键选中、左键拖拽平移、滚轮缩放、画布分支推进 step", "code_ref": "src/main.tsx:326 (activateNode); src/main.tsx:433 (choice-button 迁移)", "status": "locked" },
+      { "term": "推荐证据 (recommendation evidence)", "definition": "为何推荐某命令的理由+来源，由节点 popover 承载", "code_ref": "上轮决策#6; src/main.tsx:415-470 (迁移到 popover)", "status": "locked" },
+      { "term": "步进导航 (stepwise navigation)", "definition": "沿场景路径逐步推进 step，通过活动节点画布分支选项驱动", "code_ref": "src/main.tsx:426-447 (迁移到画布分支)", "status": "locked" }
+    ],
+    "audience": "Maestro Flow 初学者与需要命令选择辅助的开发者",
+    "industry": "开发者工具/工作流可视化"
+  },
+  "non_goals": [
+    { "title": "不保留 M1 向后兼容", "rationale": "决策#10 锁定替换 M1 代码，不保留兼容分支", "ref": "grill-report.md#Q4.1" },
+    { "title": "不引入图形布局库", "rationale": "保持项目无图形库约束，用几何规则计算坐标(决策#11/#13)", "ref": "grill-report.md#Q4.2,Q5.1" },
+    { "title": "不在 popover 内做导航", "rationale": "导航统一上画布为分支选项，popover 只承载证据+自检(决策#4/#5)", "ref": "grill-report.md#Q2.1,Q2.2" },
+    { "title": "MVP 不展开 quality/knowledge pipeline 内部", "rationale": "branch 选中即标记路线，pipeline 内部属后续里程碑(对齐项目 Out of Scope)", "ref": "grill-report.md#Q4.1" }
+  ],
+  "insights": [
+    {
+      "area": "layout-conflict",
+      "summary": "用户'移除其他所有页面布局'的字面诉求与代码三处直接冲突：.app-shell 1180px 上限(styles.css:29)、.workspace 双栏(styles.css:78)、.detail-panel(main.tsx:404)。其中 detail-panel 藏着步进导航唯一驱动(choice-button main.tsx:426-447)和受上轮决策#6约束的推荐证据，字面删除会瘫痪交互且违规。",
+      "evidence": "src/styles.css:28-32; src/styles.css:78-83; src/main.tsx:404-506; src/main.tsx:426-447; 上轮 grill 决策#6",
+      "ref": "grill-report.md#Q1.2,Q2.1"
+    },
+    {
+      "area": "gesture-conflict",
+      "summary": "可平移缩放画布引入 pan/click/hover 三者手势歧义。用户选定右键(onContextMenu)触发 popover，绕开 hover 误触与 click/pan 歧义，是本会话关键设计决策。",
+      "evidence": "src/main.tsx:388 (onClick); src/main.tsx:389-394 (onKeyDown); Q3.1 决策",
+      "ref": "grill-report.md#Q3.1"
+    },
+    {
+      "area": "cross-grill-alignment",
+      "summary": "本轮 14 条决策与上轮 grill(GRL-20260628-canvas-node-scenario-redesign) 12 条锁定决策完全对齐，并关闭了上轮 2 个 open question：'tree/swimlane/auto-layout'(本轮#11选swimlane变体) 与 '节点坐标体系'(本轮#13保留绝对x/y供视口裁剪)。",
+      "evidence": "上轮 grill 决策#1/#5/#6/#10; 本轮 Q4.2/Q5.1",
+      "ref": "grill-report.md#Q4.2,Q5.1"
+    },
+    {
+      "area": "scope-merge",
+      "summary": "本轮布局重写非独立工作，并入既有 M2 画布重构(PLN-002)，与上轮决策#1 合并为单一 M2 实现。M1 代码被替换但数据模型字段保留，仅渲染层重写。",
+      "evidence": ".workflow/state.json (M2 active, PLN-002); src/main.tsx:14-76 (数据模型保留); src/main.tsx:306-510 (App 替换)",
+      "ref": "grill-report.md#Q4.1"
+    }
+  ],
+  "open_questions": [],
+  "references": [
+    { "type": "grill-report", "path": "grill-report.md" },
+    { "type": "terminology", "path": "terminology.md" },
+    { "type": "prior-grill", "path": "../20260628-grill-canvas-node-scenario-redesign/grill-report.md", "note": "GRL-20260628-canvas-node-scenario-redesign, 12 locked decisions, 2 open questions closed by this session" }
+  ]
+}
