@@ -104,6 +104,70 @@ try {
   await wait(80);
   await page.getByRole('button', { name: '查看 规格成型' }).waitFor();
 
+  // [UI-observable] right-click on node opens popover with evidence cluster
+  const blueprintNode = page.getByRole('button', { name: '查看 规格成型' });
+  await blueprintNode.waitFor();
+  await blueprintNode.click({ button: 'right' });
+  await wait(120);
+  const popover = page.getByTestId('node-popover');
+  await popover.waitFor();
+  const popoverText = await popover.textContent();
+  assert(popoverText && popoverText.includes('maestro-blueprint'), 'popover shows recommended command');
+  assert(popoverText && popoverText.includes('Purpose'), 'popover shows Purpose evidence');
+  assert(popoverText && popoverText.includes('Source Status'), 'popover shows source status section');
+  assert(popoverText && popoverText.includes('Validation Checklist'), 'popover shows validation checklist');
+  assert(popoverText && popoverText.includes('maestro-flow/'), 'popover cites maestro-flow/ source paths');
+
+  // [UI-observable] validation checklist checkbox toggles and persists per step
+  const checklistCheckbox = page.getByTestId('checklist-check-command');
+  await checklistCheckbox.check();
+  await wait(60);
+  const isChecked = await checklistCheckbox.isChecked();
+  assert(isChecked, 'checklist checkbox checked after click');
+
+  // close popover
+  await page.getByRole('button', { name: '关闭证据弹窗' }).click();
+  await wait(80);
+  const popoverGone = await page.getByTestId('node-popover').count();
+  assert(popoverGone === 0, 'popover closes via close button');
+
+  // reopen popover — checkbox should remain checked (per-step persistence)
+  await blueprintNode.click({ button: 'right' });
+  await wait(120);
+  await page.getByTestId('node-popover').waitFor();
+  const checkboxReopened = page.getByTestId('checklist-check-command');
+  const stillChecked = await checkboxReopened.isChecked();
+  assert(stillChecked, 'checkedItems persists per step after popover reopen');
+
+  // close popover before navigating
+  await page.getByRole('button', { name: '关闭证据弹窗' }).click();
+  await wait(80);
+
+  // [UI-observable] alternatives render as secondary canvas branches
+  const altBranchCount = await page.getByRole('button', { name: '先 roadmap' }).count();
+  assert(altBranchCount > 0, 'alternatives render as canvas branches from active node');
+
+  // [UI-observable] navigate to terminal node — terminal routes render as branches
+  await page.getByRole('button', { name: '规格可执行，分析 Phase 1' }).click();
+  await wait(80);
+  await page.getByRole('button', { name: '分析结论为 GO，进入计划' }).click();
+  await wait(80);
+  await page.getByRole('button', { name: '计划完成，选择后续路线' }).click();
+  await wait(80);
+
+  await page.getByRole('button', { name: 'Stop' }).waitFor();
+  const stopCount = await page.getByRole('button', { name: 'Stop' }).count();
+  const qualityCount = await page.getByRole('button', { name: 'Quality Pipeline' }).count();
+  const knowledgeCount = await page.getByRole('button', { name: 'Knowledge Capture' }).count();
+  assert(stopCount > 0, 'terminal route Stop renders as canvas branch');
+  assert(qualityCount > 0, 'terminal route Quality Pipeline renders as canvas branch');
+  assert(knowledgeCount > 0, 'terminal route Knowledge Capture renders as canvas branch');
+
+  // [UI-observable] terminal route branches use terminalRoutes data (data-branch-kind=route)
+  const stopBranch = page.getByRole('button', { name: 'Stop' });
+  const stopKind = await stopBranch.getAttribute('data-branch-kind');
+  assert(stopKind === 'route', `terminal route branch has data-branch-kind=route (got ${stopKind})`);
+
   await browser.close();
 } finally {
   server.kill('SIGTERM');

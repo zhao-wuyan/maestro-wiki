@@ -619,6 +619,16 @@ const MIN_SCALE = 0.25;
 const MAX_SCALE = 4;
 const DEFAULT_VIEWPORT = { width: 1024, height: 600 };
 
+// Swimlane branch layout constants (grill Q4.2 / C-011):
+// main path extends rightward along horizontal axis with shared y;
+// alternative/parallel branches offset up/down with alternating sign.
+// Pure arithmetic — no graphics library.
+const MAIN_LINE_GAP = 220;
+const BRANCH_OFFSET = 90;
+const MAIN_LINE_Y = 200;
+const BASE_X = 40;
+const LONG_PRESS_MS = 500;
+
 type CanvasTransform = { x: number; y: number; scale: number };
 type ViewportSize = { width: number; height: number };
 
@@ -654,6 +664,7 @@ export function App() {
   const [hasSelectedScenario, setHasSelectedScenario] = useState(false);
   const [viewportSize, setViewportSize] = useState<ViewportSize>(DEFAULT_VIEWPORT);
   const [isPanning, setIsPanning] = useState(false);
+  const [popover, setPopover] = useState<{ nodeId: string; x: number; y: number } | null>(null);
 
   const canvasShellRef = useRef<HTMLDivElement | null>(null);
   const pointerStateRef = useRef<{
@@ -664,6 +675,7 @@ export function App() {
     isPanning: boolean;
   } | null>(null);
   const lastGestureWasPanRef = useRef(false);
+  const longPressTimerRef = useRef<number | null>(null);
 
   const activeStep = useMemo(
     () => scenario.steps.find((step) => step.id === activeStepId) ?? scenario.steps[0],
@@ -691,14 +703,82 @@ export function App() {
     return new Set<string>([intentNodeId, ...Array.from(activeNodeIds)]);
   }, [hasSelectedScenario, activeNodeIds, scenario.nodes]);
 
+  // Swimlane layout (grill Q4.2): main path nodes extend rightward along
+  // horizontal axis with shared y; positions computed via geometry rules.
+  const nodeLayout = useMemo(() => {
+    const map = new Map<string, { x: number; y: number }>();
+    scenario.nodes.forEach((node, index) => {
+      map.set(node.id, { x: BASE_X + index * MAIN_LINE_GAP, y: MAIN_LINE_Y });
+    });
+    return map;
+  }, [scenario.nodes]);
+
+  const getNodePos = (nodeId: string): { x: number; y: number } =>
+    nodeLayout.get(nodeId) ?? { x: 0, y: 0 };
+
+  // Unified canvas branch list for the active node (grill Q1.2/Q2.2):
+  // - Next Choices (step.choices with targetStepId) advance the active step
+  // - Continuation Routes (step.terminalRoutes) render as terminal canvas
+  //   branches reusing continuationRoutes data — MUST NOT be a standalone
+  //   panel or popover-internal buttons (grill C-005)
+  // - Alternatives (step.alternatives) render as secondary swimlane branches
+  type CanvasBranch = {
+    id: string;
+    label: string;
+    condition: string;
+    targetStepId?: string;
+    routeId?: string;
+    kind: 'choice' | 'route' | 'alternative';
+  };
+
+  const activeBranches = useMemo<CanvasBranch[]>(() => {
+    if (!activeStep) return [];
+    const branches: CanvasBranch[] = [];
+    if (activeStep.terminalRoutes && activeStep.terminalRoutes.length > 0) {
+      activeStep.terminalRoutes.forEach((routeId) => {
+        const route = scenario.continuationRoutes.find((item) => item.id === routeId);
+        if (route) {
+          branches.push({
+            id: `route-${routeId}`,
+            label: route.label,
+            condition: route.description,
+            routeId,
+            kind: 'route',
+          });
+        }
+      });
+    } else {
+      activeStep.choices.forEach((choice) => {
+        branches.push({
+          id: choice.id,
+          label: choice.label,
+          condition: choice.condition,
+          targetStepId: choice.targetStepId,
+          routeId: choice.routeId,
+          kind: 'choice',
+        });
+      });
+    }
+    activeStep.alternatives.forEach((alt) => {
+      branches.push({
+        id: alt.id,
+        label: alt.label,
+        condition: alt.condition,
+        kind: 'alternative',
+      });
+    });
+    return branches;
+  }, [activeStep, scenario.continuationRoutes]);
+
   const visibleNodes = useMemo(
     () =>
       scenario.nodes.filter(
         (node) =>
           revealedNodeIds.has(node.id) &&
-          isVisibleNode(node, canvasTransform, viewportSize.width, viewportSize.height),
+          isVisibleNode(getNodePos(node.id), canvasTransform, viewportSize.width, viewportSize.height),
       ),
-    [scenario.nodes, revealedNodeIds, canvasTransform, viewportSize],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [scenario.nodes, revealedNodeIds, canvasTransform, viewportSize, nodeLayout],
   );
 
   const visibleEdges = useMemo(
@@ -721,6 +801,20 @@ export function App() {
     observer.observe(shell);
     return () => observer.disconnect();
   }, []);
+
+  // Auto-pan to keep active node visible when step advances (grill Q1.2/Q4.2):
+  // recenters the active node at 1/3 from left so outgoing branches stay
+  // visible. Only fires when activeStepId actually changes.
+  useEffect(() => {
+    if (!hasSelectedScenario || !activeNode) return;
+    const pos = getNodePos(activeNode.id);
+    setCanvasTransform((current) => ({
+      x: viewportSize.width / 3 - pos.x * current.scale,
+      y: viewportSize.height / 2 - (pos.y + NODE_HEIGHT / 2) * current.scale,
+      scale: current.scale,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeStepId]);
 
   const activateNode = (nodeId: string) => {
     setSelectedNodeId(nodeId);
@@ -788,7 +882,57 @@ export function App() {
 
   const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
-    // popover wiring deferred to TASK-003
+    // Right-click on empty canvas closes any open popover; node right-click
+    // is handled by handleNodeContextMenu which stops propagation.
+    setPopover(null);
+  };
+
+  const handleNodeContextMenu = (event: React.MouseEvent<SVGGElement>, nodeId: string) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const shell = canvasShellRef.current;
+    const rect = shell?.getBoundingClientRect();
+    const x = rect ? event.clientX - rect.left : event.clientX;
+    const y = rect ? event.clientY - rect.top : event.clientY;
+    setPopover({ nodeId, x, y });
+  };
+
+  const handleNodeTouchStart = (event: React.TouchEvent<SVGGElement>, nodeId: string) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    const shell = canvasShellRef.current;
+    const rect = shell?.getBoundingClientRect();
+    const x = rect ? touch.clientX - rect.left : touch.clientX;
+    const y = rect ? touch.clientY - rect.top : touch.clientY;
+    if (longPressTimerRef.current !== null) {
+      clearTimeout(longPressTimerRef.current);
+    }
+    longPressTimerRef.current = window.setTimeout(() => {
+      setPopover({ nodeId, x, y });
+    }, LONG_PRESS_MS);
+  };
+
+  const handleNodeTouchEnd = () => {
+    if (longPressTimerRef.current !== null) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const handleNodeTouchMove = () => {
+    if (longPressTimerRef.current !== null) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const closePopover = () => setPopover(null);
+
+  const checklistKey = (stepId: string, checkId: string) => `${stepId}::${checkId}`;
+
+  const toggleCheck = (stepId: string, checkId: string) => {
+    const key = checklistKey(stepId, checkId);
+    setCheckedItems((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleNodeClick = (nodeId: string) => {
@@ -797,12 +941,14 @@ export function App() {
       return;
     }
     activateNode(nodeId);
+    setPopover(null);
   };
 
   const handleNodeKeyDown = (event: React.KeyboardEvent<SVGRectElement>, nodeId: string) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       activateNode(nodeId);
+      setPopover(null);
     }
   };
 
@@ -821,12 +967,27 @@ export function App() {
       const route = scenario.continuationRoutes.find((item) => item.id === routeId);
       void route;
     }
+    setPopover(null);
   };
 
   const activeNode = useMemo(
     () => scenario.nodes.find((node) => node.id === activeStep.nodeId) ?? null,
     [scenario.nodes, activeStep.nodeId],
   );
+
+  const activeNodePos = activeNode ? getNodePos(activeNode.id) : { x: 0, y: 0 };
+
+  const popoverStep = popover
+    ? scenario.steps.find((step) => step.nodeId === popover.nodeId) ?? null
+    : null;
+  const popoverNode = popover
+    ? scenario.nodes.find((node) => node.id === popover.nodeId) ?? null
+    : null;
+  const popoverCitations = popoverStep
+    ? popoverStep.citations
+        .map((citationId) => scenario.citations.find((citation) => citation.id === citationId))
+        .filter((citation): citation is ScenarioCitation => citation !== undefined)
+    : [];
 
   const guidanceVisible = !hasSelectedScenario;
   const scenarioLabelText = hasSelectedScenario
@@ -895,17 +1056,17 @@ export function App() {
             data-transform-scale={canvasTransform.scale}
           >
             {visibleEdges.map(({ from, to }) => {
-              const source = scenario.nodes.find((node) => node.id === from)!;
-              const target = scenario.nodes.find((node) => node.id === to)!;
+              const sourcePos = getNodePos(from);
+              const targetPos = getNodePos(to);
               const isActive = activeNodeIds.has(from) && activeNodeIds.has(to);
               return (
                 <line
                   key={`${from}-${to}`}
                   className={`edge ${isActive ? 'edge-active' : ''}`}
-                  x1={source.x + NODE_WIDTH}
-                  y1={source.y + NODE_HEIGHT / 2}
-                  x2={target.x}
-                  y2={target.y + NODE_HEIGHT / 2}
+                  x1={sourcePos.x + NODE_WIDTH}
+                  y1={sourcePos.y + NODE_HEIGHT / 2}
+                  x2={targetPos.x}
+                  y2={targetPos.y + NODE_HEIGHT / 2}
                 />
               );
             })}
@@ -913,8 +1074,16 @@ export function App() {
               const isSelected = node.id === selectedNodeId;
               const isActive = node.id === activeStep.nodeId;
               const isOnPath = activeNodeIds.has(node.id);
+              const pos = getNodePos(node.id);
               return (
-                <g key={node.id} transform={`translate(${node.x} ${node.y})`}>
+                <g
+                  key={node.id}
+                  transform={`translate(${pos.x} ${pos.y})`}
+                  onContextMenu={(event) => handleNodeContextMenu(event, node.id)}
+                  onTouchStart={(event) => handleNodeTouchStart(event, node.id)}
+                  onTouchEnd={handleNodeTouchEnd}
+                  onTouchMove={handleNodeTouchMove}
+                >
                   <rect
                     className={`node node-${node.kind} ${isSelected ? 'selected' : ''} ${isActive ? 'node-active' : ''} ${isOnPath ? 'node-on-path' : ''}`}
                     width={NODE_WIDTH}
@@ -933,37 +1102,141 @@ export function App() {
             })}
             {activeNode &&
               hasSelectedScenario &&
-              activeStep.choices.map((choice, index) => {
-                const choiceX = activeNode.x + NODE_WIDTH + 24;
-                const choiceY = activeNode.y + index * 56;
+              activeBranches.map((branch, index) => {
+                const sign = index % 2 === 0 ? -1 : 1;
+                const magnitude = Math.ceil((index + 1) / 2);
+                const branchX = activeNodePos.x + NODE_WIDTH + 24;
+                const branchY = activeNodePos.y + sign * magnitude * BRANCH_OFFSET;
+                const isSecondary = branch.kind === 'alternative';
                 return (
                   <g
-                    key={choice.id}
-                    transform={`translate(${choiceX} ${choiceY})`}
+                    key={branch.id}
+                    className={`canvas-branch ${isSecondary ? 'canvas-branch-secondary' : ''}`}
+                    transform={`translate(${branchX} ${branchY})`}
                     role="button"
                     tabIndex={0}
-                    aria-label={choice.label}
-                    onClick={() => handleChoiceClick(choice.targetStepId, choice.routeId)}
+                    aria-label={branch.label}
+                    data-branch-kind={branch.kind}
+                    onClick={() => handleChoiceClick(branch.targetStepId, branch.routeId)}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        handleChoiceClick(choice.targetStepId, choice.routeId);
+                        handleChoiceClick(branch.targetStepId, branch.routeId);
                       }
                     }}
                   >
-                    <rect className="node-choice" width="220" height="44" rx="14" tabIndex={-1} />
-                    <text className="node-choice-label" x="14" y="20">{choice.label}</text>
-                    <text className="node-choice-label" x="14" y="34" style={{ fontSize: 10, fill: '#9fb4ca' }}>
-                      {choice.condition.length > 28 ? `${choice.condition.slice(0, 26)}…` : choice.condition}
+                    <rect
+                      className={`canvas-branch-rect ${isSecondary ? 'canvas-branch-rect-secondary' : ''}`}
+                      width="220"
+                      height="44"
+                      rx="14"
+                      tabIndex={-1}
+                    />
+                    <text className="canvas-branch-label" x="14" y="20">{branch.label}</text>
+                    <text className="canvas-branch-condition" x="14" y="34">
+                      {branch.condition.length > 28 ? `${branch.condition.slice(0, 26)}…` : branch.condition}
                     </text>
                   </g>
                 );
               })}
           </g>
         </svg>
+
+        {popover && popoverStep && popoverNode && (
+          <div
+            className="node-popover"
+            data-testid="node-popover"
+            style={{ left: popover.x, top: popover.y }}
+            role="dialog"
+            aria-label={`节点证据 ${popoverNode.title}`}
+          >
+            <button
+              type="button"
+              className="popover-close"
+              onClick={closePopover}
+              aria-label="关闭证据弹窗"
+            >
+              ×
+            </button>
+
+            <div className="popover-command-card" data-testid="popover-command-card">
+              <span className="popover-rank">Recommended</span>
+              <span className="popover-command">{popoverStep.command}</span>
+            </div>
+
+            <dl className="popover-evidence" data-testid="popover-evidence">
+              <div className="popover-evidence-row">
+                <dt>Purpose</dt>
+                <dd>{popoverStep.purpose}</dd>
+              </div>
+              <div className="popover-evidence-row">
+                <dt>Input</dt>
+                <dd>{popoverStep.input}</dd>
+              </div>
+              <div className="popover-evidence-row">
+                <dt>Output</dt>
+                <dd>{popoverStep.output}</dd>
+              </div>
+              <div className="popover-evidence-row">
+                <dt>Next Action</dt>
+                <dd>{popoverStep.nextAction}</dd>
+              </div>
+            </dl>
+
+            {popoverStep.alternatives.length > 0 && (
+              <div className="popover-alternatives" data-testid="popover-alternatives">
+                <h4>Alternatives</h4>
+                <ul>
+                  {popoverStep.alternatives.map((alt) => (
+                    <li key={alt.id}>
+                      <span className="popover-alt-label">{alt.label}</span>
+                      <span className="popover-alt-condition">{alt.condition}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="popover-source-status" data-testid="popover-source-status">
+              <h4>Source Status</h4>
+              <ul>
+                {popoverCitations.map((citation) => (
+                  <li key={citation.id} className={`source-status source-${citation.status}`}>
+                    <span className="source-label">{citation.label}</span>
+                    <span className="source-path">{citation.source}</span>
+                    <span className={`source-badge source-badge-${citation.status}`}>{citation.status}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="popover-checklist" data-testid="popover-checklist">
+              <h4>Validation Checklist</h4>
+              <ul>
+                {scenario.checklist.map((check) => {
+                  const key = checklistKey(popoverStep.id, check.id);
+                  const checked = checkedItems[key] === true;
+                  return (
+                    <li key={check.id}>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleCheck(popoverStep.id, check.id)}
+                          data-testid={`checklist-${check.id}`}
+                        />
+                        <span>{check.label}</span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div aria-hidden="true" style={{ display: 'none' }}>
+      <div aria-hidden="true" style={{ display: 'none' }} data-testid="checked-items-count">
         {selectedNode?.title}
         {activeStep.command}
         {Object.keys(checkedItems).length}

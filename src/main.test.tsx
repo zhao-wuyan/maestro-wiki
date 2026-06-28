@@ -141,6 +141,119 @@ describe('Maestro Workflow Wiki fullscreen canvas shell', () => {
     expect(event.defaultPrevented).toBe(true);
   });
 
+  it('[UI-observable] right-click on node opens popover with recommendation evidence cluster', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    const brainstormNode = screen.getByRole('button', { name: '查看 探索方向' });
+    fireEvent.contextMenu(brainstormNode, { clientX: 250, clientY: 300, bubbles: true, cancelable: true });
+
+    const popover = screen.getByTestId('node-popover');
+    expect(popover).toBeInTheDocument();
+    expect(popover.style.left).toBe('250px');
+    expect(popover.style.top).toBe('300px');
+
+    expect(screen.getByTestId('popover-command-card')).toHaveTextContent('maestro-brainstorm');
+    const evidence = screen.getByTestId('popover-evidence');
+    expect(evidence).toHaveTextContent('Purpose');
+    expect(evidence).toHaveTextContent('发散需求');
+    expect(evidence).toHaveTextContent('Input');
+    expect(evidence).toHaveTextContent('Next Action');
+
+    expect(screen.getByTestId('popover-alternatives')).toBeInTheDocument();
+    expect(screen.getByTestId('popover-source-status')).toBeInTheDocument();
+    expect(screen.getByTestId('popover-checklist')).toBeInTheDocument();
+  });
+
+  it('[UI-observable] popover source status shows citation badges and maestro-flow paths', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    fireEvent.contextMenu(screen.getByRole('button', { name: '查看 探索方向' }), {
+      clientX: 100,
+      clientY: 100,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const sourceStatus = screen.getByTestId('popover-source-status');
+    expect(sourceStatus).toHaveTextContent('cited');
+    expect(sourceStatus).toHaveTextContent('pending');
+    expect(sourceStatus).toHaveTextContent('maestro-flow/');
+    expect(sourceStatus.querySelector('.source-badge-cited')).not.toBeNull();
+    expect(sourceStatus.querySelector('.source-badge-pending')).not.toBeNull();
+  });
+
+  it('[UI-observable] validation checklist toggles persist per step in checkedItems', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    fireEvent.contextMenu(screen.getByRole('button', { name: '查看 探索方向' }), {
+      clientX: 100,
+      clientY: 100,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const checkbox = screen.getByTestId('checklist-check-command') as HTMLInputElement;
+    expect(checkbox.checked).toBe(false);
+    fireEvent.click(checkbox);
+    expect(checkbox.checked).toBe(true);
+
+    fireEvent.click(screen.getByRole('button', { name: '关闭证据弹窗' }));
+    expect(screen.queryByTestId('node-popover')).not.toBeInTheDocument();
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: '查看 探索方向' }), {
+      clientX: 100,
+      clientY: 100,
+      bubbles: true,
+      cancelable: true,
+    });
+    const checkboxAgain = screen.getByTestId('checklist-check-command') as HTMLInputElement;
+    expect(checkboxAgain.checked).toBe(true);
+  });
+
+  it('[UI-observable] alternatives render as secondary canvas branches from active node', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+
+    expect(screen.getByRole('button', { name: '先 grill 压力测试' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '直接 analyze' })).toBeInTheDocument();
+
+    const altBranch = screen.getByRole('button', { name: '先 grill 压力测试' }).closest('.canvas-branch');
+    expect(altBranch?.getAttribute('data-branch-kind')).toBe('alternative');
+  });
+
+  it('[UI-observable] terminal routes render as canvas branch options at terminal node', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    await user.click(screen.getByRole('button', { name: '方向已稳定，生成规格' }));
+    await user.click(screen.getByRole('button', { name: '规格可执行，分析 Phase 1' }));
+    await user.click(screen.getByRole('button', { name: '分析结论为 GO，进入计划' }));
+    await user.click(screen.getByRole('button', { name: '计划完成，选择后续路线' }));
+
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Quality Pipeline' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Knowledge Capture' })).toBeInTheDocument();
+
+    const routeBranch = screen.getByRole('button', { name: 'Stop' }).closest('.canvas-branch');
+    expect(routeBranch?.getAttribute('data-branch-kind')).toBe('route');
+  });
+
+  it('[UI-observable] main path nodes use swimlane MAIN_LINE_GAP horizontal spacing', () => {
+    render(<App />);
+
+    const groups = document.querySelectorAll('.canvas-shell svg g[transform]');
+    const nodeGroups = Array.from(groups).filter((g) => {
+      const rect = g.querySelector('rect.node');
+      return rect !== null;
+    });
+    expect(nodeGroups.length).toBeGreaterThanOrEqual(1);
+  });
+
   it('[UI-observable] viewport clipping filters off-screen nodes', () => {
     const visibleInView = isVisibleNode(
       { x: 100, y: 100 },

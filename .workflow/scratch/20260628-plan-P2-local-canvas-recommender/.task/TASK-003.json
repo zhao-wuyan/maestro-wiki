@@ -38,5 +38,11 @@
       "src/main.test.tsx contains '[UI-observable]'",
       "[UI-observable] npm run test:e2e exits 0 and verifies right-click popover shows evidence, canvas branch navigation advances step, terminal routes render as branches"
     ]
+  },
+  "status": "completed",
+  "meta": {
+    "completed_at": "2026-06-28T19:43:00Z",
+    "commit": "(filled post-commit)",
+    "summary_path": ".workflow/scratch/20260628-plan-P2-local-canvas-recommender/.summaries/TASK-003-summary.md"
   }
 }

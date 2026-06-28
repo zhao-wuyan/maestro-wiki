@@ -266,6 +266,257 @@ h3 {
   pointer-events: none;
 }
 
+/* Canvas branch options (grill Q1.2/Q2.2) — emitted from active node,
+   main-line branches full saturation, alternative branches secondary. */
+.canvas-branch {
+  cursor: pointer;
+  outline: none;
+}
+
+.canvas-branch-rect {
+  fill: rgba(14, 165, 233, 0.18);
+  stroke: rgba(125, 211, 252, 0.6);
+  stroke-width: 2;
+  transition: fill 160ms ease, stroke 160ms ease, stroke-width 160ms ease;
+}
+
+.canvas-branch:hover .canvas-branch-rect,
+.canvas-branch:focus .canvas-branch-rect {
+  fill: rgba(14, 165, 233, 0.34);
+  stroke: #7dd3fc;
+  stroke-width: 3;
+}
+
+.canvas-branch-secondary {
+  opacity: 0.55;
+}
+
+.canvas-branch-secondary .canvas-branch-rect,
+.canvas-branch-secondary.canvas-branch-rect-secondary {
+  stroke-width: 1;
+  fill: rgba(148, 163, 184, 0.12);
+  stroke: rgba(148, 163, 184, 0.45);
+}
+
+.canvas-branch-label {
+  fill: #eef4ff;
+  font-size: 12px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.canvas-branch-condition {
+  fill: #9fb4ca;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+/* Node popover (grill Q2.1/Q2.3/Q3.1) — absolutely positioned at event
+   coordinates, semi-transparent, rounded, z-index above canvas. */
+.node-popover {
+  position: absolute;
+  z-index: 50;
+  width: 340px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 16px 18px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(125, 211, 252, 0.32);
+  background: rgba(8, 22, 39, 0.94);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 18px 48px rgba(2, 8, 20, 0.62);
+  color: #eef4ff;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.popover-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: rgba(125, 211, 252, 0.12);
+  color: #bdeaff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.popover-close:hover,
+.popover-close:focus {
+  background: rgba(125, 211, 252, 0.28);
+  outline: none;
+}
+
+.popover-command-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(34, 211, 238, 0.14);
+  border: 1px solid rgba(34, 211, 238, 0.32);
+}
+
+.popover-rank {
+  color: #5eead4;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.popover-command {
+  color: #f8fbff;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.popover-evidence {
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.popover-evidence-row {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(125, 211, 252, 0.1);
+}
+
+.popover-evidence-row dt {
+  color: #74d4ff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.popover-evidence-row dd {
+  margin: 0;
+  color: #c4d3e4;
+  font-size: 0.84rem;
+}
+
+.popover-alternatives,
+.popover-source-status,
+.popover-checklist {
+  margin-top: 10px;
+}
+
+.popover-alternatives h4,
+.popover-source-status h4,
+.popover-checklist h4 {
+  margin: 0 0 6px;
+  color: #a5b4fc;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.popover-alternatives ul,
+.popover-source-status ul,
+.popover-checklist ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.popover-alternatives li {
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.popover-alt-label {
+  color: #eef4ff;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.popover-alt-condition {
+  color: #9fb4ca;
+  font-size: 0.76rem;
+}
+
+.popover-source-status li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(125, 211, 252, 0.08);
+}
+
+.source-label {
+  color: #c4d3e4;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.source-path {
+  flex: 1 1 100%;
+  color: #7d8da3;
+  font-size: 0.7rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  word-break: break-all;
+}
+
+.source-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.source-badge-cited {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+}
+
+.source-badge-pending {
+  background: rgba(250, 204, 21, 0.16);
+  color: #fde68a;
+}
+
+.source-badge-platform-check {
+  background: rgba(167, 139, 250, 0.18);
+  color: #c4b5fd;
+}
+
+.popover-checklist li {
+  padding: 3px 0;
+}
+
+.popover-checklist label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #c4d3e4;
+  font-size: 0.82rem;
+}
+
+.popover-checklist input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #22d3ee;
+  cursor: pointer;
+}
+
 @media (max-width: 980px) {
   .hero {
     padding: 22px 16px 12px;
