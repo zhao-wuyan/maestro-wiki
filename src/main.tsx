@@ -303,6 +303,305 @@ const scenarioValidation = {
   citations: validateCitationCoverage(unclearRequirementsScenario),
 };
 
+// ============================================================
+// Phase 2 — Local Canvas Recommender (CommandRuleSet layer)
+//
+// Types, authored command facts, RecommendationRule[], recommendCommands()
+// and validateRuleSet() live here. The ScenarioModel above is retained per
+// grill Q4.1 (data model preserved, rendering rewritten in TASK-002/TASK-003).
+//
+// Evidence fields (purpose/input/output/nextAction/alternatives/sourceStatus)
+// are carried by RecommendationGroup so the TASK-003 popover can render them
+// without re-deriving from rules. sourceRef.path MUST start with `maestro-flow/`
+// per decision #9 (submodule sources only).
+// ============================================================
+
+type SourceRef = {
+  path: string;
+  label: string;
+  status: 'cited' | 'pending' | 'platform-check';
+};
+
+type CommandFact = {
+  id: string;
+  command: string;
+  purpose: string;
+  condition: string;
+  input: string;
+  output: string;
+  nextAction: string;
+  sourceRefs: SourceRef[];
+};
+
+export type RecommendationRule = {
+  id: string;
+  scenarioId: string;
+  condition: string;
+  commandFacts: CommandFact[];
+  alternatives: CommandFact[];
+  priority: 'primary' | 'secondary';
+};
+
+type RecommendationGroup = {
+  id: string;
+  scenarioId: string;
+  condition: string;
+  primary: CommandFact[];
+  secondary: CommandFact[];
+  purpose: string;
+  input: string;
+  output: string;
+  nextAction: string;
+  alternatives: CommandFact[];
+  sourceStatus: SourceRef[];
+};
+
+export type SimulatedProjectState = {
+  milestone: string;
+  phase: number;
+  hasBlueprint: boolean;
+  hasAnalyze: boolean;
+  hasPlan: boolean;
+  hasExecute: boolean;
+  intentClarity: 'unclear' | 'semi-clear' | 'clear';
+};
+
+const sourceRefCatalog: SourceRef = {
+  path: 'maestro-flow/.codex/skills/maestro-help/catalog.json',
+  label: 'Maestro command catalog (single source of truth)',
+  status: 'cited',
+};
+
+const sourceRefNext: SourceRef = {
+  path: 'maestro-flow/.claude/commands/maestro-next.md',
+  label: 'maestro-next routing table and lifecycle position scoring',
+  status: 'cited',
+};
+
+const sourceRefCommand = (name: string): SourceRef => ({
+  path: `maestro-flow/.claude/commands/${name}.md`,
+  label: `${name} command definition`,
+  status: 'cited',
+});
+
+const factBrainstorm: CommandFact = {
+  id: 'fact-brainstorm',
+  command: 'maestro-brainstorm',
+  purpose: '发散需求并形成可讨论的候选范围。',
+  condition: '目标方向不清，用户还在探索"做什么"和"为什么"。',
+  input: '自然语言目标、初始限制、用户偏好。',
+  output: '探索记录、关键问题、初步方案。',
+  nextAction: '当核心路径明确时，推进到 maestro-blueprint。',
+  sourceRefs: [sourceRefCommand('maestro-brainstorm'), sourceRefCatalog, sourceRefNext],
+};
+
+const factBlueprint: CommandFact = {
+  id: 'fact-blueprint',
+  command: 'maestro-blueprint',
+  purpose: '把讨论结果转成可追踪的规格包。',
+  condition: '探索结果足够稳定，需要正式 PRD/ADR/Epic。',
+  input: 'brainstorm/grill 结果、用户确认的范围。',
+  output: 'blueprint context-package、requirements、architecture decisions。',
+  nextAction: '用 roadmap/analyze 判断第一阶段是否能执行。',
+  sourceRefs: [sourceRefCommand('maestro-blueprint'), sourceRefCatalog, sourceRefNext],
+};
+
+const factAnalyze: CommandFact = {
+  id: 'fact-analyze',
+  command: 'maestro-analyze',
+  purpose: '评估 GO/NO-GO，锁定实现范围、限制和验证方式。',
+  condition: '已有 Phase 目标，但仍需确认实现边界和风险。',
+  input: 'roadmap、blueprint、代码现状。',
+  output: 'ANL-xxx context package 和 GO/NO-GO 结论。',
+  nextAction: 'GO 后生成执行计划。',
+  sourceRefs: [sourceRefCommand('maestro-analyze'), sourceRefCatalog, sourceRefNext],
+};
+
+const factPlan: CommandFact = {
+  id: 'fact-plan',
+  command: 'maestro-plan',
+  purpose: '把 Phase 拆成可执行任务和验证标准。',
+  condition: '分析产物已完成，下一步需要可执行任务。',
+  input: 'ANL-xxx context-package、roadmap、specs。',
+  output: 'plan.json 和 TASK 文件。',
+  nextAction: '确认计划后执行，或在闭合节点选择路线。',
+  sourceRefs: [sourceRefCommand('maestro-plan'), sourceRefCatalog, sourceRefNext],
+};
+
+const factExecute: CommandFact = {
+  id: 'fact-execute',
+  command: 'maestro-execute',
+  purpose: '按 plan.json wave 并行执行 TASK 并自动提交。',
+  condition: '计划已确认，进入实现阶段。',
+  input: 'plan.json、TASK 文件、项目 specs。',
+  output: '代码改动、提交记录、验证证据。',
+  nextAction: '执行结束后进入质量门（review/test）。',
+  sourceRefs: [sourceRefCommand('maestro-execute'), sourceRefCatalog, sourceRefNext],
+};
+
+const factReview: CommandFact = {
+  id: 'fact-review',
+  command: 'quality-review',
+  purpose: '多维度代码质量审查（正确性、安全、性能、架构）。',
+  condition: '执行已完成，需要审查代码质量。',
+  input: '执行证据、git diff、项目 specs。',
+  output: '审查报告与改进建议。',
+  nextAction: '审查 PASS 后进入测试或里程碑审计。',
+  sourceRefs: [sourceRefCommand('quality-review'), sourceRefCatalog, sourceRefNext],
+};
+
+const factTest: CommandFact = {
+  id: 'fact-test',
+  command: 'quality-test',
+  purpose: '会话式 UAT 验证，闭合需求与实现差距。',
+  condition: '执行已完成，需要业务验收测试。',
+  input: '需求文档、实现产物、用户场景。',
+  output: 'UAT 结果与 gap 清单。',
+  nextAction: 'gap 闭合后进入里程碑审计或知识沉淀。',
+  sourceRefs: [sourceRefCommand('quality-test'), sourceRefCatalog, sourceRefNext],
+};
+
+const factRalphExecute: CommandFact = {
+  id: 'fact-ralph-execute',
+  command: 'maestro-ralph-execute',
+  purpose: '运行自适应决策链，按 state 推进下一个 pending step。',
+  condition: '已有 plan/session，希望由 ralph 引擎自动推进。',
+  input: 'ralph session、plan.json、项目状态。',
+  output: '下一个 step 执行结果与状态更新。',
+  nextAction: 'session 完成后进入质量门或里程碑审计。',
+  sourceRefs: [sourceRefCommand('maestro-ralph-execute'), sourceRefCatalog, sourceRefNext],
+};
+
+export const authoredRules: RecommendationRule[] = [
+  {
+    id: 'rule-explore-unclear',
+    scenarioId: 'unclear-requirements',
+    condition: 'intentClarity=unclear, no blueprint',
+    commandFacts: [factBrainstorm],
+    alternatives: [factBlueprint],
+    priority: 'primary',
+  },
+  {
+    id: 'rule-explore-semi-clear',
+    scenarioId: 'unclear-requirements',
+    condition: 'intentClarity=semi-clear, no blueprint (equal-rank: brainstorm vs blueprint)',
+    commandFacts: [factBrainstorm, factBlueprint],
+    alternatives: [factAnalyze],
+    priority: 'primary',
+  },
+  {
+    id: 'rule-explore-clear',
+    scenarioId: 'unclear-requirements',
+    condition: 'intentClarity=clear, no blueprint',
+    commandFacts: [factBlueprint],
+    alternatives: [factBrainstorm],
+    priority: 'primary',
+  },
+  {
+    id: 'rule-analyze',
+    scenarioId: 'phase-analysis',
+    condition: 'hasBlueprint, no analyze',
+    commandFacts: [factAnalyze],
+    alternatives: [factPlan],
+    priority: 'primary',
+  },
+  {
+    id: 'rule-plan',
+    scenarioId: 'phase-planning',
+    condition: 'hasAnalyze, no plan',
+    commandFacts: [factPlan],
+    alternatives: [factExecute, factRalphExecute],
+    priority: 'primary',
+  },
+  {
+    id: 'rule-execute',
+    scenarioId: 'phase-execution',
+    condition: 'hasPlan, no execute (equal-rank when intent unclear: execute vs ralph-execute)',
+    commandFacts: [factExecute, factRalphExecute],
+    alternatives: [],
+    priority: 'primary',
+  },
+  {
+    id: 'rule-quality-gate',
+    scenarioId: 'phase-quality',
+    condition: 'hasExecute (equal-rank: review vs test)',
+    commandFacts: [factReview, factTest],
+    alternatives: [],
+    priority: 'primary',
+  },
+];
+
+function ruleApplies(rule: RecommendationRule, state: SimulatedProjectState): boolean {
+  switch (rule.id) {
+    case 'rule-explore-unclear':
+      return !state.hasBlueprint && state.intentClarity === 'unclear';
+    case 'rule-explore-semi-clear':
+      return !state.hasBlueprint && state.intentClarity === 'semi-clear';
+    case 'rule-explore-clear':
+      return !state.hasBlueprint && state.intentClarity === 'clear';
+    case 'rule-analyze':
+      return state.hasBlueprint && !state.hasAnalyze;
+    case 'rule-plan':
+      return state.hasAnalyze && !state.hasPlan;
+    case 'rule-execute':
+      return state.hasPlan && !state.hasExecute;
+    case 'rule-quality-gate':
+      return state.hasExecute;
+    default:
+      return false;
+  }
+}
+
+function toRecommendationGroup(rule: RecommendationRule): RecommendationGroup {
+  const allFacts = [...rule.commandFacts, ...rule.alternatives];
+  const sourceStatus: SourceRef[] = Array.from(
+    new Map(allFacts.flatMap((fact) => fact.sourceRefs).map((ref) => [ref.path, ref])).values(),
+  );
+  const head = rule.commandFacts[0];
+  const isEqualRank = rule.commandFacts.length > 1;
+  return {
+    id: rule.id.replace('rule-', 'grp-'),
+    scenarioId: rule.scenarioId,
+    condition: rule.condition,
+    primary: rule.commandFacts,
+    secondary: [],
+    purpose: isEqualRank
+      ? `equal-rank 推荐含 ${rule.commandFacts.length} 个并列命令：${rule.commandFacts.map((fact) => fact.command).join(' / ')}。`
+      : head.purpose,
+    input: head.input,
+    output: head.output,
+    nextAction: head.nextAction,
+    alternatives: rule.alternatives,
+    sourceStatus,
+  };
+}
+
+export function recommendCommands(state: SimulatedProjectState): RecommendationGroup[] {
+  return authoredRules.filter((rule) => ruleApplies(rule, state)).map(toRecommendationGroup);
+}
+
+export function validateRuleSet(ruleSet: RecommendationRule[]): string[] {
+  const errors: string[] = [];
+  for (const rule of ruleSet) {
+    if (rule.commandFacts.length === 0) {
+      errors.push(`${rule.id}: missing command references (commandFacts empty)`);
+    }
+    const checkFact = (fact: CommandFact, slot: string) => {
+      if (fact.sourceRefs.length === 0) {
+        errors.push(`${rule.id}/${slot}-${fact.id}: missing sourceRefs`);
+      }
+      for (const ref of fact.sourceRefs) {
+        if (!ref.path.startsWith('maestro-flow/')) {
+          errors.push(`${rule.id}/${slot}-${fact.id}: sourceRef.path "${ref.path}" does not start with maestro-flow/`);
+        }
+      }
+    };
+    rule.commandFacts.forEach((fact) => checkFact(fact, 'primary'));
+    rule.alternatives.forEach((fact) => checkFact(fact, 'alt'));
+  }
+  return errors;
+}
+
 export function App() {
   const [selectedScenarioId] = useState(unclearRequirementsScenario.id);
   const [activeStepId, setActiveStepId] = useState(unclearRequirementsScenario.steps[0].id);
