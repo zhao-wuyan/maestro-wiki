@@ -1,0 +1,153 @@
+{
+  "$schema": "task/1.0",
+  "id": "TASK-002",
+  "plan_id": "PLN-canvas-start-scenario-redesign",
+  "wave": "wave-2",
+  "title": "App() state 重构 + 场景选择 UI + 7 守卫点适配",
+  "objective": "src/main.tsx:764 `const scenario = unclearRequirementsScenario` 删除,改为 `selectedScenarioId: string|null` state + `scenario = useMemo(() => scenarioRegistry.find(s => s.id === selectedScenarioId) ?? null, [selectedScenarioId])` + 派生 `hasSelectedScenario = scenario !== null`。7 守卫点(:808/:930/:948/:1101/:1154/:1155/:1276)适配。src/main.tsx:1205-1209 guidance-overlay 替换为场景选择器(3 卡片 A/D/F),选中后 setSelectedScenarioId + setActiveStepId(steps[0].id) + setSelectedNodeId(null) + setPopover(null) + setSimulatedProjectState(taskType 对应),canvasTransform/isFullscreen 保留。activeStepId 初始值改 null。",
+  "rationale": "覆盖 implementation_scope 1 接入层 + REC-002 + REC-004 + REC-006。解耦 21+ scenario 变量消费点(通过 useMemo 自动重算),7 hasSelectedScenario 守卫点逐一适配为派生值。空态从'点击中央节点'改为'3 卡片场景选择器',符合路径 2 统一 selector(绕开 nodes[0] 约定,C-003)。",
+  "priority": "high",
+  "complexity": "medium",
+  "depends_on": ["TASK-001"],
+  "files": ["src/main.tsx", "src/styles.css", "src/main.test.tsx", "scripts/e2e-smoke.mjs"],
+  "read_first": [
+    "src/main.tsx",
+    "src/styles.css",
+    "src/main.test.tsx",
+    "scripts/e2e-smoke.mjs",
+    ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/context.md",
+    ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/exploration-codebase.json"
+  ],
+  "acceptance_criteria": [
+    "src/main.tsx 含 scenarioRegistry 数组",
+    "src/main.tsx 含 selectedScenarioId state",
+    "src/main.tsx 不含 'const scenario = unclearRequirementsScenario' 硬编码",
+    "npm test exits 0"
+  ],
+  "convergence": {
+    "criteria": [
+      "grep -q 'selectedScenarioId' src/main.tsx",
+      "! grep -q 'const scenario = unclearRequirementsScenario' src/main.tsx",
+      "! grep -q 'hasSelectedScenario, setHasSelectedScenario' src/main.tsx",
+      "grep -q 'scenarioRegistry.find' src/main.tsx",
+      "grep -q 'scenario-selector' src/main.tsx",
+      "grep -q '\\[UI-observable\\]' src/main.test.tsx",
+      "npm run test:e2e exits 0 and verifies scenario selector renders 3 options (A/D/F), selecting a scenario loads corresponding canvas, canvasTransform preserved on switch [UI-observable]"
+    ]
+  },
+  "action": {
+    "state_refactor": "src/main.tsx:764 删除 `const scenario = unclearRequirementsScenario`;src/main.tsx:770 删除 `const [hasSelectedScenario, setHasSelectedScenario] = useState(false)`,改为 `const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);`;新增 `const scenario = useMemo(() => scenarioRegistry.find((s) => s.id === selectedScenarioId) ?? null, [selectedScenarioId]);`;新增 `const hasSelectedScenario = scenario !== null;`(派生,非 state)",
+    "simulatedState_intro": "src/main.tsx App() 内新增 `const [simulatedProjectState, setSimulatedProjectState] = useState<SimulatedProjectState>({ milestone: 'M2', phase: 0, hasBlueprint: false, hasAnalyze: false, hasPlan: false, hasExecute: false, intentClarity: 'unclear', taskType: 'new' });`(为 TASK-003 recommendCommands 接入预留,TASK-002 仅用于 selectScenario 中 taskType 设置)",
+    "activeStepId": "src/main.tsx:765 `useState(scenario.steps[0].id)` 改为 `useState<string | null>(null)`;场景选择后 setActiveStepId(scenario.steps[0].id)",
+    "guard_808": "src/main.tsx:806-812 revealedNodeIds useMemo: `if (!scenario) return new Set<string>(); const intentNodeId = scenario.nodes[0].id; if (!hasSelectedScenario) return new Set<string>([intentNodeId]);`",
+    "guard_930": "src/main.tsx:930 `if (!hasSelectedScenario || !activeNode) return;` 保留(hasSelectedScenario 派生)",
+    "guard_948": "src/main.tsx:946-953 activateNode: 删除 `if (!hasSelectedScenario) { setHasSelectedScenario(true); }` 整块(场景选择改由 selectScenario handler 触发,不再通过节点点击);保留 setSelectedNodeId + setActiveStepId",
+    "guard_1101": "src/main.tsx:1100-1101 handleSaveCurrentRoute: `if (!hasSelectedScenario || !activeStep) return;` 保留;内部 scenario.citations/scenario.title 改为 `scenario?.citations ?? []`/`scenario?.title ?? 'unknown'`",
+    "guard_1154": "src/main.tsx:1154 `const guidanceVisible = !hasSelectedScenario;` 保留(派生)",
+    "guard_1155": "src/main.tsx:1155 `const scenarioLabelText = hasSelectedScenario ? scenario.title : '未选择场景';` 改为 `const scenarioLabelText = scenario?.title ?? '未选择场景';`",
+    "guard_1276": "src/main.tsx:1275-1277 分支渲染: `{activeNode && hasSelectedScenario && activeBranches.map(...)}` 保留(hasSelectedScenario 派生)",
+    "useMemo_null_guards": "src/main.tsx:788-822 activeStep/selectedNode/activeNodeIds/nodeLayout useMemo 全部加 scenario null 守卫: activeStep 返回 null,selectedNode 返回 null,activeNodeIds 返回 new Set<string>(),nodeLayout 返回 new Map()",
+    "selector_ui": "src/main.tsx:1205-1209 guidance-overlay div 替换为场景选择器: `{guidanceVisible && (<div className=\"scenario-selector\" data-testid=\"scenario-selector\"><p className=\"guidance-copy\">选择场景开始 — 点击下方卡片进入对应工作流</p><div className=\"scenario-cards\">{scenarioRegistry.map((s) => (<button key={s.id} type=\"button\" className=\"scenario-card\" data-testid={`scenario-card-${s.id}`} onClick={() => selectScenario(s.id)}><span className=\"scenario-card-id\">{s.id}</span><span className=\"scenario-card-title\">{s.title}</span><span className=\"scenario-card-summary\">{s.summary}</span></button>))}</div></div>)}`",
+    "selectScenario_handler": "新增 `const selectScenario = (id: string) => { const target = scenarioRegistry.find((s) => s.id === id); if (!target) return; setSelectedScenarioId(id); setActiveStepId(target.steps[0].id); setSelectedNodeId(null); setPopover(null); setSimulatedProjectState({ milestone: 'M2', phase: 0, hasBlueprint: false, hasAnalyze: false, hasPlan: false, hasExecute: false, intentClarity: 'unclear', taskType: id === 'A_full_project' ? 'new' : id === 'D_small_fix' ? 'bugfix' : 'explore' }); };`",
+    "css": "src/styles.css 新增 `.scenario-selector`(绝对定位居中,grid 布局,透明背景),`.scenario-cards`(3 列 grid),`.scenario-card`(透明背景,边框 rgba(255,255,255,0.15),hover 高亮),`.scenario-card-id`/`.scenario-card-title`/`.scenario-card-summary` 样式;保留 `.guidance-overlay` 样式兼容",
+    "e2e": "scripts/e2e-smoke.mjs:36-44 更新: 初始态断言 `scenario-selector` testid 存在且含 3 个 scenario-card 按钮;点击 scenario-card-A_full_project 后断言 canvas-transform-group 渲染;新增切换 scenario-card-D_small_fix 后断言节点 aria-label 含'规划'/'评审',canvasTransform.data-transform-x/y/scale 与切换前一致"
+  },
+  "implementation": [
+    {
+      "step": 1,
+      "target": "src/main.tsx:763-775(App state 声明区)",
+      "action": "删除 `const scenario = unclearRequirementsScenario`(line 764);删除 `const [hasSelectedScenario, setHasSelectedScenario] = useState(false)`(line 770);新增 `const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);`;新增 `const scenario = useMemo(() => scenarioRegistry.find((s) => s.id === selectedScenarioId) ?? null, [selectedScenarioId]);`;新增 `const hasSelectedScenario = scenario !== null;`(派生)"
+    },
+    {
+      "step": 2,
+      "target": "src/main.tsx:765",
+      "action": "`const [activeStepId, setActiveStepId] = useState(scenario.steps[0].id);` 改为 `const [activeStepId, setActiveStepId] = useState<string | null>(null);`"
+    },
+    {
+      "step": 3,
+      "target": "src/main.tsx:775 附近(savedRoutes state 之后)",
+      "action": "新增 `const [simulatedProjectState, setSimulatedProjectState] = useState<SimulatedProjectState>({ milestone: 'M2', phase: 0, hasBlueprint: false, hasAnalyze: false, hasPlan: false, hasExecute: false, intentClarity: 'unclear', taskType: 'new' });`"
+    },
+    {
+      "step": 4,
+      "target": "src/main.tsx:788-803(activeStep/selectedNode/activeNodeIds useMemo)",
+      "action": "activeStep 改为 `const activeStep = useMemo(() => scenario ? (scenario.steps.find((s) => s.id === activeStepId) ?? scenario.steps[0]) : null, [activeStepId, scenario]);`;selectedNode 改为 `const selectedNode = useMemo(() => scenario ? (scenario.nodes.find((n) => n.id === selectedNodeId) ?? null) : null, [selectedNodeId, scenario]);`;activeNodeIds 改为 `const activeNodeIds = useMemo(() => { if (!scenario || !activeStep) return new Set<string>(); return new Set(scenario.steps.slice(0, scenario.steps.findIndex((s) => s.id === activeStep.id) + 1).map((s) => s.nodeId)); }, [activeStep, scenario]);`"
+    },
+    {
+      "step": 5,
+      "target": "src/main.tsx:806-812(revealedNodeIds)",
+      "action": "改为 `const revealedNodeIds = useMemo(() => { if (!scenario) return new Set<string>(); const intentNodeId = scenario.nodes[0].id; if (!hasSelectedScenario) return new Set<string>([intentNodeId]); return new Set<string>([intentNodeId, ...Array.from(activeNodeIds)]); }, [hasSelectedScenario, activeNodeIds, scenario]);`"
+    },
+    {
+      "step": 6,
+      "target": "src/main.tsx:816-822(nodeLayout useMemo)",
+      "action": "改为 `const nodeLayout = useMemo(() => { const map = new Map<string, { x: number; y: number }>(); if (scenario) { scenario.nodes.forEach((node, index) => { map.set(node.id, { x: BASE_X + index * MAIN_LINE_GAP, y: MAIN_LINE_Y }); }); } return map; }, [scenario]);`"
+    },
+    {
+      "step": 7,
+      "target": "src/main.tsx:842-879(activeBranches useMemo)及 881-889(visibleNodes)",
+      "action": "activeBranches 头部加 `if (!scenario || !activeStep) return [];`(scenario.continuationRoutes 已 null 安全);visibleNodes 头部 `if (!scenario) return [];`"
+    },
+    {
+      "step": 8,
+      "target": "src/main.tsx:926-938(useEffect 自动 pan)",
+      "action": "guard_930 `if (!hasSelectedScenario || !activeNode) return;` 保留(hasSelectedScenario 派生)"
+    },
+    {
+      "step": 9,
+      "target": "src/main.tsx:946-953(activateNode)",
+      "action": "删除 `if (!hasSelectedScenario) { setHasSelectedScenario(true); }` 整块;改为 `const activateNode = (nodeId: string) => { setSelectedNodeId(nodeId); if (!scenario) return; const nodeStep = scenario.steps.find((step) => step.nodeId === nodeId); if (nodeStep) setActiveStepId(nodeStep.id); };`"
+    },
+    {
+      "step": 10,
+      "target": "src/main.tsx:1100-1127(handleSaveCurrentRoute)",
+      "action": "guard_1101 保留 `if (!hasSelectedScenario || !activeStep) return;`;`scenario.citations` 改为 `scenario?.citations ?? []`;`scenario.title` 改为 `scenario?.title ?? 'unknown'`;`scenario.id` 改为 `scenario?.id ?? 'unknown'`"
+    },
+    {
+      "step": 11,
+      "target": "src/main.tsx:1135-1156(activeNode/popoverStep/popoverNode/popoverCitations/guidanceVisible/scenarioLabelText)",
+      "action": "activeNode 改为 `const activeNode = useMemo(() => scenario ? (scenario.nodes.find((n) => n.id === activeStep?.nodeId) ?? null) : null, [scenario, activeStep]);`;popoverStep/popoverNode/popoverCitations 全部 `scenario ?` 守卫;guard_1154 `const guidanceVisible = !hasSelectedScenario;` 保留;guard_1155 `const scenarioLabelText = scenario?.title ?? '未选择场景';`"
+    },
+    {
+      "step": 12,
+      "target": "src/main.tsx(App 内新增 selectScenario handler,置于 handleSaveCurrentRoute 之前)",
+      "action": "新增 `const selectScenario = (id: string) => { const target = scenarioRegistry.find((s) => s.id === id); if (!target) return; setSelectedScenarioId(id); setActiveStepId(target.steps[0].id); setSelectedNodeId(null); setPopover(null); setSimulatedProjectState({ milestone: 'M2', phase: 0, hasBlueprint: false, hasAnalyze: false, hasPlan: false, hasExecute: false, intentClarity: 'unclear', taskType: id === 'A_full_project' ? 'new' : id === 'D_small_fix' ? 'bugfix' : 'explore' }); };`"
+    },
+    {
+      "step": 13,
+      "target": "src/main.tsx:1205-1209(guidance-overlay)",
+      "action": "替换为场景选择器 JSX 见 action.selector_ui;guidanceVisible 控制渲染,scenarioRegistry.map 渲染 3 卡片,data-testid=`scenario-card-${s.id}`"
+    },
+    {
+      "step": 14,
+      "target": "src/main.tsx:1275-1277(分支渲染守卫)",
+      "action": "guard_1276 `{activeNode && hasSelectedScenario && activeBranches.map(...)}` 保留"
+    },
+    {
+      "step": 15,
+      "target": "src/styles.css",
+      "action": "新增 `.scenario-selector { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: grid; gap: 16px; z-index: 5; background: rgba(255,255,255,0.04); padding: 24px; border-radius: 12px; }` `.guidance-copy { margin: 0 0 8px; font-size: 14px; opacity: 0.8; }` `.scenario-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }` `.scenario-card { background: transparent; border: 1px solid rgba(255,255,255,0.15); padding: 20px; cursor: pointer; border-radius: 8px; text-align: left; color: inherit; font: inherit; }` `.scenario-card:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3); }` `.scenario-card-id { display: block; font-size: 11px; opacity: 0.6; margin-bottom: 4px; }` `.scenario-card-title { display: block; font-size: 16px; font-weight: 600; }` `.scenario-card-summary { display: block; font-size: 12px; opacity: 0.7; margin-top: 8px; line-height: 1.4; }`"
+    },
+    {
+      "step": 16,
+      "target": "src/main.test.tsx:20-44(初始空态测试)",
+      "action": "更新断言: `expect(screen.getByTestId('scenario-selector')).toBeInTheDocument()`;删除 `expect(screen.getByTestId('guidance-overlay')).toBeInTheDocument()`(改为断言 scenario-selector);删除 `expect(screen.getByText('unclear-requirements')).toBeInTheDocument()` 或改为 `expect(screen.getByText('A_full_project')).toBeInTheDocument()`;删除 `查看 模糊目标` 节点断言(空态不再渲染 intent 节点);新增断言 3 个 scenario-card 按钮 `screen.getByTestId('scenario-card-A_full_project')` 等;保留 [UI-observable] 标记"
+    },
+    {
+      "step": 17,
+      "target": "src/main.test.tsx:35-44(首次选择场景测试)",
+      "action": "从 `await user.click(screen.getByRole('button', { name: '查看 模糊目标' }))` 改为 `await user.click(screen.getByTestId('scenario-card-A_full_project'))`;断言 `screen.queryByTestId('scenario-selector')` 不存在;断言 canvas 节点渲染 `查看 模糊目标`(A_full_project intent 节点)"
+    },
+    {
+      "step": 18,
+      "target": "scripts/e2e-smoke.mjs:36-44",
+      "action": "更新: 初始态断言 `await page.getByTestId('scenario-selector').waitFor()`;断言 3 个 scenario-card 按钮 `await page.getByTestId('scenario-card-A_full_project').waitFor()`;删除 `查看 模糊目标` 节点初始态断言(空态不渲染节点);新增: `await page.getByTestId('scenario-card-A_full_project').click()` 后断言 `canvas-transform-group` 渲染;新增切换测试: 读取切换前 `data-transform-x/y/scale`,点击 `scenario-card-D_small_fix`,断言节点 aria-label 含'规划'/'评审',断言切换后 `data-transform-x/y/scale` 与切换前一致"
+    }
+  ],
+  "references": {
+    "analyze_context": ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/context.md",
+    "exploration": ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/exploration-codebase.json"
+  },
+  "locked_constraints": ["C-001", "C-002", "C-003", "C-005", "C-006", "C-007"],
+  "open_constraints": ["C-010"]
+}

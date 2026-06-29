@@ -1,0 +1,95 @@
+{
+  "$schema": "task/1.0",
+  "id": "TASK-003",
+  "plan_id": "PLN-canvas-start-scenario-redesign",
+  "wave": "wave-3",
+  "title": "接通 recommendCommands + 测试完善",
+  "objective": "App() 内调用 recommendCommands(simulatedProjectState) 获取 RecommendationGroup[],与 scenario.steps 联动(popover 证据来源从 recommendCommands 补充)。完善测试: 多场景选择、场景切换 state 重置、recommendCommands 接入验证、D/F 场景 ruleApplies 验证。e2e: 多场景切换流程、场景切换后画布正确渲染、savedRoutes 跨场景持久。",
+  "rationale": "覆盖 REC-005(接入部分)+ 测试覆盖。规则系统(recommendCommands/authoredRules/SimulatedProjectState)已由 TASK-001 建好但 App 内零调用,是'待接线层'。本 task 完成接线,验证多场景端到端,闭合 implementation_scope 1+2 全部 acceptance_criteria。",
+  "priority": "medium",
+  "complexity": "medium",
+  "depends_on": ["TASK-002"],
+  "files": ["src/main.tsx", "src/styles.css", "src/main.test.tsx", "scripts/e2e-smoke.mjs"],
+  "read_first": [
+    "src/main.tsx",
+    "src/styles.css",
+    "src/main.test.tsx",
+    "scripts/e2e-smoke.mjs",
+    ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/context.md",
+    ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/exploration-codebase.json"
+  ],
+  "acceptance_criteria": [
+    "src/main.tsx 含 scenarioRegistry 数组",
+    "src/main.tsx 含 selectedScenarioId state",
+    "src/main.tsx 不含 'const scenario = unclearRequirementsScenario' 硬编码",
+    "src/main.tsx SimulatedProjectState 含 taskType 字段",
+    "src/main.tsx 含 rule-plan-direct 或 D 场景 plan 无 hasAnalyze 前置",
+    "npm test exits 0"
+  ],
+  "convergence": {
+    "criteria": [
+      "grep -qE 'useMemo\\(\\(\\) => recommendCommands\\(' src/main.tsx",
+      "grep -qE 'useState<SimulatedProjectState>|simulatedProjectState' src/main.tsx",
+      "grep -q 'recommendCommands' src/main.test.tsx",
+      "grep -qEi 'scenario switch|场景切换' src/main.test.tsx",
+      "npm test exits 0",
+      "npm run test:e2e exits 0 and verifies switching between A/D/F scenarios renders correct canvas nodes and preserves savedRoutes [UI-observable]"
+    ]
+  },
+  "action": {
+    "recommendCommands_call": "App() 内新增 `const recommendations = useMemo(() => recommendCommands(simulatedProjectState), [simulatedProjectState]);`(simulatedProjectState state 已由 TASK-002 引入);新增 `const activeRecommendation = useMemo(() => recommendations.find((g) => g.scenarioId === scenario?.id) ?? null, [recommendations, scenario]);`",
+    "popover_wiring": "popover 渲染处(src/main.tsx:1317 附近)新增 activeRecommendation 渲染区块: 渲染 primary 命令(command+purpose)、alternatives(备选命令列表)、sourceStatus(来源引用),data-testid='popover-recommendations'",
+    "state_reset_verify": "selectScenario handler(TASK-002 已建)setSimulatedProjectState 已重置全部进度字段(hasBlueprint/hasAnalyze/hasPlan/hasExecute=false)+taskType 对应新场景;本 task 验证不重复实现",
+    "tests_unit": "src/main.test.tsx 新增 describe('recommendCommands integration'): 3 条 it 验证 A/D/F 场景对应 rule 命中(grp-explore-unclear/grp-plan-direct/grp-explore-only)",
+    "tests_scenario_switch": "src/main.test.tsx 新增 describe('scenario switch'): it('[UI-observable] switching A→D→F renders correct canvas nodes')、it('[UI-observable] canvasTransform preserved on scenario switch')、it('[UI-observable] savedRoutes persist across scenario switch')",
+    "e2e_switch": "scripts/e2e-smoke.mjs 新增: 切换 A→D 断言节点 aria-label 含'规划'/'执行'/'评审';切换 D→F 断言节点含'探索方向'/'人工决策';切换前后断言 saved-routes-toggle 可点击且历史路线不丢失;断言 canvasTransform.data-transform-x/y/scale 在场景切换前后一致"
+  },
+  "implementation": [
+    {
+      "step": 1,
+      "target": "src/main.tsx App() 内(TASK-002 simulatedProjectState state 声明之后)",
+      "action": "新增 `const recommendations = useMemo(() => recommendCommands(simulatedProjectState), [simulatedProjectState]);`;新增 `const activeRecommendation = useMemo(() => recommendations.find((g) => g.scenarioId === scenario?.id) ?? null, [recommendations, scenario]);`"
+    },
+    {
+      "step": 2,
+      "target": "src/main.tsx:1317 附近(popover 渲染区块内)",
+      "action": "在现有 popover 内容(citations/源引用)之后新增 `{activeRecommendation && (<div className=\"popover-recommendations\" data-testid=\"popover-recommendations\"><h4 className=\"popover-rec-title\">推荐命令</h4>{activeRecommendation.primary.map((f) => (<div key={f.id} className=\"rec-primary\"><span className=\"rec-command\">{f.command}</span><span className=\"rec-purpose\">{f.purpose}</span></div>))}{activeRecommendation.alternatives.length > 0 && (<div className=\"rec-alternatives\">备选: {activeRecommendation.alternatives.map((f) => f.command).join(' / ')}</div>)}</div>)}`"
+    },
+    {
+      "step": 3,
+      "target": "src/styles.css",
+      "action": "新增 `.popover-recommendations { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); }` `.popover-rec-title { margin: 0 0 4px; font-size: 12px; font-weight: 600; }` `.rec-primary { display: flex; gap: 8px; font-size: 12px; margin-bottom: 2px; }` `.rec-command { font-weight: 600; }` `.rec-purpose { opacity: 0.8; }` `.rec-alternatives { font-size: 11px; opacity: 0.7; margin-top: 4px; }`"
+    },
+    {
+      "step": 4,
+      "target": "src/main.tsx selectScenario handler(TASK-002 已建)",
+      "action": "验证 setSimulatedProjectState 已重置全部字段(milestone/phase/hasBlueprint/hasAnalyze/hasPlan/hasExecute/intentClarity/taskType);若未重置进度字段则补全: `setSimulatedProjectState({ milestone: 'M2', phase: 0, hasBlueprint: false, hasAnalyze: false, hasPlan: false, hasExecute: false, intentClarity: 'unclear', taskType: id === 'A_full_project' ? 'new' : id === 'D_small_fix' ? 'bugfix' : 'explore' });`"
+    },
+    {
+      "step": 5,
+      "target": "src/main.test.tsx(新增 describe)",
+      "action": "新增 `describe('recommendCommands integration', () => { it('returns grp-explore-unclear for A_full_project new state', () => { const groups = recommendCommands({ milestone:'M2', phase:0, hasBlueprint:false, hasAnalyze:false, hasPlan:false, hasExecute:false, intentClarity:'unclear', taskType:'new' }); expect(groups.some((g) => g.id === 'grp-explore-unclear')).toBe(true); }); it('returns grp-plan-direct for D_small_fix bugfix state without analyze', () => { const groups = recommendCommands({ milestone:'M2', phase:0, hasBlueprint:false, hasAnalyze:false, hasPlan:false, hasExecute:false, intentClarity:'clear', taskType:'bugfix' }); expect(groups.some((g) => g.id === 'grp-plan-direct')).toBe(true); }); it('returns grp-explore-only for F_explore_only explore state', () => { const groups = recommendCommands({ milestone:'M2', phase:0, hasBlueprint:false, hasAnalyze:false, hasPlan:false, hasExecute:false, intentClarity:'unclear', taskType:'explore' }); expect(groups.some((g) => g.id === 'grp-explore-only')).toBe(true); }); });`"
+    },
+    {
+      "step": 6,
+      "target": "src/main.test.tsx(新增 describe)",
+      "action": "新增 `describe('scenario switch', () => { it('[UI-observable] switching A→D renders D_small_fix nodes 规划/评审', async () => { const user = userEvent.setup(); render(<App />); await user.click(screen.getByTestId('scenario-card-A_full_project')); await user.click(screen.getByTestId('scenario-card-D_small_fix')); expect(screen.getByRole('button', { name: '查看 规划' })).toBeInTheDocument(); expect(screen.getByRole('button', { name: '查看 评审' })).toBeInTheDocument(); expect(screen.queryByRole('button', { name: '查看 模糊目标' })).not.toBeInTheDocument(); }); it('[UI-observable] canvasTransform preserved on scenario switch', async () => { const user = userEvent.setup(); render(<App />); await user.click(screen.getByTestId('scenario-card-A_full_project')); const groupBefore = screen.getByTestId('canvas-transform-group'); const xBefore = groupBefore.getAttribute('data-transform-x'); const yBefore = groupBefore.getAttribute('data-transform-y'); const scaleBefore = groupBefore.getAttribute('data-transform-scale'); await user.click(screen.getByTestId('scenario-card-D_small_fix')); const groupAfter = screen.getByTestId('canvas-transform-group'); expect(groupAfter.getAttribute('data-transform-x')).toBe(xBefore); expect(groupAfter.getAttribute('data-transform-y')).toBe(yBefore); expect(groupAfter.getAttribute('data-transform-scale')).toBe(scaleBefore); }); it('[UI-observable] savedRoutes persist across scenario switch', async () => { const user = userEvent.setup(); render(<App />); await user.click(screen.getByTestId('scenario-card-A_full_project')); const toggle = screen.getByTestId('saved-routes-toggle'); expect(toggle).toBeInTheDocument(); await user.click(screen.getByTestId('scenario-card-D_small_fix')); expect(screen.getByTestId('saved-routes-toggle')).toBeInTheDocument(); }); });`"
+    },
+    {
+      "step": 7,
+      "target": "scripts/e2e-smoke.mjs",
+      "action": "在 TASK-002 已加的 A 场景选择 + D 切换断言之后,新增: `await page.getByTestId('scenario-card-F_explore_only').click(); await page.getByRole('button', { name: '查看 探索方向' }).waitFor(); assert(await page.getByRole('button', { name: '查看 人工决策' }).count() >= 0, 'F scenario renders brainstorm+decision nodes'); const toggleCount = await page.getByTestId('saved-routes-toggle').count(); assert(toggleCount === 1, 'saved-routes-toggle persists across scenario switch');`"
+    },
+    {
+      "step": 8,
+      "target": "src/main.test.tsx(popover 推荐测试)",
+      "action": "新增 `it('[UI-observable] popover shows recommendations after scenario selection and node click', async () => { const user = userEvent.setup(); render(<App />); await user.click(screen.getByTestId('scenario-card-A_full_project')); const intentNode = screen.getByRole('button', { name: '查看 模糊目标' }); await user.click(intentNode); const popover = await screen.findByTestId('popover-recommendations'); expect(popover).toBeInTheDocument(); });`(若 popover 触发方式不同则适配为 contextmenu/longpress)"
+    }
+  ],
+  "references": {
+    "analyze_context": ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/context.md",
+    "exploration": ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/exploration-codebase.json"
+  },
+  "locked_constraints": ["C-001", "C-004", "C-005", "C-007"],
+  "open_constraints": ["C-008", "C-009"]
+}

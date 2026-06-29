@@ -1,0 +1,112 @@
+{
+  "$schema": "task/1.0",
+  "id": "TASK-001",
+  "plan_id": "PLN-canvas-start-scenario-redesign",
+  "wave": "wave-1",
+  "title": "新建 scenarioRegistry + 3 场景数据 + SimulatedProjectState 扩展",
+  "objective": "新建 scenarioRegistry: ScenarioModel[] 含 3 场景(A_full_project 复用 unclearRequirementsScenario 重命名 / D_small_fix 新建 3 节点 3 步 / F_explore_only 新建 2 节点 1 步);扩展 SimulatedProjectState.taskType 字段;ruleApplies 加 D 场景 case(rule-plan-direct,无 hasAnalyze 前置)+ F 场景 case(rule-explore-only);authoredRules 加 rule-plan-direct(D)+ rule-explore-only(F)。",
+  "rationale": "覆盖 implementation_scope 2(SimulatedProjectState 扩展 taskType + ruleApplies 放宽 D 场景)全部 + implementation_scope 1 数据层 + REC-001(数据)+ REC-003 + REC-005(规则部分)。为 wave-2 App state 重构提供 scenarioRegistry 数据契约和 selectedScenarioId 查找基础。",
+  "priority": "high",
+  "complexity": "medium",
+  "depends_on": [],
+  "files": ["src/main.tsx", "src/main.test.tsx"],
+  "read_first": [
+    "src/main.tsx",
+    "src/main.test.tsx",
+    ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/context.md",
+    ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/conclusions.json",
+    ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/exploration-codebase.json",
+    "maestro-flow/.codex/skills/maestro-help/catalog.json"
+  ],
+  "acceptance_criteria": [
+    "src/main.tsx 含 scenarioRegistry 数组",
+    "src/main.tsx 含 selectedScenarioId state",
+    "src/main.tsx 不含 'const scenario = unclearRequirementsScenario' 硬编码",
+    "src/main.tsx SimulatedProjectState 含 taskType 字段",
+    "src/main.tsx 含 rule-plan-direct 或 D 场景 plan 无 hasAnalyze 前置",
+    "npm test exits 0"
+  ],
+  "convergence": {
+    "criteria": [
+      "grep -q 'scenarioRegistry' src/main.tsx",
+      "grep -qE 'fullProjectScenario|A_full_project' src/main.tsx",
+      "grep -q 'D_small_fix' src/main.tsx",
+      "grep -q 'F_explore_only' src/main.tsx",
+      "grep -q 'taskType' src/main.tsx",
+      "grep -q 'rule-plan-direct' src/main.tsx",
+      "grep -qE 'small-fix|D_small_fix' src/main.test.tsx",
+      "npm test exits 0"
+    ]
+  },
+  "action": {
+    "scenarioRegistry": "新建 `export const scenarioRegistry: ScenarioModel[] = [fullProjectScenario, smallFixScenario, exploreOnlyScenario];` 置于 src/main.tsx:300 附近(fullProjectScenario 定义之后,scenarioValidation 之前)",
+    "rename_A": "将 `const unclearRequirementsScenario`(src/main.tsx:78)重命名为 `const fullProjectScenario`,内部 `id: 'unclear-requirements'` 改为 `id: 'A_full_project'`,title 改为 'Full Project'",
+    "D_small_fix": "新建 `const smallFixScenario: ScenarioModel`,id='D_small_fix',title='Small Fix',summary='小修复场景: plan→execute→review,无 analyze 前置',nodes=[{id:'plan',title:'规划',subtitle:'maestro-plan',x:70,y:118,kind:'plan'},{id:'execute',title:'执行',subtitle:'maestro-execute',x:320,y:118,kind:'plan'},{id:'review',title:'评审',subtitle:'quality-review',x:570,y:118,kind:'terminal'}],edges=[{from:'plan',to:'execute'},{from:'execute',to:'review'}],steps=[{id:'step-d-plan',nodeId:'plan',command:'maestro-plan',terminalRoutes:undefined},{id:'step-d-execute',nodeId:'execute',command:'maestro-execute'},{id:'step-d-review',nodeId:'review',command:'quality-review',terminalRoutes:['stop']}],continuationRoutes=[{id:'stop',label:'Stop',description:'小修复完成'}]",
+    "F_explore_only": "新建 `const exploreOnlyScenario: ScenarioModel`,id='F_explore_only',title='Explore Only',summary='探索场景: brainstorm→人工决策,无后续执行',nodes=[{id:'brainstorm',title:'探索方向',subtitle:'maestro-brainstorm',x:70,y:118,kind:'explore'},{id:'decision',title:'人工决策',subtitle:'terminal',x:320,y:118,kind:'terminal'}],edges=[{from:'brainstorm',to:'decision'}],steps=[{id:'step-f-brainstorm',nodeId:'brainstorm',command:'maestro-brainstorm',terminalRoutes:['stop']}],continuationRoutes=[{id:'stop',label:'Stop',description:'探索结束,待人工决策'}]",
+    "taskType": "SimulatedProjectState(src/main.tsx:359-367)新增字段 `taskType: 'new' | 'continue' | 'bugfix' | 'explore';`",
+    "rule_plan_direct": "ruleApplies(src/main.tsx:534-553 switch)新增 `case 'rule-plan-direct': return state.taskType === 'bugfix' && !state.hasPlan;`(无 hasAnalyze 前置)",
+    "rule_explore_only": "ruleApplies 新增 `case 'rule-explore-only': return state.taskType === 'explore' && !state.hasBlueprint;`",
+    "authoredRules_extend": "authoredRules(src/main.tsx:475-532 末尾)新增 2 条: {id:'rule-plan-direct',scenarioId:'D_small_fix',condition:'taskType=bugfix, no plan (无 analyze 前置)',commandFacts:[factPlan],alternatives:[factExecute],priority:'primary'} 和 {id:'rule-explore-only',scenarioId:'F_explore_only',condition:'taskType=explore, no blueprint',commandFacts:[factBrainstorm],alternatives:[],priority:'primary'}",
+    "scenarioValidation": "scenarioValidation(src/main.tsx:301-304)重构为遍历 scenarioRegistry: `export const scenarioValidation = scenarioRegistry.map((s) => ({ id: s.id, references: validateScenarioReferences(s), citations: validateCitationCoverage(s) }));`"
+  },
+  "implementation": [
+    {
+      "step": 1,
+      "target": "src/main.tsx:78",
+      "action": "将 `const unclearRequirementsScenario: ScenarioModel = {` 改为 `const fullProjectScenario: ScenarioModel = {`;将内部 `id: 'unclear-requirements'` 改为 `id: 'A_full_project'`;将 `title: 'Unclear Requirements'` 改为 `title: 'Full Project'`"
+    },
+    {
+      "step": 2,
+      "target": "src/main.tsx:271 后(fullProjectScenario 闭合之后,scenarioValidation 之前)",
+      "action": "新建 `const smallFixScenario: ScenarioModel` 见 action.D_small_fix 完整字段;3 节点 x 坐标 70/320/570 与 fullProjectScenario 第一节点对齐,y:118;continuationRoutes 仅含 {id:'stop',label:'Stop',description:'小修复完成'}"
+    },
+    {
+      "step": 3,
+      "target": "src/main.tsx:271 后",
+      "action": "新建 `const exploreOnlyScenario: ScenarioModel` 见 action.F_explore_only 完整字段;2 节点 x:70/320,y:118;steps 仅 1 步 step-f-brainstorm,terminalRoutes:['stop']"
+    },
+    {
+      "step": 4,
+      "target": "src/main.tsx:300 前(scenarioValidation 之前)",
+      "action": "新建 `export const scenarioRegistry: ScenarioModel[] = [fullProjectScenario, smallFixScenario, exploreOnlyScenario];`"
+    },
+    {
+      "step": 5,
+      "target": "src/main.tsx:359-367(SimulatedProjectState 类型)",
+      "action": "在 `intentClarity: 'unclear' | 'semi-clear' | 'clear';` 之后新增 `taskType: 'new' | 'continue' | 'bugfix' | 'explore';`"
+    },
+    {
+      "step": 6,
+      "target": "src/main.tsx:475-532(authoredRules 数组 rule-quality-gate 之后,闭合 ] 之前)",
+      "action": "新增 `{ id: 'rule-plan-direct', scenarioId: 'D_small_fix', condition: 'taskType=bugfix, no plan (无 analyze 前置)', commandFacts: [factPlan], alternatives: [factExecute], priority: 'primary' }` 和 `{ id: 'rule-explore-only', scenarioId: 'F_explore_only', condition: 'taskType=explore, no blueprint', commandFacts: [factBrainstorm], alternatives: [], priority: 'primary' }`(复用现有 factPlan/factBrainstorm/factExecute)"
+    },
+    {
+      "step": 7,
+      "target": "src/main.tsx:534-553(ruleApplies switch)",
+      "action": "在 `case 'rule-quality-gate':` 之前新增 `case 'rule-plan-direct': return state.taskType === 'bugfix' && !state.hasPlan;` 和 `case 'rule-explore-only': return state.taskType === 'explore' && !state.hasBlueprint;`"
+    },
+    {
+      "step": 8,
+      "target": "src/main.tsx:301-304(scenarioValidation)",
+      "action": "重构为 `export const scenarioValidation = scenarioRegistry.map((s) => ({ id: s.id, references: validateScenarioReferences(s), citations: validateCitationCoverage(s) }));`;若现有测试引用 scenarioValidation.references 需同步改为 scenarioValidation[0].references 或遍历"
+    },
+    {
+      "step": 9,
+      "target": "src/main.test.tsx(新增 describe 块)",
+      "action": "新增 `describe('scenarioRegistry multi-scenario data', () => { it('contains 3 scenarios A/D/F', () => { expect(scenarioRegistry.length).toBe(3); expect(scenarioRegistry.map(s => s.id)).toEqual(['A_full_project','D_small_fix','F_explore_only']); }); it('D_small_fix has 3 nodes plan/execute/review', () => { const d = scenarioRegistry.find(s => s.id === 'D_small_fix'); expect(d?.nodes.map(n => n.id)).toEqual(['plan','execute','review']); }); it('F_explore_only has 2 nodes brainstorm/decision', () => { const f = scenarioRegistry.find(s => s.id === 'F_explore_only'); expect(f?.nodes.map(n => n.id)).toEqual(['brainstorm','decision']); }); it('ruleApplies rule-plan-direct returns true when taskType=bugfix and no plan', () => { const groups = recommendCommands({ milestone:'M2', phase:0, hasBlueprint:false, hasAnalyze:false, hasPlan:false, hasExecute:false, intentClarity:'clear', taskType:'bugfix' }); expect(groups.some(g => g.id === 'grp-plan-direct')).toBe(true); }); });`;import 中新增 scenarioRegistry"
+    },
+    {
+      "step": 10,
+      "target": "src/main.test.tsx:20-44(初始空态测试)",
+      "action": "将 `expect(screen.getByText('unclear-requirements')).toBeInTheDocument()` 改为 `expect(screen.getByText('A_full_project')).toBeInTheDocument()`(若 TASK-002 改 scenario id);若 TASK-001 阶段测试仍引用 'unclear-requirements' 字符串则同步改为 'A_full_project';保留 [UI-observable] 标记"
+    }
+  ],
+  "references": {
+    "analyze_context": ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/context.md",
+    "conclusions": ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/conclusions.json",
+    "exploration": ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/exploration-codebase.json",
+    "catalog": "maestro-flow/.codex/skills/maestro-help/catalog.json:168-175"
+  },
+  "locked_constraints": ["C-001", "C-002", "C-004", "C-006"],
+  "open_constraints": ["C-008", "C-009"]
+}
