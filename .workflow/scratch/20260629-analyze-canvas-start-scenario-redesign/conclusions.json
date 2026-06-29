@@ -1,0 +1,101 @@
+{
+  "$schema": "conclusions/1.0",
+  "session_id": "ANL-canvas-start-scenario-redesign-2026-06-29",
+  "topic": "初始场景改造 — 支持多入口场景",
+  "recommendation": "GO",
+  "confidence": "medium-high",
+  "confidence_score": 84,
+  "scope_verdict": "medium",
+  "decision_trail": [
+    {"round": 1, "decision": "ScenarioRegistry模型推荐(fit=4)", "reason": "数据契约已验证,改动面最小,与grill Q4.1兼容", "evidence": "cli-explore-agent: src/main.tsx:78-271,816,842"},
+    {"round": 1, "decision": "规则系统已建好未接入(待接线层)", "reason": "recommendCommands/authoredRules在App内零调用,仅test消费", "evidence": "cli-explore-agent: grep确认"},
+    {"round": 2, "decision": "MVP 3场景: A_full_project+D_small_fix+F_explore_only", "reason": "A复用现有(改动最小),D/F短链(3步/2步),覆盖新项目/小修复/探索三大入口", "evidence": "用户确认 + catalog.json:168-175"},
+    {"round": 2, "decision": "SimulatedProjectState扩展taskType字段", "reason": "当前7字段无法区分D/E/F入口", "evidence": "src/main.tsx:359-367"},
+    {"round": 2, "decision": "路径2统一selector节点(非每场景自带intent)", "reason": "绕开nodes[0]约定风险,与guidance-overlay兼容,改动更小", "evidence": "压力测试结论"}
+  ],
+  "key_conclusions": [
+    {"conclusion": "ScenarioRegistry是最佳模型选型(fit=4/5)", "confidence": "high", "evidence": "数据契约验证+改动面最小+grill Q4.1兼容+catalog 1:1映射"},
+    {"conclusion": "规则系统是待接线层,本次改造核心是接通它", "confidence": "high", "evidence": "recommendCommands App内零调用,grep确认"},
+    {"conclusion": "改动面medium,集中在3处state重构", "confidence": "high", "evidence": "scenario变量21+消费点+hasSelectedScenario 7守卫点+activeStepId生命周期"},
+    {"conclusion": "canvasTransform/isFullscreen/popover/SavedRoute场景无关无需改动", "confidence": "high", "evidence": "src/main.tsx:768-771,773,617-630"},
+    {"conclusion": "ruleApplies硬编码switch是扩展性瓶颈(MVP可接受)", "confidence": "medium", "evidence": "src/main.tsx:534-553"}
+  ],
+  "recommendations": [
+    {
+      "id": "REC-001",
+      "priority": "high",
+      "action": "新建 scenarioRegistry: ScenarioModel[] 含3场景(A_full_project复用/D_small_fix新建/F_explore_only新建)",
+      "rationale": "ScenarioRegistry模型fit=4,数据契约已验证",
+      "steps": [{"target": "src/main.tsx:78后", "description": "新建scenarioRegistry数组, unclearRequirementsScenario重命名为fullProjectScenario作为A场景"}, {"target": "新增D场景", "description": "D_small_fix: 3节点(plan/execute/review)3步,terminal route=stop"}, {"target": "新增F场景", "description": "F_explore_only: 2节点(brainstorm/decision)1步,terminal route=stop"}],
+      "review_status": "accepted"
+    },
+    {
+      "id": "REC-002",
+      "priority": "high",
+      "action": "App() state重构: hasSelectedScenario:boolean → selectedScenarioId:string|null, scenario变量改useMemo",
+      "rationale": "解耦硬编码点src/main.tsx:764,支持多场景查找",
+      "steps": [{"target": "src/main.tsx:764-770", "description": "scenario改useMemo(selectedScenarioId查找scenarioRegistry)"}, {"target": "src/main.tsx:770", "description": "hasSelectedScenario派生为selectedScenarioId!==null"}, {"target": "7守卫点", "description": ":808/:930/:948/:1101/:1154/:1155/:1276适配selectedScenarioId"}],
+      "review_status": "accepted"
+    },
+    {
+      "id": "REC-003",
+      "priority": "high",
+      "action": "SimulatedProjectState扩展taskType字段: 'new'|'continue'|'bugfix'|'explore'",
+      "rationale": "当前7字段无法区分D/E/F入口",
+      "steps": [{"target": "src/main.tsx:359-367", "description": "类型加taskType字段"}, {"target": "场景选择UI", "description": "taskType映射到场景选择(new→A, bugfix→D, explore→F)"}],
+      "review_status": "accepted"
+    },
+    {
+      "id": "REC-004",
+      "priority": "high",
+      "action": "路径2统一selector节点: 空态时渲染独立场景选择器(3选项A/D/F),选中后切换到对应ScenarioModel",
+      "rationale": "绕开nodes[0]约定风险,与guidance-overlay:1205兼容",
+      "steps": [{"target": "src/main.tsx:1205-1209", "description": "guidance-overlay替换为场景选择器(3卡片A/D/F)"}, {"target": "选中逻辑", "description": "setSelectedScenarioId+初始化SimulatedProjectState(taskType)+setActiveStepId(steps[0].id)"}],
+      "review_status": "accepted"
+    },
+    {
+      "id": "REC-005",
+      "priority": "medium",
+      "action": "ruleApplies扩展: 加D场景case(放宽plan前置hasAnalyze)+F场景case",
+      "rationale": "D场景rule-plan当前要求hasAnalyze,小修复无analyze需放宽",
+      "steps": [{"target": "src/main.tsx:534-553", "description": "新增rule-plan-direct case(无analyze前置)"}, {"target": "F场景", "description": "brainstorm后补terminal route(stop)"}],
+      "review_status": "accepted"
+    },
+    {
+      "id": "REC-006",
+      "priority": "medium",
+      "action": "场景切换时state重置策略: setActiveStepId+setSelectedNodeId(null)+setPopover(null), canvasTransform保留",
+      "rationale": "activeStepId不可跨场景复用,canvasTransform是用户视角应保留",
+      "steps": [{"target": "场景切换handler", "description": "setSelectedScenarioId(newId); setActiveStepId(newScenario.steps[0].id); setSelectedNodeId(null); setPopover(null)"}],
+      "review_status": "accepted"
+    },
+    {
+      "id": "REC-007",
+      "priority": "low",
+      "action": "ruleApplies长期改声明式匹配(替代switch on rule.id)",
+      "rationale": "硬编码switch扩展性瓶颈,MVP可接受技术债",
+      "steps": [{"target": "src/main.tsx:534-553", "description": "改为按rule.scenarioId+rule.condition字段声明式匹配"}],
+      "review_status": "deferred"
+    }
+  ],
+  "implementation_scope": [
+    {
+      "objective": "新建scenarioRegistry含3场景(A/D/F)并接入App()",
+      "rationale": "ScenarioRegistry模型MVP,解决单场景硬编码",
+      "priority": "high",
+      "target_files": ["src/main.tsx", "src/main.test.tsx"],
+      "acceptance_criteria": ["src/main.tsx含scenarioRegistry数组", "src/main.tsx含selectedScenarioId state", "src/main.tsx不含'const scenario = unclearRequirementsScenario'硬编码", "npm test exits 0"],
+      "change_summary": "src/main.tsx: 新建scenarioRegistry+D/F ScenarioModel+selectedScenarioId state+useMemo+7守卫点适配+场景选择UI"
+    },
+    {
+      "objective": "SimulatedProjectState扩展taskType字段+ruleApplies放宽D场景",
+      "rationale": "区分入口意图+D场景无analyze前置",
+      "priority": "high",
+      "target_files": ["src/main.tsx", "src/main.test.tsx"],
+      "acceptance_criteria": ["src/main.tsx SimulatedProjectState含taskType字段", "src/main.tsx含rule-plan-direct或D场景plan无hasAnalyze前置", "npm test exits 0"],
+      "change_summary": "src/main.tsx: SimulatedProjectState加taskType+ruleApplies加D/F case"
+    }
+  ],
+  "open_questions": [],
+  "warnings": ["W001: maestro delegate CLI不可用(opencode not found),架构分析基于cli-explore-agent单视角,非双验证"]
+}

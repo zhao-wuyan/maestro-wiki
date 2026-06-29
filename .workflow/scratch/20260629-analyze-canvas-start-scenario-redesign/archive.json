@@ -1,0 +1,27 @@
+{
+  "$schema": "session-archive/1.0",
+  "session_id": "ANL-canvas-start-scenario-redesign-2026-06-29",
+  "session_type": "analyze",
+  "session_path": "scratch/20260629-analyze-canvas-start-scenario-redesign",
+  "lifecycle": {
+    "status": "sealed",
+    "sealed_at": "2026-06-29T00:00:00Z",
+    "archived_at": null,
+    "linked_milestone": "M2-canvas-command-recommender-mvp"
+  },
+  "content_refs": [
+    {"type": "context-package", "path": "context-package.json"},
+    {"type": "conclusions", "path": "conclusions.json"},
+    {"type": "analysis", "path": "analysis.md"},
+    {"type": "context", "path": "context.md"},
+    {"type": "discussion", "path": "discussion.md"},
+    {"type": "exploration-codebase", "path": "exploration-codebase.json"},
+    {"type": "explorations", "path": "explorations.json"}
+  ],
+  "extraction": {
+    "harvested": false,
+    "reason": "user-skip",
+    "_note": "fragments available for future harvest: 7 locked constraints (arch) + 4 insights (arch/coding)"
+  },
+  "pruned": null
+}

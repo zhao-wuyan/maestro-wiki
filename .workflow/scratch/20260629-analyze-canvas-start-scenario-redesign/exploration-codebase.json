@@ -1,0 +1,69 @@
+{
+  "$schema": "exploration-codebase/1.0",
+  "session_id": "ANL-canvas-start-scenario-redesign-2026-06-29",
+  "topic": "初始场景改造 — 支持多入口场景",
+  "explorer": "cli-explore-agent",
+  "relevant_files": [
+    {"path": "src/main.tsx", "lines": "1519", "role": "单文件 SPA，含全部数据模型+规则引擎+渲染层"},
+    {"path": "src/main.tsx:14-76", "role": "ScenarioModel/ScenarioNode/ScenarioStep 类型定义"},
+    {"path": "src/main.tsx:78-271", "role": "unclearRequirementsScenario 唯一硬编码场景"},
+    {"path": "src/main.tsx:301-304", "role": "scenarioValidation 模块级验证缓存"},
+    {"path": "src/main.tsx:359-367", "role": "SimulatedProjectState 类型"},
+    {"path": "src/main.tsx:475-532", "role": "authoredRules 7条规则，覆盖5个scenarioId"},
+    {"path": "src/main.tsx:534-553", "role": "ruleApplies switch on rule.id 硬编码"},
+    {"path": "src/main.tsx:555-577", "role": "toRecommendationGroup 证据提升函数"},
+    {"path": "src/main.tsx:579-581", "role": "recommendCommands 入口函数"},
+    {"path": "src/main.tsx:617-630", "role": "SavedRoute 类型（已含 scenarioId 字段）"},
+    {"path": "src/main.tsx:763-786", "role": "App() state 声明区（scenario硬编码点line764）"},
+    {"path": "src/main.tsx:806-812", "role": "revealedNodeIds（intentNodeId=nodes[0]约定）"},
+    {"path": "src/main.tsx:816-822", "role": "nodeLayout 泳道布局（覆盖node.x/y）"},
+    {"path": "src/main.tsx:827-879", "role": "activeBranches 画布分支统一模型"},
+    {"path": "src/main.tsx:1145-1209", "role": "初始空态渲染（guidanceVisible/scenarioLabelText）"},
+    {"path": "maestro-flow/.codex/skills/maestro-help/catalog.json:168-175", "role": "workflows.paths 6条入口场景A-F"},
+    {"path": "src/main.test.tsx:20-44", "role": "初始空态测试断言（含unclear-requirements硬编码ID）"}
+  ],
+  "call_chains": [
+    {
+      "name": "当前硬编码渲染链",
+      "chain": "unclearRequirementsScenario(:78) → App() scenario(:764) → useState(activeStepId,:765) → useMemo(activeStep,:788) → useMemo(revealedNodeIds,:806) → useMemo(nodeLayout,:816) → useMemo(activeBranches,:842) → useMemo(visibleNodes,:881) → SVG渲染(:1211) + popover渲染(:1317)"
+    },
+    {
+      "name": "规则系统（已建好未接入）",
+      "chain": "SimulatedProjectState → recommendCommands(:579) → authoredRules.filter(ruleApplies,:580) → .map(toRecommendationGroup,:580) → RecommendationGroup[] → [仅main.test.tsx消费，未接入App]"
+    },
+    {
+      "name": "catalog→场景枚举（待建）",
+      "chain": "catalog.json.workflows.paths(6条A-F) → [LLM-assisted规则更新] → authoredRules扩展 → ScenarioModel[] registry → App() selectedScenarioId → 场景选择UI"
+    }
+  ],
+  "data_flows": [
+    {
+      "name": "scenario变量消费点",
+      "count": "21+处",
+      "key_points": ["steps[0].id→activeStepId初始(:765)", "nodes[0].id→intentNodeId(:807)", "nodes→nodeLayout(:816)", "title→scenarioLabelText(:1155)", "id→savedRoute.scenarioId(:1115)"]
+    },
+    {
+      "name": "hasSelectedScenario守卫点",
+      "count": "7处",
+      "key_points": [":808 revealedNodeIds", ":930 useEffect早退", ":948 activateNode", ":1101 handleSave早退", ":1154 guidanceVisible", ":1155 scenarioLabelText", ":1276 分支渲染守卫"]
+    }
+  ],
+  "code_anchors": [
+    {"file": "src/main.tsx", "line": "764", "snippet": "const scenario = unclearRequirementsScenario;", "note": "核心硬编码点，无selector"},
+    {"file": "src/main.tsx", "line": "770", "snippet": "const [hasSelectedScenario, setHasSelectedScenario] = useState(false);", "note": "布尔值不携带场景ID，多入口需扩展为selectedScenarioId"},
+    {"file": "src/main.tsx", "line": "807", "snippet": "const intentNodeId = scenario.nodes[0].id;", "note": "硬编码nodes[0]为中央选择节点，多场景需决定每场景自带intent还是统一selector"},
+    {"file": "src/main.tsx", "line": "579", "snippet": "export function recommendCommands(state: SimulatedProjectState): RecommendationGroup[]", "note": "规则系统入口，已建好但App内零调用"},
+    {"file": "src/main.tsx", "line": "534", "snippet": "function ruleApplies(rule, state) { switch (rule.id) {", "note": "硬编码switch on rule.id，新增规则必须改此函数"},
+    {"file": "maestro-flow/.codex/skills/maestro-help/catalog.json", "line": "168", "snippet": "\"paths\": { \"A_full_project\": \"brainstorm→blueprint→analyze→roadmap→...\" }", "note": "6条入口场景直接映射源"}
+  ],
+  "key_findings": [
+    "规则系统(recommendCommands/authoredRules/SimulatedProjectState)已由TASK-001建好但App内零调用——是'待接线'层，已为多场景路由预留scenarioId字段(5个不同值)",
+    "hasSelectedScenario是布尔值不携带场景ID——多入口必须扩展为selectedScenarioId: string|null",
+    "scenario变量被App内21+处消费——解耦需用useMemo(selectedScenarioId)替代常量",
+    "canvasTransform/isFullscreen/viewportSize/popover是纯UI状态场景无关——切换场景无需重置(仅setPopover(null))",
+    "nodeLayout/activeBranches/popover渲染依赖ScenarioModel数据契约——任何符合契约的场景可复用,无适配成本",
+    "SavedRoute已含scenarioId字段——localStorage持久化层天然跨场景兼容,无schema改动",
+    "catalog.workflows.paths有6条入口(A_full_project/B_large_feature/C_medium_feature/D_small_fix/E_spec_only/F_explore_only)——可直接映射为场景枚举",
+    "ruleApplies硬编码switch on rule.id——新增规则需同时改ruleApplies函数(扩展性瓶颈)"
+  ]
+}

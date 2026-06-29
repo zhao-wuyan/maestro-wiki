@@ -1,0 +1,74 @@
+{
+  "$schema": "explorations/1.0",
+  "session_id": "ANL-canvas-start-scenario-redesign-2026-06-29",
+  "perspective": "architecture+implementation (单视角合并, CLI delegate W001不可用)",
+  "warning": "W001: maestro delegate CLI 不可用(opencode not found), 架构分析基于 cli-explore-agent 代码探索证据, 所有决策标注证据来源",
+  "model_options": [
+    {
+      "name": "ScenarioRegistry (预定义场景表)",
+      "description": "新建 scenarioRegistry: ScenarioModel[]，每个场景一个 ScenarioModel 实例（复用 unclearRequirementsScenario 模式）。App() 按 selectedScenarioId 查找。",
+      "pros": ["数据契约已验证(nodeLayout/activeBranches/popover均依赖ScenarioModel契约)", "复用现有validateScenarioReferences验证", "场景数据可静态审计", "与catalog.paths 6条直接1:1映射"],
+      "cons": ["每个场景需手写nodes/steps/citations(工作量大)", "场景内容固化无法按state动态调整", "与recommendCommands规则系统平行存在可能冗余"],
+      "fit_score": 4,
+      "evidence_refs": ["src/main.tsx:78-271(unclearRequirementsScenario模式可复制)", "src/main.tsx:816-822(nodeLayout依赖scenario.nodes)", "catalog.json:168-175(6条paths可直接映射)"]
+    },
+    {
+      "name": "动态生成 (按SimulatedProjectState实时生成ScenarioModel)",
+      "description": "不预存场景，按 SimulatedProjectState 实时调用 recommendCommands 生成 RecommendationGroup[]，再映射为 ScenarioModel.nodes/steps。",
+      "pros": ["场景随state自适应(用户进度变化场景演进)", "单一数据源(recommendCommands)避免冗余", "扩展新场景只需加规则不需写ScenarioModel"],
+      "cons": ["ScenarioModel结构复杂(nodes/steps/edges/citations/checklist)实时生成成本高", "生成逻辑需在浏览器端跑(无LLM), 映射规则硬编码", "与现有unclearRequirementsScenario手写模式不兼容(需重写)", "测试难度高(生成结果非确定)"],
+      "fit_score": 2,
+      "evidence_refs": ["src/main.tsx:579-581(recommendCommands返回RecommendationGroup[]非ScenarioModel)", "src/main.tsx:14-76(ScenarioModel含8个字段需填充)", "src/main.tsx:534-553(ruleApplies硬编码switch扩展性瓶颈)"]
+    },
+    {
+      "name": "规则路由 (recommendCommands直接分流,不显式建模场景)",
+      "description": "废弃ScenarioModel，App()直接用recommendCommands(state)返回的RecommendationGroup[]驱动画布渲染。scenario概念弱化为rule.scenarioId标签。",
+      "pros": ["最彻底解耦(移除ScenarioModel依赖)", "规则系统已建好(TASK-001)", "扩展性最好(加规则即加场景)"],
+      "cons": ["需重写画布渲染层(nodeLayout/activeBranches/popover均依赖ScenarioModel.nodes/steps契约)", "丢失ScenarioModel的edges/citations/checklist结构(需在RecommendationGroup补)", "与grill Q4.1(数据模型字段保留)冲突", "改动面巨大(21+处scenario.消费点全改)"],
+      "fit_score": 1,
+      "evidence_refs": ["src/main.tsx:816-822(nodeLayout依赖scenario.nodes)", "src/main.tsx:842-879(activeBranches依赖scenario.continuationRoutes)", "src/main.tsx:1148-1152(popover依赖scenario.citations)", "grill Q4.1: ScenarioModel字段MUST保留"]
+    }
+  ],
+  "decoupling_difficulty": {
+    "level": "medium",
+    "blockers": [
+      "hasSelectedScenario: boolean 不携带场景ID, 需重构为 selectedScenarioId: string|null (影响7处守卫点)",
+      "scenario变量21+处消费, 需用useMemo(selectedScenarioId)替代常量",
+      "activeStepId初始值依赖scenario.steps[0].id, 场景为null时需处理生命周期"
+    ],
+    "evidence_refs": ["src/main.tsx:764(硬编码点)", "src/main.tsx:770(hasSelectedScenario)", "src/main.tsx:765(activeStepId初始值)"]
+  },
+  "state_sufficiency": {
+    "sufficient": false,
+    "missing_fields": ["taskType: 'new'|'continue'|'bugfix'|'test'|'docs'|'explore' (区分入口意图)", "hasRoadmap: boolean (区分A_full_project vs B/C)", "issueCount: number (区分是否有未决issue)"],
+    "recommended_scenarios_from_catalog": [
+      {"catalog_path": "A_full_project", "entry": "新项目从头开始", "state_match": "intentClarity=unclear, !hasBlueprint, !hasRoadmap"},
+      {"catalog_path": "B_large_feature", "entry": "大功能开发", "state_match": "hasBlueprint, !hasRoadmap"},
+      {"catalog_path": "C_medium_feature", "entry": "中等功能", "state_match": "hasBlueprint, hasRoadmap"},
+      {"catalog_path": "D_small_fix", "entry": "小修复/bugfix", "state_match": "hasPlan || taskType='bugfix'"},
+      {"catalog_path": "E_spec_only", "entry": "仅出规格文档", "state_match": "taskType='docs'"},
+      {"catalog_path": "F_explore_only", "entry": "探索学习", "state_match": "taskType='explore'"}
+    ],
+    "evidence_refs": ["src/main.tsx:359-367(SimulatedProjectState当前7字段)", "catalog.json:168-175(6条paths需taskType区分)"]
+  },
+  "integration_couplings": [
+    {"component": "canvasTransform/isFullscreen/viewportSize", "coupling_level": "loose", "impact": "纯UI状态场景无关, 切换无需重置", "evidence_refs": ["src/main.tsx:768-771"]},
+    {"component": "popover", "coupling_level": "loose", "impact": "状态只存{nodeId,x,y}不存scenarioId, 切换时setPopover(null)即可", "evidence_refs": ["src/main.tsx:773", "src/main.tsx:1142-1152"]},
+    {"component": "nodeLayout", "coupling_level": "medium", "impact": "依赖项已是scenario.nodes, 自动重算, 但nodes[0]约定需统一", "evidence_refs": ["src/main.tsx:816-822", "src/main.tsx:807"]},
+    {"component": "activeBranches", "coupling_level": "loose", "impact": "数据契约驱动, 任何符合steps/choices/terminalRoutes的场景可复用", "evidence_refs": ["src/main.tsx:842-879"]},
+    {"component": "SavedRoute/localStorage", "coupling_level": "loose", "impact": "已含scenarioId字段, 天然跨场景兼容", "evidence_refs": ["src/main.tsx:617-630"]},
+    {"component": "activeStepId/selectedNodeId", "coupling_level": "tight", "impact": "不可跨场景复用, 切换必须重置", "evidence_refs": ["src/main.tsx:765-766"]}
+  ],
+  "catalog_feasibility": {
+    "viable": true,
+    "mapping_approach": "catalog.workflows.paths 6条(A-F) → ScenarioModel[] registry, 每条path按→split成nodes, commands[]查description填purpose, essential_commands补command字段, citations直接映射commands[].source(已maestro-flow/前缀)",
+    "gaps": ["catalog不含checklist(需通用3项共享)", "catalog不含continuationRoutes(复用现有stop/quality/knowledge)", "E_spec_only/F_explore_only无现成authoredRules(需新增rule)"],
+    "evidence_refs": ["catalog.json:168-175(paths)", "catalog.json:147-157(essential_commands)", "catalog.json:7-62(commands[].source)"]
+  },
+  "recommendation": {
+    "preferred_model": "ScenarioRegistry (预定义场景表)",
+    "rationale": "数据契约已验证(nodeLayout/activeBranches/popover均依赖ScenarioModel且已通过TASK-002/003测试), 改动面最小(仅扩展selectedScenarioId state + scenarioRegistry数组), 与grill Q4.1(数据模型保留)完全兼容, catalog.paths 6条可直接1:1映射。动态生成fit_score=2(ScenarioModel结构复杂实时生成成本高), 规则路由fit_score=1(与grill Q4.1冲突且改动面巨大)。",
+    "MVP_scope": "3个场景: A_full_project(复用unclearRequirementsScenario), D_small_fix(小修复, 最短路径plan→execute→review), F_explore_only(探索, brainstorm-only)。E_spec_only/C_medium_feature/B_large_feature延后。",
+    "risks": ["ruleApplies硬编码switch扩展性瓶颈(新增场景需改此函数)", "SimulatedProjectState缺taskType字段无法区分D/E/F入口(需扩展类型)", "场景选择UI与现有guidance-overlay的交互需重新设计"]
+  }
+}

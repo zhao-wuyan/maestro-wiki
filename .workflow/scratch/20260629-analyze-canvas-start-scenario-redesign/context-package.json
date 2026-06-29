@@ -1,0 +1,71 @@
+{
+  "$schema": "context-package/1.0",
+  "source": {
+    "type": "analyze",
+    "artifact_id": "ANL-canvas-start-scenario-redesign-2026-06-29",
+    "session_path": "scratch/20260629-analyze-canvas-start-scenario-redesign",
+    "generated_at": "2026-06-29T00:00:00Z"
+  },
+  "requirements": [
+    {
+      "id": "R-001",
+      "title": "新建scenarioRegistry含3场景(A/D/F)并接入App()",
+      "description": "新建scenarioRegistry: ScenarioModel[]含A_full_project(复用)/D_small_fix(新建3步)/F_explore_only(新建2步),App()按selectedScenarioId查找替代硬编码:764",
+      "priority": "must",
+      "ref": "conclusions.json#implementation_scope[0]"
+    },
+    {
+      "id": "R-002",
+      "title": "SimulatedProjectState扩展taskType+ruleApplies放宽D场景",
+      "description": "SimulatedProjectState加taskType:'new'|'continue'|'bugfix'|'explore'字段;ruleApplies加D场景case(放宽plan前置hasAnalyze)+F场景case",
+      "priority": "must",
+      "ref": "conclusions.json#implementation_scope[1]"
+    }
+  ],
+  "constraints": [
+    {"id": "C-001", "area": "architecture", "constraint": "MUST使用ScenarioRegistry模型(scenarioRegistry: ScenarioModel[]),App()按selectedScenarioId查找;MUST NOT用动态生成或规则路由", "rationale": "fit=4最高,数据契约验证,grill Q4.1兼容", "status": "locked", "ref": "context.md#Locked-1"},
+    {"id": "C-002", "area": "scope", "constraint": "MVP MUST含3场景: A_full_project+D_small_fix+F_explore_only;E/B/C延后", "rationale": "覆盖新项目/小修复/探索三大入口", "status": "locked", "ref": "context.md#Locked-2"},
+    {"id": "C-003", "area": "ui", "constraint": "MUST用路径2统一selector节点(空态渲染独立场景选择器);MUST NOT依赖ScenarioModel.nodes[0]约定", "rationale": "绕开nodes[0]约定风险", "status": "locked", "ref": "context.md#Locked-3"},
+    {"id": "C-004", "area": "data-model", "constraint": "SimulatedProjectState MUST扩展taskType:'new'|'continue'|'bugfix'|'explore'字段", "rationale": "区分D/E/F入口", "status": "locked", "ref": "context.md#Locked-4"},
+    {"id": "C-005", "area": "state", "constraint": "场景切换MUST重置:setSelectedScenarioId+setActiveStepId(steps[0].id)+setSelectedNodeId(null)+setPopover(null);canvasTransform/isFullscreen MUST保留", "rationale": "activeStepId不可跨场景,canvasTransform是用户视角", "status": "locked", "ref": "context.md#Locked-5"},
+    {"id": "C-006", "area": "data-model", "constraint": "ScenarioModel/ScenarioNode/ScenarioStep字段MUST不变(grill Q4.1),仅渲染层+state重构", "rationale": "grill Q4.1数据模型保留", "status": "locked", "ref": "context.md#Locked-6"},
+    {"id": "C-007", "area": "persistence", "constraint": "SavedRoute已含scenarioId字段MUST不改schema,天然跨场景兼容", "rationale": "src/main.tsx:617-630已预留", "status": "locked", "ref": "context.md#Locked-7"},
+    {"id": "C-008", "area": "implementation", "constraint": "ruleApplies MVP阶段MAY加case(D/F);长期SHOULD改声明式匹配(技术债)", "rationale": "硬编码switch扩展性瓶颈但MVP可接受", "status": "open", "ref": "context.md#Free-1"},
+    {"id": "C-009", "area": "implementation", "constraint": "D场景plan前置MAY新增rule-plan-direct或改rule-plan条件;F场景terminal route MAY用stop或新增route类型", "rationale": "实现者选择", "status": "open", "ref": "context.md#Free-2,3"},
+    {"id": "C-010", "area": "ui", "constraint": "场景选择卡片视觉MAY由实现者选择(参考满屏画布浮动按钮透明风格)", "rationale": "实现细节", "status": "open", "ref": "context.md#Free-4"}
+  ],
+  "domain": {
+    "problem_statement": "当前画布初始场景只有unclearRequirementsScenario一个硬编码(src/main.tsx:764),用户可能从新项目/小修复/探索等多种入口开始。需改造为支持多入口场景,规则系统(recommendCommands)已建好但未接入App。",
+    "terminology": [
+      {"term": "ScenarioRegistry", "definition": "预定义ScenarioModel[]数组,App按selectedScenarioId查找", "code_ref": "src/main.tsx:78(将新建)", "status": "locked"},
+      {"term": "selectedScenarioId", "definition": "替代hasSelectedScenario的场景ID状态(string|null)", "code_ref": "src/main.tsx:770(将重构)", "status": "locked"},
+      {"term": "taskType", "definition": "SimulatedProjectState新字段,区分入口意图(new/continue/bugfix/explore)", "code_ref": "src/main.tsx:359-367(将扩展)", "status": "locked"},
+      {"term": "统一selector节点", "definition": "路径2:空态渲染独立场景选择器,不依赖ScenarioModel.nodes[0]", "code_ref": "src/main.tsx:1205(将替换)", "status": "locked"},
+      {"term": "ruleApplies", "definition": "规则适用判定函数,当前硬编码switch on rule.id", "code_ref": "src/main.tsx:534-553", "status": "open"}
+    ],
+    "audience": "Maestro Flow用户(新项目/小修复/探索入口)",
+    "industry": "开发者工具/工作流可视化"
+  },
+  "non_goals": [
+    {"title": "E_spec_only场景", "rationale": "无现成rule需全新构建,延后M3", "ref": "context.md#Deferred-1"},
+    {"title": "B_large_feature/C_medium_feature场景", "rationale": "与A重叠,延后M3", "ref": "context.md#Deferred-2"},
+    {"title": "ruleApplies声明式匹配重构", "rationale": "MVP可接受技术债,延后", "ref": "context.md#Deferred-3"},
+    {"title": "'continue'入口(继续中断任务)", "rationale": "taskType已预留但MVP不实现", "ref": "context.md#Deferred-4"},
+    {"title": "catalog→ScenarioModel自动转换工具", "rationale": "当前手写,长期可建", "ref": "context.md#Deferred-5"}
+  ],
+  "insights": [
+    {"area": "architecture", "summary": "规则系统(recommendCommands/authoredRules/SimulatedProjectState)已由TASK-001建好但App内零调用,是'待接线'层,已为多场景路由预留scenarioId字段(5个不同值)", "evidence": "cli-explore-agent: grep确认App内无recommendCommands调用", "ref": "exploration-codebase.json#key_findings[0]"},
+    {"area": "implementation", "summary": "canvasTransform/isFullscreen/viewportSize/popover/SavedRoute均场景无关或已含scenarioId,解耦面集中在scenario变量(21+消费点)+hasSelectedScenario(7守卫点)+activeStepId(生命周期)三处", "evidence": "src/main.tsx:768-771,773,617-630", "ref": "exploration-codebase.json#key_findings[3]"},
+    {"area": "data-model", "summary": "catalog.workflows.paths 6条入口(A-F)可直接1:1映射为ScenarioModel,nodes按→split生成,citations直接映射commands[].source(已maestro-flow/前缀)", "evidence": "catalog.json:168-175", "ref": "exploration-codebase.json#key_findings[5]"},
+    {"area": "risk", "summary": "nodes[0]约定(scenario.nodes[0].id作为intentNodeId)在D/F场景不成立,路径2统一selector节点可绕开此风险", "evidence": "src/main.tsx:807, 压力测试结论", "ref": "analysis.md#压力测试"}
+  ],
+  "open_questions": [],
+  "references": [
+    {"type": "analysis", "path": "context.md"},
+    {"type": "conclusions", "path": "conclusions.json"},
+    {"type": "exploration", "path": "exploration-codebase.json"},
+    {"type": "discussion", "path": "discussion.md"},
+    {"type": "scoring", "path": "analysis.md"},
+    {"type": "prior-grill", "path": "../20260628-grill-canvas-node-scenario-redesign/context-package.json", "note": "决策#1规则驱动画布,#2 maestro-help catalog驱动场景枚举"}
+  ]
+}
