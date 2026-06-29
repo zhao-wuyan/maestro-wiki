@@ -211,6 +211,90 @@ try {
   const shellBoxAfter = await canvasShell.boundingBox();
   assert(Math.abs(shellBoxAfter.width - viewportSize.width) < 4, 'canvas-shell still fills viewport width after saved-routes popover opens (no permanent sidebar)');
 
+  // [UI-observable] TASK-003 — scenario switch: switch A→D→F and verify the
+  // corresponding scenario is active (via scenario-label / active card),
+  // canvasTransform is preserved across the switch (C-005), and the
+  // saved-routes entry persisted from the A session is still readable after
+  // switching (savedRoutes cross-scenario). Note: D/F first nodes may render
+  // off-screen because C-005 preserves the canvasTransform accumulated by
+  // navigation in A — visibility of the new first node is verified in the
+  // unit test where canvas stays centered.
+  const savedRoutesToggleAfterSave = page.getByTestId('saved-routes-toggle');
+  await savedRoutesToggleAfterSave.waitFor();
+  const savedCountBefore = await page.getByTestId('saved-routes-list').count();
+  assert(savedCountBefore > 0, 'saved-routes list is populated before scenario switch');
+
+  // close popover so scenario-switch-toggle is unobstructed
+  await page.getByRole('button', { name: '关闭路线列表' }).click();
+  await wait(80);
+
+  // capture canvasTransform before switch
+  const groupBeforeSwitch = page.getByTestId('canvas-transform-group');
+  const switchXBefore = await groupBeforeSwitch.getAttribute('data-transform-x');
+  const switchYBefore = await groupBeforeSwitch.getAttribute('data-transform-y');
+  const switchScaleBefore = await groupBeforeSwitch.getAttribute('data-transform-scale');
+
+  // A→D switch
+  await page.getByTestId('scenario-switch-toggle').click();
+  await wait(100);
+  await page.getByTestId('scenario-card-D_small_fix').click();
+  await wait(150);
+
+  // scenario-label reflects D_small_project (proves switch committed)
+  const labelAfterD = await page.getByTestId('scenario-label').textContent();
+  assert(labelAfterD && labelAfterD.includes('D_small_fix'), `scenario-label switched to D_small_fix (got: ${labelAfterD})`);
+  // selector overlay closed after selection
+  const selectorAfterD = await page.getByTestId('scenario-selector').count();
+  assert(selectorAfterD === 0, 'scenario selector hidden after D selection');
+  // reopen selector — D card should now be marked active
+  await page.getByTestId('scenario-switch-toggle').click();
+  await wait(100);
+  const dCardClass = await page.getByTestId('scenario-card-D_small_fix').getAttribute('class');
+  assert(dCardClass && dCardClass.includes('scenario-card-active'), 'D_small_fix card marked active after switch');
+  await page.getByTestId('scenario-card-D_small_fix').click();
+  await wait(100);
+
+  // canvasTransform preserved across A→D switch (C-005)
+  const switchXAfterD = await groupBeforeSwitch.getAttribute('data-transform-x');
+  const switchYAfterD = await groupBeforeSwitch.getAttribute('data-transform-y');
+  const switchScaleAfterD = await groupBeforeSwitch.getAttribute('data-transform-scale');
+  assert(switchXAfterD === switchXBefore, `canvasTransform.x preserved across A→D (before=${switchXBefore}, after=${switchXAfterD})`);
+  assert(switchYAfterD === switchYBefore, `canvasTransform.y preserved across A→D (before=${switchYBefore}, after=${switchYAfterD})`);
+  assert(switchScaleAfterD === switchScaleBefore, `canvasTransform.scale preserved across A→D (before=${switchScaleBefore}, after=${switchScaleAfterD})`);
+
+  // saved-routes entry persisted across A→D switch
+  await page.getByTestId('saved-routes-toggle').click();
+  await wait(100);
+  const savedListAfterD = await page.getByTestId('saved-routes-list').count();
+  assert(savedListAfterD > 0, 'saved-routes entry persisted across A→D scenario switch');
+  const savedListTextD = await page.getByTestId('saved-routes-list').textContent();
+  assert(savedListTextD && savedListTextD.includes('A_full_project'), 'saved-routes content survived A→D switch (route still tagged with A_full_project scenarioId)');
+  await page.getByRole('button', { name: '关闭路线列表' }).click();
+  await wait(80);
+
+  // D→F switch
+  await page.getByTestId('scenario-switch-toggle').click();
+  await wait(100);
+  await page.getByTestId('scenario-card-F_explore_only').click();
+  await wait(150);
+
+  const labelAfterF = await page.getByTestId('scenario-label').textContent();
+  assert(labelAfterF && labelAfterF.includes('F_explore_only'), `scenario-label switched to F_explore_only (got: ${labelAfterF})`);
+  await page.getByTestId('scenario-switch-toggle').click();
+  await wait(100);
+  const fCardClass = await page.getByTestId('scenario-card-F_explore_only').getAttribute('class');
+  assert(fCardClass && fCardClass.includes('scenario-card-active'), 'F_explore_only card marked active after switch');
+  await page.getByTestId('scenario-card-F_explore_only').click();
+  await wait(100);
+
+  // saved-routes entry still persisted across D→F switch (cross-scenario)
+  await page.getByTestId('saved-routes-toggle').click();
+  await wait(100);
+  const savedListAfterF = await page.getByTestId('saved-routes-list').count();
+  assert(savedListAfterF > 0, 'saved-routes entry persisted across D→F scenario switch');
+  const savedListTextF = await page.getByTestId('saved-routes-list').textContent();
+  assert(savedListTextF && savedListTextF.includes('A_full_project'), 'saved-routes content survived D→F switch (cross-scenario persistence, route still tagged with A_full_project)');
+
   await browser.close();
 } finally {
   server.kill('SIGTERM');

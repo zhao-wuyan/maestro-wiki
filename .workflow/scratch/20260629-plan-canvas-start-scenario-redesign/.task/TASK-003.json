@@ -91,5 +91,25 @@
     "exploration": ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/exploration-codebase.json"
   },
   "locked_constraints": ["C-001", "C-004", "C-005", "C-007"],
-  "open_constraints": ["C-008", "C-009"]
+  "open_constraints": ["C-008", "C-009"],
+  "status": "completed",
+  "meta": {
+    "completed_at": "2026-06-29",
+    "commit_subject": "feat(TASK-003): 接通recommendCommands + popover推荐区块 + 场景切换测试 + C-005 canvasTransform保留修复",
+    "summary_path": ".workflow/scratch/20260629-plan-canvas-start-scenario-redesign/.summaries/TASK-003-summary.md",
+    "verification": {
+      "npm_test": "45 passed",
+      "npx_tsc": "clean",
+      "npm_run_build": "ok (485ms)",
+      "npm_run_test_e2e": "exit 0"
+    },
+    "convergence_pass": "6/6",
+    "deviations": [
+      "新增 scenario-switch-toggle 浮动按钮 + scenarioSwitchOpen state (TASK-002 selector 选中后消失, 需新入口支持切换)",
+      "C-005 修复加 isFirstSelection 判断 (首次选择 recenter, 后续切换保留) - 避免 task Step 5 简化逻辑误跳过首次 recenter",
+      "e2e 节点可见性 vs C-005 冲突: A 完整导航后 canvasTransform 远右, D 首节点不可见, 改用 scenario-label + active-card class 断言",
+      "e2e saved-routes 内容断言改 scenarioId=A_full_project (实际保存的是 route-choice 命令, 非 maestro-brainstorm)",
+      "D 场景首节点断言简化: 只验证 查看 规划 可见 (D steps 无 choices 无法推进 activeStep reveal 后续节点)"
+    ]
+  }
 }

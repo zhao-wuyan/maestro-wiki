@@ -696,3 +696,124 @@ describe('Local route history persistence (TASK-004)', () => {
     expect(saveButton.disabled).toBe(true);
   });
 });
+
+// TASK-003 — recommendCommands integration: verify the rule system is wired
+// into App() and that the active scenario's recommendation group matches the
+// expected rule (grp-explore-unclear / grp-plan-direct / grp-explore-only).
+describe('recommendCommands integration (TASK-003)', () => {
+  it('returns grp-explore-unclear for A_full_project new state', () => {
+    const groups = recommendCommands({
+      milestone: 'M2',
+      phase: 0,
+      hasBlueprint: false,
+      hasAnalyze: false,
+      hasPlan: false,
+      hasExecute: false,
+      intentClarity: 'unclear',
+      taskType: 'new',
+    });
+    expect(groups.some((g) => g.id === 'grp-explore-unclear')).toBe(true);
+  });
+
+  it('returns grp-plan-direct for D_small_fix bugfix state without analyze', () => {
+    const groups = recommendCommands({
+      milestone: 'M2',
+      phase: 0,
+      hasBlueprint: false,
+      hasAnalyze: false,
+      hasPlan: false,
+      hasExecute: false,
+      intentClarity: 'clear',
+      taskType: 'bugfix',
+    });
+    expect(groups.some((g) => g.id === 'grp-plan-direct')).toBe(true);
+  });
+
+  it('returns grp-explore-only for F_explore_only explore state', () => {
+    const groups = recommendCommands({
+      milestone: 'M2',
+      phase: 0,
+      hasBlueprint: false,
+      hasAnalyze: false,
+      hasPlan: false,
+      hasExecute: false,
+      intentClarity: 'unclear',
+      taskType: 'explore',
+    });
+    expect(groups.some((g) => g.id === 'grp-explore-only')).toBe(true);
+  });
+});
+
+// TASK-003 — scenario switch: verifies C-005 (canvasTransform preserved),
+// node set swaps correctly, and savedRoutes entry persists across switches.
+describe('scenario switch (TASK-003)', () => {
+  beforeEach(() => {
+    _resetRouteStorageState();
+  });
+
+  it('[UI-observable] switching A→D renders D_small_fix first node 规划 and hides A nodes', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByTestId('scenario-card-A_full_project'));
+    expect(screen.getByRole('button', { name: '查看 探索方向' })).toBeInTheDocument();
+
+    await user.click(screen.getByTestId('scenario-switch-toggle'));
+    await user.click(screen.getByTestId('scenario-card-D_small_fix'));
+
+    expect(screen.getByRole('button', { name: '查看 规划' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '查看 探索方向' })).not.toBeInTheDocument();
+  });
+
+  it('[UI-observable] canvasTransform preserved on scenario switch (C-005)', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByTestId('scenario-card-A_full_project'));
+    const groupBefore = screen.getByTestId('canvas-transform-group');
+    const xBefore = groupBefore.getAttribute('data-transform-x');
+    const yBefore = groupBefore.getAttribute('data-transform-y');
+    const scaleBefore = groupBefore.getAttribute('data-transform-scale');
+
+    await user.click(screen.getByTestId('scenario-switch-toggle'));
+    await user.click(screen.getByTestId('scenario-card-D_small_fix'));
+
+    const groupAfter = screen.getByTestId('canvas-transform-group');
+    expect(groupAfter.getAttribute('data-transform-x')).toBe(xBefore);
+    expect(groupAfter.getAttribute('data-transform-y')).toBe(yBefore);
+    expect(groupAfter.getAttribute('data-transform-scale')).toBe(scaleBefore);
+  });
+
+  it('[UI-observable] savedRoutes persist across scenario switch', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByTestId('scenario-card-A_full_project'));
+    await user.click(screen.getByRole('button', { name: '查看已保存的路线' }));
+    await user.click(screen.getByTestId('save-current-route-button'));
+    expect(screen.getByTestId('saved-routes-list')).toHaveTextContent('maestro-brainstorm');
+
+    await user.click(screen.getByTestId('scenario-switch-toggle'));
+    await user.click(screen.getByTestId('scenario-card-D_small_fix'));
+
+    expect(screen.getByTestId('saved-routes-toggle')).toBeInTheDocument();
+    await user.click(screen.getByTestId('saved-routes-toggle'));
+    expect(screen.getByTestId('saved-routes-list')).toHaveTextContent('maestro-brainstorm');
+    _resetRouteStorageState();
+  });
+
+  it('[UI-observable] popover shows recommendations block matching active scenario rule', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByTestId('scenario-card-A_full_project'));
+    const brainstormNode = screen.getByRole('button', { name: '查看 探索方向' });
+    fireEvent.contextMenu(brainstormNode, { clientX: 120, clientY: 120, bubbles: true, cancelable: true });
+
+    const recs = await screen.findByTestId('popover-recommendations');
+    expect(recs).toBeInTheDocument();
+    expect(recs).toHaveTextContent('推荐命令');
+    expect(recs).toHaveTextContent('maestro-brainstorm');
+    expect(recs).toHaveTextContent('maestro-blueprint');
+  });
+});

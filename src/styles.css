@@ -596,6 +596,54 @@ h3 {
   cursor: pointer;
 }
 
+/* TASK-003 — recommendation block rendered when recommendCommands() returns
+   a group whose scenarioId matches the active scenario. Sits inside the
+   node popover below Source Status, above Validation Checklist. */
+.popover-recommendations {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(125, 211, 252, 0.12);
+}
+
+.popover-rec-title {
+  margin: 0 0 6px;
+  color: #a5b4fc;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rec-primary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(125, 211, 252, 0.06);
+}
+
+.rec-command {
+  color: #eef4ff;
+  font-weight: 700;
+  font-size: 0.82rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.rec-purpose {
+  flex: 1 1 100%;
+  color: #9fb4ca;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.rec-alternatives {
+  margin-top: 6px;
+  color: #7d8da3;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
 /* Saved routes floating toggle + popover (grill Q5.2 / C-014):
    in-canvas floating entry reusing TASK-002 floating-button style.
    MUST NOT reintroduce a permanent large right sidebar. */
@@ -624,6 +672,41 @@ h3 {
   border-color: #7dd3fc;
   background: rgba(14, 165, 233, 0.22);
   outline: none;
+}
+
+/* TASK-003 — scenario switch floating toggle: reopens the scenario-selector
+   overlay after the initial selection so users can swap workflows without
+   reloading. Mirrors the saved-routes-toggle pill style (grill Q5.2 pattern). */
+.scenario-switch-toggle {
+  position: absolute;
+  bottom: 12px;
+  left: 124px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid rgba(167, 139, 250, 0.32);
+  border-radius: 999px;
+  background: rgba(8, 22, 39, 0.72);
+  backdrop-filter: blur(10px);
+  color: #c4b5fd;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.scenario-switch-toggle:hover,
+.scenario-switch-toggle:focus {
+  border-color: #a78bfa;
+  background: rgba(139, 92, 246, 0.22);
+  outline: none;
+}
+
+.scenario-card-active {
+  border-color: rgba(167, 139, 250, 0.7);
+  background: rgba(139, 92, 246, 0.14);
 }
 
 .saved-routes-popover {

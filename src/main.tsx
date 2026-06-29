@@ -973,6 +973,7 @@ export function App() {
   const [popover, setPopover] = useState<{ nodeId: string; x: number; y: number } | null>(null);
   const [savedRoutesOpen, setSavedRoutesOpen] = useState(false);
   const [savedRoutes, setSavedRoutes] = useState<SavedRoute[]>([]);
+  const [scenarioSwitchOpen, setScenarioSwitchOpen] = useState(false);
   const [simulatedProjectState, setSimulatedProjectState] = useState<SimulatedProjectState>({
     milestone: 'M2',
     phase: 0,
@@ -983,6 +984,12 @@ export function App() {
     intentClarity: 'unclear',
     taskType: 'new',
   });
+
+  const recommendations = useMemo(() => recommendCommands(simulatedProjectState), [simulatedProjectState]);
+  const activeRecommendation = useMemo(
+    () => recommendations.find((group) => group.scenarioId === scenario?.id) ?? null,
+    [recommendations, scenario],
+  );
 
   const canvasShellRef = useRef<HTMLDivElement | null>(null);
   const pointerStateRef = useRef<{
@@ -1139,11 +1146,21 @@ export function App() {
     return () => observer.disconnect();
   }, []);
 
+  // TASK-003 / C-005: track the previously-committed scenarioId so the
+  // auto-pan effect below can detect scenario switches and skip recenter.
+  // First-time selection (ref was null) still recenters the canvas.
+  const prevScenarioIdRef = useRef<string | null>(null);
+
   // Auto-pan to keep active node visible when step advances (grill Q1.2/Q4.2):
   // recenters the active node at 1/3 from left so outgoing branches stay
-  // visible. Only fires when activeStepId actually changes.
+  // visible. Skipped on scenario switch (C-005: canvasTransform preserved).
   useEffect(() => {
     if (!hasSelectedScenario || !activeNode) return;
+    if (prevScenarioIdRef.current !== selectedScenarioId) {
+      const isFirstSelection = prevScenarioIdRef.current === null;
+      prevScenarioIdRef.current = selectedScenarioId;
+      if (!isFirstSelection) return;
+    }
     const pos = getNodePos(activeNode.id);
     setCanvasTransform((current) => ({
       x: viewportSize.width / 3 - pos.x * current.scale,
@@ -1173,6 +1190,7 @@ export function App() {
     setActiveStepId(target.steps[0].id);
     setSelectedNodeId(null);
     setPopover(null);
+    setScenarioSwitchOpen(false);
     setSimulatedProjectState({
       milestone: 'M2',
       phase: 0,
@@ -1389,6 +1407,7 @@ export function App() {
     : [];
 
   const guidanceVisible = !hasSelectedScenario;
+  const scenarioSelectorVisible = guidanceVisible || scenarioSwitchOpen;
   const scenarioLabelText = scenario?.title ?? '未选择场景';
 
   return (
@@ -1437,15 +1456,31 @@ export function App() {
           历史路线
         </button>
 
-        {guidanceVisible && (
+        {hasSelectedScenario && !scenarioSwitchOpen && (
+          <button
+            type="button"
+            className="scenario-switch-toggle"
+            onClick={() => setScenarioSwitchOpen(true)}
+            aria-label="切换场景"
+            data-testid="scenario-switch-toggle"
+          >
+            切换场景
+          </button>
+        )}
+
+        {scenarioSelectorVisible && (
           <div className="scenario-selector" data-testid="scenario-selector">
-            <p className="guidance-copy">选择场景开始 — 点击下方卡片进入对应工作流</p>
+            <p className="guidance-copy">
+              {guidanceVisible
+                ? '选择场景开始 — 点击下方卡片进入对应工作流'
+                : '切换场景 — 点击下方卡片切换到对应工作流（当前进度会重置）'}
+            </p>
             <div className="scenario-cards">
               {scenarioRegistry.map((s) => (
                 <button
                   key={s.id}
                   type="button"
-                  className="scenario-card"
+                  className={`scenario-card${s.id === selectedScenarioId ? ' scenario-card-active' : ''}`}
                   data-testid={`scenario-card-${s.id}`}
                   onClick={() => selectScenario(s.id)}
                 >
@@ -1631,6 +1666,23 @@ export function App() {
                 ))}
               </ul>
             </div>
+
+            {activeRecommendation && (
+              <div className="popover-recommendations" data-testid="popover-recommendations">
+                <h4 className="popover-rec-title">推荐命令</h4>
+                {activeRecommendation.primary.map((fact) => (
+                  <div key={fact.id} className="rec-primary">
+                    <span className="rec-command">{fact.command}</span>
+                    <span className="rec-purpose">{fact.purpose}</span>
+                  </div>
+                ))}
+                {activeRecommendation.alternatives.length > 0 && (
+                  <div className="rec-alternatives">
+                    备选: {activeRecommendation.alternatives.map((fact) => fact.command).join(' / ')}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="popover-checklist" data-testid="popover-checklist">
               <h4>Validation Checklist</h4>
