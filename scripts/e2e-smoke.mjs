@@ -3,11 +3,42 @@ import { chromium } from 'playwright';
 
 const port = 4173;
 const baseUrl = `http://127.0.0.1:${port}`;
+// detached: true puts the child in its own process group so we can kill
+// the whole tree (npm + vite preview grandchild) via the group id.
+// Without this, server.kill() only reaps the npm parent and the real
+// `vite preview` listener leaks as an orphan — accumulating one zombie
+// per e2e run on the preview port.
 const server = spawn('npm', ['run', 'preview', '--', '--host', '127.0.0.1', '--port', String(port)], {
   stdio: 'ignore',
+  detached: true,
 });
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Kill the entire process group (negative pid) so the vite preview
+// grandchild is reaped together with the npm parent. Idempotent: ignore
+// errors when the group is already gone.
+function killServerTree() {
+  try {
+    process.kill(-server.pid, 'SIGTERM');
+  } catch {
+    // group already dead — nothing to do
+  }
+  server.unref();
+}
+
+// Ensure cleanup on normal exit, uncaught errors, and external signals
+// (Ctrl+C / kill). Without these, a SIGINT would bypass the finally block.
+let cleaned = false;
+function cleanup() {
+  if (cleaned) return;
+  cleaned = true;
+  killServerTree();
+}
+process.on('exit', cleanup);
+process.on('SIGINT', () => { cleanup(); process.exit(130); });
+process.on('SIGTERM', () => { cleanup(); process.exit(143); });
+process.on('uncaughtException', (err) => { cleanup(); throw err; });
 
 async function waitForServer() {
   for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -297,6 +328,5 @@ try {
 
   await browser.close();
 } finally {
-  server.kill('SIGTERM');
-  server.unref();
+  killServerTree();
 }
