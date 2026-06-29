@@ -957,18 +957,32 @@ function clampScale(scale: number): number {
 }
 
 export function App() {
-  const scenario = fullProjectScenario;
-  const [activeStepId, setActiveStepId] = useState(scenario.steps[0].id);
+  const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
+  const scenario = useMemo(
+    () => scenarioRegistry.find((s) => s.id === selectedScenarioId) ?? null,
+    [selectedScenarioId],
+  );
+  const hasSelectedScenario = scenario !== null;
+  const [activeStepId, setActiveStepId] = useState<string | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [canvasTransform, setCanvasTransform] = useState<CanvasTransform>({ x: 0, y: 0, scale: 1 });
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [hasSelectedScenario, setHasSelectedScenario] = useState(false);
   const [viewportSize, setViewportSize] = useState<ViewportSize>(DEFAULT_VIEWPORT);
   const [isPanning, setIsPanning] = useState(false);
   const [popover, setPopover] = useState<{ nodeId: string; x: number; y: number } | null>(null);
   const [savedRoutesOpen, setSavedRoutesOpen] = useState(false);
   const [savedRoutes, setSavedRoutes] = useState<SavedRoute[]>([]);
+  const [simulatedProjectState, setSimulatedProjectState] = useState<SimulatedProjectState>({
+    milestone: 'M2',
+    phase: 0,
+    hasBlueprint: false,
+    hasAnalyze: false,
+    hasPlan: false,
+    hasExecute: false,
+    intentClarity: 'unclear',
+    taskType: 'new',
+  });
 
   const canvasShellRef = useRef<HTMLDivElement | null>(null);
   const pointerStateRef = useRef<{
@@ -982,40 +996,42 @@ export function App() {
   const longPressTimerRef = useRef<number | null>(null);
 
   const activeStep = useMemo(
-    () => scenario.steps.find((step) => step.id === activeStepId) ?? scenario.steps[0],
-    [activeStepId, scenario.steps],
+    () => (scenario ? (scenario.steps.find((step) => step.id === activeStepId) ?? scenario.steps[0]) : null),
+    [activeStepId, scenario],
   );
   const selectedNode = useMemo(
-    () => scenario.nodes.find((node) => node.id === selectedNodeId) ?? null,
-    [selectedNodeId, scenario.nodes],
+    () => (scenario ? (scenario.nodes.find((node) => node.id === selectedNodeId) ?? null) : null),
+    [selectedNodeId, scenario],
   );
-  const activeNodeIds = useMemo(
-    () =>
-      new Set(
-        scenario.steps
-          .slice(0, scenario.steps.findIndex((step) => step.id === activeStep.id) + 1)
-          .map((step) => step.nodeId),
-      ),
-    [activeStep.id, scenario.steps],
-  );
+  const activeNodeIds = useMemo(() => {
+    if (!scenario || !activeStep) return new Set<string>();
+    return new Set(
+      scenario.steps
+        .slice(0, scenario.steps.findIndex((step) => step.id === activeStep.id) + 1)
+        .map((step) => step.nodeId),
+    );
+  }, [activeStep, scenario]);
 
   const revealedNodeIds = useMemo(() => {
+    if (!scenario) return new Set<string>();
     const intentNodeId = scenario.nodes[0].id;
     if (!hasSelectedScenario) {
       return new Set<string>([intentNodeId]);
     }
     return new Set<string>([intentNodeId, ...Array.from(activeNodeIds)]);
-  }, [hasSelectedScenario, activeNodeIds, scenario.nodes]);
+  }, [hasSelectedScenario, activeNodeIds, scenario]);
 
   // Swimlane layout (grill Q4.2): main path nodes extend rightward along
   // horizontal axis with shared y; positions computed via geometry rules.
   const nodeLayout = useMemo(() => {
     const map = new Map<string, { x: number; y: number }>();
-    scenario.nodes.forEach((node, index) => {
-      map.set(node.id, { x: BASE_X + index * MAIN_LINE_GAP, y: MAIN_LINE_Y });
-    });
+    if (scenario) {
+      scenario.nodes.forEach((node, index) => {
+        map.set(node.id, { x: BASE_X + index * MAIN_LINE_GAP, y: MAIN_LINE_Y });
+      });
+    }
     return map;
-  }, [scenario.nodes]);
+  }, [scenario]);
 
   const getNodePos = (nodeId: string): { x: number; y: number } =>
     nodeLayout.get(nodeId) ?? { x: 0, y: 0 };
@@ -1036,7 +1052,7 @@ export function App() {
   };
 
   const activeBranches = useMemo<CanvasBranch[]>(() => {
-    if (!activeStep) return [];
+    if (!scenario || !activeStep) return [];
     const branches: CanvasBranch[] = [];
     if (activeStep.terminalRoutes && activeStep.terminalRoutes.length > 0) {
       activeStep.terminalRoutes.forEach((routeId) => {
@@ -1072,23 +1088,27 @@ export function App() {
       });
     });
     return branches;
-  }, [activeStep, scenario.continuationRoutes]);
+  }, [activeStep, scenario]);
 
   const visibleNodes = useMemo(
     () =>
-      scenario.nodes.filter(
-        (node) =>
-          revealedNodeIds.has(node.id) &&
-          isVisibleNode(getNodePos(node.id), canvasTransform, viewportSize.width, viewportSize.height),
-      ),
+      scenario
+        ? scenario.nodes.filter(
+            (node) =>
+              revealedNodeIds.has(node.id) &&
+              isVisibleNode(getNodePos(node.id), canvasTransform, viewportSize.width, viewportSize.height),
+          )
+        : [],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [scenario.nodes, revealedNodeIds, canvasTransform, viewportSize, nodeLayout],
+    [scenario, revealedNodeIds, canvasTransform, viewportSize, nodeLayout],
   );
 
   const visibleEdges = useMemo(
     () =>
-      scenario.edges.filter(({ from, to }) => revealedNodeIds.has(from) && revealedNodeIds.has(to)),
-    [scenario.edges, revealedNodeIds],
+      scenario
+        ? scenario.edges.filter(({ from, to }) => revealedNodeIds.has(from) && revealedNodeIds.has(to))
+        : [],
+    [scenario, revealedNodeIds],
   );
 
   const savedRoutesFavorites = useMemo(
@@ -1140,12 +1160,29 @@ export function App() {
   }, []);
 
   const activateNode = (nodeId: string) => {
+    if (!scenario) return;
     setSelectedNodeId(nodeId);
-    if (!hasSelectedScenario) {
-      setHasSelectedScenario(true);
-    }
     const nodeStep = scenario.steps.find((step) => step.nodeId === nodeId);
     if (nodeStep) setActiveStepId(nodeStep.id);
+  };
+
+  const selectScenario = (id: string) => {
+    const target = scenarioRegistry.find((s) => s.id === id);
+    if (!target) return;
+    setSelectedScenarioId(id);
+    setActiveStepId(target.steps[0].id);
+    setSelectedNodeId(null);
+    setPopover(null);
+    setSimulatedProjectState({
+      milestone: 'M2',
+      phase: 0,
+      hasBlueprint: false,
+      hasAnalyze: false,
+      hasPlan: false,
+      hasExecute: false,
+      intentClarity: 'unclear',
+      taskType: id === 'A_full_project' ? 'new' : id === 'D_small_fix' ? 'bugfix' : 'explore',
+    });
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -1280,6 +1317,10 @@ export function App() {
       lastGestureWasPanRef.current = false;
       return;
     }
+    if (!scenario) {
+      setPopover(null);
+      return;
+    }
     if (targetStepId) {
       const target = scenario.steps.find((step) => step.id === targetStepId);
       if (target) {
@@ -1294,7 +1335,7 @@ export function App() {
   };
 
   const handleSaveCurrentRoute = () => {
-    if (!hasSelectedScenario || !activeStep) return;
+    if (!hasSelectedScenario || !activeStep || !scenario) return;
     const citations = activeStep.citations
       .map((citationId) => scenario.citations.find((c) => c.id === citationId))
       .filter((c): c is ScenarioCitation => c !== undefined);
@@ -1329,28 +1370,26 @@ export function App() {
   };
 
   const activeNode = useMemo(
-    () => scenario.nodes.find((node) => node.id === activeStep.nodeId) ?? null,
-    [scenario.nodes, activeStep.nodeId],
+    () => (scenario && activeStep ? (scenario.nodes.find((node) => node.id === activeStep.nodeId) ?? null) : null),
+    [scenario, activeStep],
   );
 
   const activeNodePos = activeNode ? getNodePos(activeNode.id) : { x: 0, y: 0 };
 
-  const popoverStep = popover
-    ? scenario.steps.find((step) => step.nodeId === popover.nodeId) ?? null
+  const popoverStep = popover && scenario
+    ? (scenario.steps.find((step) => step.nodeId === popover.nodeId) ?? null)
     : null;
-  const popoverNode = popover
-    ? scenario.nodes.find((node) => node.id === popover.nodeId) ?? null
+  const popoverNode = popover && scenario
+    ? (scenario.nodes.find((node) => node.id === popover.nodeId) ?? null)
     : null;
-  const popoverCitations = popoverStep
+  const popoverCitations = popoverStep && scenario
     ? popoverStep.citations
         .map((citationId) => scenario.citations.find((citation) => citation.id === citationId))
         .filter((citation): citation is ScenarioCitation => citation !== undefined)
     : [];
 
   const guidanceVisible = !hasSelectedScenario;
-  const scenarioLabelText = hasSelectedScenario
-    ? scenario.title
-    : '未选择场景';
+  const scenarioLabelText = scenario?.title ?? '未选择场景';
 
   return (
     <main className={`app-shell ${isFullscreen ? 'is-fullscreen' : ''}`}>
@@ -1374,7 +1413,7 @@ export function App() {
         onContextMenu={handleContextMenu}
       >
         <div className="scenario-label" data-testid="scenario-label">
-          <span className="scenario-label-id">{scenario.id}</span>
+          <span className="scenario-label-id">{scenario?.id ?? '\u2014'}</span>
           <span>{scenarioLabelText}</span>
         </div>
 
@@ -1399,8 +1438,23 @@ export function App() {
         </button>
 
         {guidanceVisible && (
-          <div className="guidance-overlay" data-testid="guidance-overlay">
-            选择场景开始 — 点击中央节点展开后续步骤
+          <div className="scenario-selector" data-testid="scenario-selector">
+            <p className="guidance-copy">选择场景开始 — 点击下方卡片进入对应工作流</p>
+            <div className="scenario-cards">
+              {scenarioRegistry.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className="scenario-card"
+                  data-testid={`scenario-card-${s.id}`}
+                  onClick={() => selectScenario(s.id)}
+                >
+                  <span className="scenario-card-id">{s.id}</span>
+                  <span className="scenario-card-title">{s.title}</span>
+                  <span className="scenario-card-summary">{s.summary}</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -1408,7 +1462,7 @@ export function App() {
           width="100%"
           height="100%"
           role="img"
-          aria-label="Full Project 场景流程"
+          aria-label={scenario ? `${scenario.title} 场景流程` : 'Maestro 场景流程'}
           onWheel={handleWheel}
         >
           <defs>
@@ -1440,7 +1494,7 @@ export function App() {
             })}
             {visibleNodes.map((node) => {
               const isSelected = node.id === selectedNodeId;
-              const isActive = node.id === activeStep.nodeId;
+              const isActive = activeStep ? node.id === activeStep.nodeId : false;
               const isOnPath = activeNodeIds.has(node.id);
               const pos = getNodePos(node.id);
               return (
@@ -1581,7 +1635,7 @@ export function App() {
             <div className="popover-checklist" data-testid="popover-checklist">
               <h4>Validation Checklist</h4>
               <ul>
-                {scenario.checklist.map((check) => {
+                {(scenario?.checklist ?? []).map((check) => {
                   const key = checklistKey(popoverStep.id, check.id);
                   const checked = checkedItems[key] === true;
                   return (
@@ -1697,7 +1751,7 @@ export function App() {
 
       <div aria-hidden="true" style={{ display: 'none' }} data-testid="checked-items-count">
         {selectedNode?.title}
-        {activeStep.command}
+        {activeStep?.command}
         {Object.keys(checkedItems).length}
       </div>
     </main>

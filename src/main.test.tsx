@@ -19,28 +19,31 @@ import {
 import type { RecommendationRule, SimulatedProjectState, SavedRoute } from './main';
 
 describe('Maestro Workflow Wiki fullscreen canvas shell', () => {
-  it('[UI-observable] renders hero, fullscreen button, scenario label, and empty initial canvas with guidance copy', () => {
+  it('[UI-observable] renders hero, fullscreen button, scenario label, and scenario selector with 3 cards in empty initial state', () => {
     render(<App />);
 
     expect(screen.getByRole('heading', { name: /把复杂工作流变成可点击/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '进入全屏' })).toBeInTheDocument();
     expect(screen.getByTestId('scenario-label')).toBeInTheDocument();
-    expect(screen.getByTestId('guidance-overlay')).toBeInTheDocument();
+    expect(screen.getByTestId('scenario-selector')).toBeInTheDocument();
     expect(screen.getByText('未选择场景')).toBeInTheDocument();
-    expect(screen.getByText('A_full_project')).toBeInTheDocument();
 
-    const intentNode = screen.getByRole('button', { name: '查看 模糊目标' });
-    expect(intentNode).toBeInTheDocument();
+    // Empty state: no canvas nodes; scenario-selector carries 3 cards (A/D/F).
+    expect(screen.queryByRole('button', { name: '查看 模糊目标' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '查看 探索方向' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('scenario-card-A_full_project')).toBeInTheDocument();
+    expect(screen.getByTestId('scenario-card-D_small_fix')).toBeInTheDocument();
+    expect(screen.getByTestId('scenario-card-F_explore_only')).toBeInTheDocument();
+    expect(screen.getByText('A_full_project')).toBeInTheDocument();
   });
 
-  it('[UI-observable] reveals subsequent nodes after first scenario selection and hides guidance copy', async () => {
+  it('[UI-observable] reveals subsequent nodes after scenario selection and hides selector', async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    await user.click(screen.getByTestId('scenario-card-A_full_project'));
 
-    expect(screen.queryByTestId('guidance-overlay')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('scenario-selector')).not.toBeInTheDocument();
     expect(screen.getByText('Full Project')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '查看 探索方向' })).toBeInTheDocument();
   });
@@ -65,19 +68,21 @@ describe('Maestro Workflow Wiki fullscreen canvas shell', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const intentNode = screen.getByRole('button', { name: '查看 模糊目标' });
-    intentNode.focus();
+    await user.click(screen.getByTestId('scenario-card-A_full_project'));
+
+    const brainstormNode = screen.getByRole('button', { name: '查看 探索方向' });
+    brainstormNode.focus();
     await user.keyboard('{Enter}');
 
-    expect(screen.queryByTestId('guidance-overlay')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '查看 探索方向' })).toBeInTheDocument();
+    // Activating brainstorm node reveals its forward-choice branch.
+    expect(screen.getByRole('button', { name: '方向已稳定，生成规格' })).toBeInTheDocument();
   });
 
   it('[UI-observable] advances active step via on-canvas choice buttons', async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    await user.click(screen.getByTestId('scenario-card-A_full_project'));
     const brainstormNode = screen.getByRole('button', { name: '查看 探索方向' });
     await user.click(brainstormNode);
 
@@ -158,7 +163,7 @@ describe('Maestro Workflow Wiki fullscreen canvas shell', () => {
   it('[UI-observable] right-click on node opens popover with recommendation evidence cluster', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    fireEvent.click(screen.getByTestId('scenario-card-A_full_project'));
     const brainstormNode = screen.getByRole('button', { name: '查看 探索方向' });
     fireEvent.contextMenu(brainstormNode, { clientX: 250, clientY: 300, bubbles: true, cancelable: true });
 
@@ -182,7 +187,7 @@ describe('Maestro Workflow Wiki fullscreen canvas shell', () => {
   it('[UI-observable] popover source status shows citation badges and maestro-flow paths', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    fireEvent.click(screen.getByTestId('scenario-card-A_full_project'));
     fireEvent.contextMenu(screen.getByRole('button', { name: '查看 探索方向' }), {
       clientX: 100,
       clientY: 100,
@@ -201,7 +206,7 @@ describe('Maestro Workflow Wiki fullscreen canvas shell', () => {
   it('[UI-observable] validation checklist toggles persist per step in checkedItems', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    fireEvent.click(screen.getByTestId('scenario-card-A_full_project'));
     fireEvent.contextMenu(screen.getByRole('button', { name: '查看 探索方向' }), {
       clientX: 100,
       clientY: 100,
@@ -230,7 +235,7 @@ describe('Maestro Workflow Wiki fullscreen canvas shell', () => {
   it('[UI-observable] alternatives render as secondary canvas branches from active node', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    fireEvent.click(screen.getByTestId('scenario-card-A_full_project'));
 
     expect(screen.getByRole('button', { name: '先 grill 压力测试' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '直接 analyze' })).toBeInTheDocument();
@@ -243,7 +248,7 @@ describe('Maestro Workflow Wiki fullscreen canvas shell', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    await user.click(screen.getByTestId('scenario-card-A_full_project'));
     await user.click(screen.getByRole('button', { name: '方向已稳定，生成规格' }));
     await user.click(screen.getByRole('button', { name: '规格可执行，分析 Phase 1' }));
     await user.click(screen.getByRole('button', { name: '分析结论为 GO，进入计划' }));
@@ -257,8 +262,11 @@ describe('Maestro Workflow Wiki fullscreen canvas shell', () => {
     expect(routeBranch?.getAttribute('data-branch-kind')).toBe('route');
   });
 
-  it('[UI-observable] main path nodes use swimlane MAIN_LINE_GAP horizontal spacing', () => {
+  it('[UI-observable] main path nodes use swimlane MAIN_LINE_GAP horizontal spacing', async () => {
+    const user = userEvent.setup();
     render(<App />);
+
+    await user.click(screen.getByTestId('scenario-card-A_full_project'));
 
     const groups = document.querySelectorAll('.canvas-shell svg g[transform]');
     const nodeGroups = Array.from(groups).filter((g) => {
@@ -648,7 +656,7 @@ describe('Local route history persistence (TASK-004)', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    await user.click(screen.getByTestId('scenario-card-A_full_project'));
     await user.click(screen.getByRole('button', { name: '查看已保存的路线' }));
     await user.click(screen.getByTestId('save-current-route-button'));
 
@@ -663,7 +671,7 @@ describe('Local route history persistence (TASK-004)', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole('button', { name: '查看 模糊目标' }));
+    await user.click(screen.getByTestId('scenario-card-A_full_project'));
     await user.click(screen.getByRole('button', { name: '查看已保存的路线' }));
     await user.click(screen.getByTestId('save-current-route-button'));
 

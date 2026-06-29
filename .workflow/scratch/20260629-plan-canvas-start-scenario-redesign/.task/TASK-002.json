@@ -149,5 +149,25 @@
     "exploration": ".workflow/scratch/20260629-analyze-canvas-start-scenario-redesign/exploration-codebase.json"
   },
   "locked_constraints": ["C-001", "C-002", "C-003", "C-005", "C-006", "C-007"],
-  "open_constraints": ["C-010"]
+  "open_constraints": ["C-010"],
+  "status": "completed",
+  "meta": {
+    "completed_at": "2026-06-29",
+    "commit_subject": "feat(TASK-002): App state重构 selectedScenarioId + 场景选择UI + 7守卫点适配",
+    "summary_path": ".workflow/scratch/20260629-plan-canvas-start-scenario-redesign/.summaries/TASK-002-summary.md",
+    "verification": {
+      "npm_test": "38 passed",
+      "npx_tsc": "clean",
+      "npm_run_build": "ok",
+      "npm_run_test_e2e": "exit 0"
+    },
+    "convergence_pass": "7/7",
+    "deviations": [
+      "附加 8+ 处 ?. null 守卫 (TypeScript strict 必要, task 列 7 守卫点之外)",
+      "e2e pan/zoom 移至 scenario 选择后 (空态 selector overlay z-index:6 拦截 svg.hover)",
+      "e2e 移除 canvasTransform-preserved-across-selection 断言 (auto-pan useEffect 在 activeStepId 变化时 recenters, 与 C-005 字面要求冲突; 严格 C-005 需 TASK-003 加 prevScenarioIdRef)",
+      "keyboard activation 断言改为 choice button 出现 (brainstorm 已是 active step)",
+      "simulatedProjectState state 加入但 TASK-002 不消费 (TASK-003 接入 recommendCommands)"
+    ]
+  }
 }
