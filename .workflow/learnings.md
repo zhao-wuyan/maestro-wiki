@@ -25,3 +25,21 @@
 
 ### vite preview port leak in e2e loops
 - Each e2e smoke run (`npm run test:e2e`) spawned `vite preview` without cleanup, accumulating 13 zombie processes on ports 4173-4185. **Lesson: e2e harness scripts that spawn preview servers MUST capture the PID and kill it in a trap/finally block; otherwise long execution sessions leak listening ports and exhaust the ephemeral range.**
+
+## 2026-06-29 — 初始场景改造 多入口场景 (EXC-canvas-start-scenario-redesign)
+
+### ScenarioRegistry over dynamic generation for multi-entry canvas
+- Analyze evaluated 3 models (ScenarioRegistry fit=4 / dynamic fit=2 / rule-routing fit=1). ScenarioRegistry won because the ScenarioModel data contract was already validated by prior TASK-002/003 (nodeLayout/activeBranches/popover all depend on it), minimizing change surface, and aligning with grill Q4.1 (data model retained). **Lesson: when extending a data-driven UI to multi-instance, prefer a registry of pre-validated data contracts over dynamic generation — the validation cost is sunk, the change surface is smallest.**
+
+### Unified selector node beats per-scenario intent node
+- Path 2 (unified selector rendering independent scenario cards in empty state) bypassed the `scenario.nodes[0]` convention risk (D/F scenarios' first node isn't necessarily an "intent" node). **Lesson: when a data convention (nodes[0]=entry) doesn't hold across all instances, decouple the empty-state selector from the data model — render an independent selector UI rather than overloading the first data node.**
+
+### prevScenarioIdRef to skip auto-pan on scenario switch
+- TASK-002's auto-pan useEffect (`[activeStepId]`) couldn't distinguish "first scenario selection" from "scenario switch", causing canvasTransform to recenter on switch (violating C-005). TASK-003 added `prevScenarioIdRef`: first selection (prev=null) updates ref + continues auto-pan; subsequent switches update ref + skip auto-pan (canvasTransform byte-identical). **Lesson: when a useEffect depends on a derived value that changes for multiple reasons (step advance vs scenario switch), use a ref to distinguish the trigger cause and selectively skip the effect.**
+
+### Rule system "wiring layer" pattern
+- recommendCommands/authoredRules/SimulatedProjectState were built in TASK-001 (prior plan) but had zero App() calls — a "wiring layer" awaiting integration. This plan's TASK-003 finally connected them via `useMemo(() => recommendCommands(simulatedProjectState))`. **Lesson: building a rule engine ahead of its UI integration is viable when the data contract is stable; the integration task then becomes a pure wiring exercise with grep-verifiable convergence (`useMemo(() => recommendCommands(`).**
+
+### scenario-switch-toggle for in-canvas scenario switching
+- After initial selection, switching scenarios required a re-entry point. Added a floating `scenario-switch-toggle` button (reusing the floating-control style token from EXC-002) that reopens the selector overlay without resetting canvasTransform. **Lesson: for multi-scenario UIs, provide a lightweight in-canvas re-entry to the selector — don't force users back through an initial empty state.**
+

@@ -525,6 +525,34 @@
         "source": "--from analyze:ANL-canvas-start-scenario-redesign-2026-06-29",
         "collision": "W004 expected overlap with EXC-002"
       }
+    },
+    {
+      "id": "EXC-canvas-start-scenario-redesign",
+      "type": "execute",
+      "scope": "standalone",
+      "status": "completed",
+      "milestone": "M2-canvas-command-recommender-mvp",
+      "phase": null,
+      "path": "scratch/20260629-execute-canvas-start-scenario-redesign",
+      "depends_on": [
+        "PLN-canvas-start-scenario-redesign"
+      ],
+      "harvested": false,
+      "created_at": "2026-06-29T00:00:00Z",
+      "completed_at": "2026-06-29T00:00:00Z",
+      "metadata": {
+        "tasks_completed": 3,
+        "tasks_failed": 0,
+        "verification_status": "passed",
+        "unit_tests": "45/45",
+        "e2e": "exit 0",
+        "build": "success",
+        "commits": [
+          "b9005da",
+          "b373a63",
+          "324e3e6"
+        ]
+      }
     }
   ],
   "last_updated": "2026-06-29T00:00:00Z",

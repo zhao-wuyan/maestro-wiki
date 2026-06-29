@@ -1,0 +1,30 @@
+{
+  "$schema": "artifact-index/1.0",
+  "artifact_type": "execution",
+  "artifact_id": "EXC-canvas-start-scenario-redesign",
+  "title": "初始场景改造 — 多入口场景支持 Execution",
+  "milestone": "M2-canvas-command-recommender-mvp",
+  "phase": null,
+  "scope": "standalone",
+  "source_artifact": "PLN-canvas-start-scenario-redesign",
+  "status": "completed",
+  "created_at": "2026-06-29T00:00:00Z",
+  "completed_at": "2026-06-29T00:00:00Z",
+  "plan_ref": "scratch/20260629-plan-canvas-start-scenario-redesign/plan.json",
+  "tasks": [
+    {"id": "TASK-001", "status": "completed", "commit": "b9005da"},
+    {"id": "TASK-002", "status": "completed", "commit": "b373a63"},
+    {"id": "TASK-003", "status": "completed", "commit": "324e3e6"}
+  ],
+  "verification": {
+    "tsc": "pass",
+    "unit_tests": "45/45 pass",
+    "e2e": "exit 0",
+    "build": "success"
+  },
+  "summaries": [
+    "scratch/20260629-plan-canvas-start-scenario-redesign/.summaries/TASK-001-summary.md",
+    "scratch/20260629-plan-canvas-start-scenario-redesign/.summaries/TASK-002-summary.md",
+    "scratch/20260629-plan-canvas-start-scenario-redesign/.summaries/TASK-003-summary.md"
+  ]
+}

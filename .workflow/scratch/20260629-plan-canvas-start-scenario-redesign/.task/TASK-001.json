@@ -108,5 +108,11 @@
     "catalog": "maestro-flow/.codex/skills/maestro-help/catalog.json:168-175"
   },
   "locked_constraints": ["C-001", "C-002", "C-004", "C-006"],
-  "open_constraints": ["C-008", "C-009"]
+  "open_constraints": ["C-008", "C-009"],
+  "status": "completed",
+  "meta": {
+    "completed_at": "2026-06-29T11:09:58Z",
+    "commit": "b9005dace4e67e0eedf3b24e51aeb2a99577e244",
+    "summary_path": ".workflow/scratch/20260629-plan-canvas-start-scenario-redesign/.summaries/TASK-001-summary.md"
+  }
 }
