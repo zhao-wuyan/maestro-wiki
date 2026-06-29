@@ -13,6 +13,8 @@ import {
   pruneRecentRoutes,
   _resetRouteStorageState,
   RECENT_ROUTE_CAP,
+  scenarioRegistry,
+  scenarioValidation,
 } from './main';
 import type { RecommendationRule, SimulatedProjectState, SavedRoute } from './main';
 
@@ -25,7 +27,7 @@ describe('Maestro Workflow Wiki fullscreen canvas shell', () => {
     expect(screen.getByTestId('scenario-label')).toBeInTheDocument();
     expect(screen.getByTestId('guidance-overlay')).toBeInTheDocument();
     expect(screen.getByText('未选择场景')).toBeInTheDocument();
-    expect(screen.getByText('unclear-requirements')).toBeInTheDocument();
+    expect(screen.getByText('A_full_project')).toBeInTheDocument();
 
     const intentNode = screen.getByRole('button', { name: '查看 模糊目标' });
     expect(intentNode).toBeInTheDocument();
@@ -39,7 +41,7 @@ describe('Maestro Workflow Wiki fullscreen canvas shell', () => {
     await user.click(screen.getByRole('button', { name: '查看 模糊目标' }));
 
     expect(screen.queryByTestId('guidance-overlay')).not.toBeInTheDocument();
-    expect(screen.getByText('Unclear Requirements')).toBeInTheDocument();
+    expect(screen.getByText('Full Project')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '查看 探索方向' })).toBeInTheDocument();
   });
 
@@ -295,7 +297,7 @@ describe('Maestro Workflow Wiki fullscreen canvas shell', () => {
   it('keeps authored scenario data intact (regression guard)', () => {
     render(<App />);
     const canvasShell = within(document.querySelector('.canvas-shell') as HTMLElement);
-    expect(canvasShell.getByText('unclear-requirements')).toBeInTheDocument();
+    expect(canvasShell.getByText('A_full_project')).toBeInTheDocument();
   });
 });
 
@@ -322,6 +324,7 @@ describe('Local canvas recommender rules (TASK-001)', () => {
       hasPlan: false,
       hasExecute: false,
       intentClarity: 'semi-clear',
+      taskType: 'new',
     };
     const groups = recommendCommands(state);
     const explore = groups.find((group) => group.id === 'grp-explore-semi-clear');
@@ -341,6 +344,7 @@ describe('Local canvas recommender rules (TASK-001)', () => {
       hasPlan: true,
       hasExecute: true,
       intentClarity: 'clear',
+      taskType: 'new',
     };
     const groups = recommendCommands(state);
     const quality = groups.find((group) => group.id === 'grp-quality-gate');
@@ -409,6 +413,72 @@ describe('Local canvas recommender rules (TASK-001)', () => {
   });
 });
 
+describe('scenarioRegistry multi-scenario data (TASK-001)', () => {
+  it('contains 3 scenarios A/D/F', () => {
+    expect(scenarioRegistry.length).toBe(3);
+    expect(scenarioRegistry.map((s) => s.id)).toEqual([
+      'A_full_project',
+      'D_small_fix',
+      'F_explore_only',
+    ]);
+  });
+
+  it('D_small_fix has 3 nodes plan/execute/review', () => {
+    const d = scenarioRegistry.find((s) => s.id === 'D_small_fix');
+    expect(d).toBeDefined();
+    expect(d!.nodes.map((n) => n.id)).toEqual(['plan', 'execute', 'review']);
+    expect(d!.steps.map((st) => st.id)).toEqual([
+      'step-d-plan',
+      'step-d-execute',
+      'step-d-review',
+    ]);
+    expect(d!.continuationRoutes.map((r) => r.id)).toEqual(['stop']);
+  });
+
+  it('F_explore_only has 2 nodes brainstorm/decision', () => {
+    const f = scenarioRegistry.find((s) => s.id === 'F_explore_only');
+    expect(f).toBeDefined();
+    expect(f!.nodes.map((n) => n.id)).toEqual(['brainstorm', 'decision']);
+    expect(f!.steps.map((st) => st.id)).toEqual(['step-f-brainstorm']);
+  });
+
+  it('ruleApplies rule-plan-direct returns true when taskType=bugfix and no plan', () => {
+    const groups = recommendCommands({
+      milestone: 'M2-canvas-start-scenario-redesign',
+      phase: 0,
+      hasBlueprint: false,
+      hasAnalyze: false,
+      hasPlan: false,
+      hasExecute: false,
+      intentClarity: 'clear',
+      taskType: 'bugfix',
+    });
+    expect(groups.some((g) => g.id === 'grp-plan-direct')).toBe(true);
+  });
+
+  it('ruleApplies rule-explore-only returns true when taskType=explore and no blueprint', () => {
+    const groups = recommendCommands({
+      milestone: 'M2-canvas-start-scenario-redesign',
+      phase: 0,
+      hasBlueprint: false,
+      hasAnalyze: false,
+      hasPlan: false,
+      hasExecute: false,
+      intentClarity: 'unclear',
+      taskType: 'explore',
+    });
+    expect(groups.some((g) => g.id === 'grp-explore-only')).toBe(true);
+  });
+
+  it('scenarioValidation covers all registry entries with no missing references/citations', () => {
+    expect(scenarioValidation.length).toBe(scenarioRegistry.length);
+    for (const entry of scenarioValidation) {
+      expect(entry.references).toEqual([]);
+      expect(entry.citations).toEqual([]);
+    }
+  });
+});
+
 describe('Local route history persistence (TASK-004)', () => {
   beforeEach(() => {
     _resetRouteStorageState();
@@ -420,7 +490,7 @@ describe('Local route history persistence (TASK-004)', () => {
       name: 'Default Route',
       createdAt: '2026-06-28T12:00:00.000Z',
       favorite: false,
-      scenarioId: 'unclear-requirements',
+      scenarioId: 'A_full_project',
       selectedCommandNodes: ['brainstorm'],
       primaryRecommendations: ['maestro-brainstorm'],
       secondaryRecommendations: ['maestro-blueprint'],

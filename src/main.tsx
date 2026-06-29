@@ -75,9 +75,9 @@ type ScenarioModel = {
   checklist: ValidationChecklistItem[];
 };
 
-const unclearRequirementsScenario: ScenarioModel = {
-  id: 'unclear-requirements',
-  title: 'Unclear Requirements',
+const fullProjectScenario: ScenarioModel = {
+  id: 'A_full_project',
+  title: 'Full Project',
   summary: '当需求还不清楚时，先探索，再规格化，最后进入 Phase 1 plan。',
   nodes: [
     {
@@ -270,6 +270,180 @@ const unclearRequirementsScenario: ScenarioModel = {
   ],
 };
 
+const smallFixScenario: ScenarioModel = {
+  id: 'D_small_fix',
+  title: 'Small Fix',
+  summary: '小修复场景: plan→execute→review,无 analyze 前置',
+  nodes: [
+    {
+      id: 'plan',
+      title: '规划',
+      subtitle: 'maestro-plan',
+      x: 70,
+      y: 118,
+      kind: 'plan',
+      purpose: '把小修复任务拆成可执行步骤和验证标准。',
+      input: 'bug 描述、复现路径、项目 specs。',
+      output: 'plan.json 和 TASK 文件。',
+      nextAction: '确认后进入 execute。',
+    },
+    {
+      id: 'execute',
+      title: '执行',
+      subtitle: 'maestro-execute',
+      x: 320,
+      y: 118,
+      kind: 'plan',
+      purpose: '按 plan.json 执行 TASK 并自动提交。',
+      input: 'plan.json、TASK 文件、项目 specs。',
+      output: '代码改动、提交记录、验证证据。',
+      nextAction: '执行结束后进入 review。',
+    },
+    {
+      id: 'review',
+      title: '评审',
+      subtitle: 'quality-review',
+      x: 570,
+      y: 118,
+      kind: 'terminal',
+      purpose: '多维度代码质量审查并选择收尾路线。',
+      input: '执行证据、git diff、项目 specs。',
+      output: '审查报告与改进建议。',
+      nextAction: '审查通过后选择 Stop 收尾。',
+    },
+  ],
+  edges: [
+    { from: 'plan', to: 'execute' },
+    { from: 'execute', to: 'review' },
+  ],
+  steps: [
+    {
+      id: 'step-d-plan',
+      nodeId: 'plan',
+      command: 'maestro-plan',
+      condition: '已有明确 bug 描述，需要快速拆解任务（无 analyze 前置）。',
+      purpose: '生成 plan.json 和 TASK 文件。',
+      input: 'bug 描述、复现路径、specs。',
+      output: 'Phase 执行计划。',
+      nextAction: '确认计划后进入 execute。',
+      choices: [],
+      alternatives: [],
+      citations: ['cmd-plan', 'guide-flow'],
+    },
+    {
+      id: 'step-d-execute',
+      nodeId: 'execute',
+      command: 'maestro-execute',
+      condition: '计划已确认，进入实现阶段。',
+      purpose: '按 plan.json wave 并行执行 TASK 并自动提交。',
+      input: 'plan.json、TASK 文件、项目 specs。',
+      output: '代码改动、提交记录、验证证据。',
+      nextAction: '执行结束后进入 review。',
+      choices: [],
+      alternatives: [],
+      citations: ['cmd-execute', 'guide-flow'],
+    },
+    {
+      id: 'step-d-review',
+      nodeId: 'review',
+      command: 'quality-review',
+      condition: '执行已完成，需要审查代码质量。',
+      purpose: '多维度代码质量审查（正确性、安全、性能、架构）。',
+      input: '执行证据、git diff、项目 specs。',
+      output: '审查报告与改进建议。',
+      nextAction: '审查通过后选择 Stop 收尾。',
+      choices: [],
+      alternatives: [],
+      citations: ['cmd-review', 'codex-skill'],
+      terminalRoutes: ['stop'],
+    },
+  ],
+  citations: [
+    { id: 'cmd-plan', label: 'Command definition', source: 'maestro-flow/.claude/commands/maestro-plan.md', status: 'cited' },
+    { id: 'cmd-execute', label: 'Command definition', source: 'maestro-flow/.claude/commands/maestro-execute.md', status: 'cited' },
+    { id: 'cmd-review', label: 'Command definition', source: 'maestro-flow/.claude/commands/quality-review.md', status: 'cited' },
+    { id: 'guide-flow', label: 'Guide sequence', source: 'maestro-flow/guide/*.md', status: 'pending' },
+    { id: 'codex-skill', label: 'Codex skill mirror', source: 'maestro-flow/.codex/skills/*/SKILL.md', status: 'platform-check' },
+  ],
+  continuationRoutes: [
+    { id: 'stop', label: 'Stop', description: '小修复完成' },
+  ],
+  checklist: [
+    { id: 'check-command', label: '我能说出当前推荐 command 及其原因。' },
+    { id: 'check-next', label: '我能根据输出条件选择下一步。' },
+    { id: 'check-route', label: '我能在闭合节点选择 Stop。' },
+  ],
+};
+
+const exploreOnlyScenario: ScenarioModel = {
+  id: 'F_explore_only',
+  title: 'Explore Only',
+  summary: '探索场景: brainstorm→人工决策,无后续执行',
+  nodes: [
+    {
+      id: 'brainstorm',
+      title: '探索方向',
+      subtitle: 'maestro-brainstorm',
+      x: 70,
+      y: 118,
+      kind: 'explore',
+      purpose: '发散需求并形成可讨论的候选范围。',
+      input: '自然语言目标、初始限制、用户偏好。',
+      output: '探索记录、关键问题、初步方案。',
+      nextAction: '探索结束后进入人工决策。',
+    },
+    {
+      id: 'decision',
+      title: '人工决策',
+      subtitle: 'terminal',
+      x: 320,
+      y: 118,
+      kind: 'terminal',
+      purpose: '由人工决定下一步路线。',
+      input: '探索产物、候选方案。',
+      output: '人工决策结果。',
+      nextAction: '选择 Stop 结束探索。',
+    },
+  ],
+  edges: [
+    { from: 'brainstorm', to: 'decision' },
+  ],
+  steps: [
+    {
+      id: 'step-f-brainstorm',
+      nodeId: 'brainstorm',
+      command: 'maestro-brainstorm',
+      condition: '目标方向不清，用户还在探索“做什么”和“为什么”。',
+      purpose: '发散需求并形成可讨论的候选范围。',
+      input: '自然语言目标、初始限制、用户偏好。',
+      output: '探索记录、关键问题、初步方案。',
+      nextAction: '探索结束后进入人工决策。',
+      choices: [],
+      alternatives: [],
+      citations: ['cmd-brainstorm', 'guide-flow'],
+      terminalRoutes: ['stop'],
+    },
+  ],
+  citations: [
+    { id: 'cmd-brainstorm', label: 'Command definition', source: 'maestro-flow/.claude/commands/maestro-brainstorm.md', status: 'cited' },
+    { id: 'guide-flow', label: 'Guide sequence', source: 'maestro-flow/guide/*.md', status: 'pending' },
+  ],
+  continuationRoutes: [
+    { id: 'stop', label: 'Stop', description: '探索结束,待人工决策' },
+  ],
+  checklist: [
+    { id: 'check-command', label: '我能说出当前推荐 command 及其原因。' },
+    { id: 'check-next', label: '我能根据输出条件选择下一步。' },
+    { id: 'check-route', label: '我能在闭合节点选择 Stop。' },
+  ],
+};
+
+export const scenarioRegistry: ScenarioModel[] = [
+  fullProjectScenario,
+  smallFixScenario,
+  exploreOnlyScenario,
+];
+
 function validateScenarioReferences(scenario: ScenarioModel) {
   const stepIds = new Set(scenario.steps.map((step) => step.id));
   const nodeIds = new Set(scenario.nodes.map((node) => node.id));
@@ -298,10 +472,11 @@ function validateCitationCoverage(scenario: ScenarioModel) {
   );
 }
 
-const scenarioValidation = {
-  references: validateScenarioReferences(unclearRequirementsScenario),
-  citations: validateCitationCoverage(unclearRequirementsScenario),
-};
+export const scenarioValidation = scenarioRegistry.map((s) => ({
+  id: s.id,
+  references: validateScenarioReferences(s),
+  citations: validateCitationCoverage(s),
+}));
 
 // ============================================================
 // Phase 2 — Local Canvas Recommender (CommandRuleSet layer)
@@ -364,6 +539,7 @@ export type SimulatedProjectState = {
   hasPlan: boolean;
   hasExecute: boolean;
   intentClarity: 'unclear' | 'semi-clear' | 'clear';
+  taskType: 'new' | 'continue' | 'bugfix' | 'explore';
 };
 
 const sourceRefCatalog: SourceRef = {
@@ -475,7 +651,7 @@ const factRalphExecute: CommandFact = {
 export const authoredRules: RecommendationRule[] = [
   {
     id: 'rule-explore-unclear',
-    scenarioId: 'unclear-requirements',
+    scenarioId: 'A_full_project',
     condition: 'intentClarity=unclear, no blueprint',
     commandFacts: [factBrainstorm],
     alternatives: [factBlueprint],
@@ -483,7 +659,7 @@ export const authoredRules: RecommendationRule[] = [
   },
   {
     id: 'rule-explore-semi-clear',
-    scenarioId: 'unclear-requirements',
+    scenarioId: 'A_full_project',
     condition: 'intentClarity=semi-clear, no blueprint (equal-rank: brainstorm vs blueprint)',
     commandFacts: [factBrainstorm, factBlueprint],
     alternatives: [factAnalyze],
@@ -491,7 +667,7 @@ export const authoredRules: RecommendationRule[] = [
   },
   {
     id: 'rule-explore-clear',
-    scenarioId: 'unclear-requirements',
+    scenarioId: 'A_full_project',
     condition: 'intentClarity=clear, no blueprint',
     commandFacts: [factBlueprint],
     alternatives: [factBrainstorm],
@@ -529,6 +705,22 @@ export const authoredRules: RecommendationRule[] = [
     alternatives: [],
     priority: 'primary',
   },
+  {
+    id: 'rule-plan-direct',
+    scenarioId: 'D_small_fix',
+    condition: 'taskType=bugfix, no plan (无 analyze 前置)',
+    commandFacts: [factPlan],
+    alternatives: [factExecute],
+    priority: 'primary',
+  },
+  {
+    id: 'rule-explore-only',
+    scenarioId: 'F_explore_only',
+    condition: 'taskType=explore, no blueprint',
+    commandFacts: [factBrainstorm],
+    alternatives: [],
+    priority: 'primary',
+  },
 ];
 
 function ruleApplies(rule: RecommendationRule, state: SimulatedProjectState): boolean {
@@ -545,6 +737,10 @@ function ruleApplies(rule: RecommendationRule, state: SimulatedProjectState): bo
       return state.hasAnalyze && !state.hasPlan;
     case 'rule-execute':
       return state.hasPlan && !state.hasExecute;
+    case 'rule-plan-direct':
+      return state.taskType === 'bugfix' && !state.hasPlan;
+    case 'rule-explore-only':
+      return state.taskType === 'explore' && !state.hasBlueprint;
     case 'rule-quality-gate':
       return state.hasExecute;
     default:
@@ -761,7 +957,7 @@ function clampScale(scale: number): number {
 }
 
 export function App() {
-  const scenario = unclearRequirementsScenario;
+  const scenario = fullProjectScenario;
   const [activeStepId, setActiveStepId] = useState(scenario.steps[0].id);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
@@ -1212,7 +1408,7 @@ export function App() {
           width="100%"
           height="100%"
           role="img"
-          aria-label="Unclear Requirements 场景流程"
+          aria-label="Full Project 场景流程"
           onWheel={handleWheel}
         >
           <defs>
