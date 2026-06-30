@@ -9,7 +9,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['src/**/*.test.{ts,tsx}'],
-    exclude: ['node_modules/**', 'dist/**', 'maestro-flow/**'],
+    exclude: ['node_modules/**', 'dist/**', 'maestro-flow/**', 'archive/**'],
     globals: true,
     setupFiles: './src/test-setup.ts',
   },
