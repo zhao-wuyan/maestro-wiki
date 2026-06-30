@@ -4,7 +4,7 @@
   "update_note": "Code anchors migrated to v0.2 stack per ADR-005. Legacy src paths marked (archived).",
   "relevant_files": [
     { "path": "archive/src-reference-20260630/main.tsx", "archived": true, "evidence": "(archived v0.1) ScenarioModel was a single authored flow; active state used selectedNodeId/activeStepId. Replaced by src/App.tsx wireframe in v0.2." },
-    { "path": "src/App.tsx", "evidence": "v0.2 wireframe using static SCENARIOS array + useState<ScenarioId>; pending refactor to branch-aware model per ADR-002." },
+    { "path": "src/App.tsx", "evidence": "v0.2 wireframe using static SCENARIOS array + useState<ScenarioId>; form-driven shape per ADR-006, pending data layer for RecommendationResult." },
     { "path": "maestro-flow/.codex/skills/maestro-help/catalog.json", "evidence": "Command catalog, workflow paths, and categories." },
     { "path": "maestro-flow/.claude/commands/maestro-next.md", "evidence": "Lifecycle, scoring, routing, preconditions, and close-call behavior." }
   ],

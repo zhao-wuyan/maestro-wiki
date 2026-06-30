@@ -4,38 +4,43 @@
     "type": "blueprint",
     "artifact_id": "BLP-canvas-maestro-command-recommender-2026-06-28",
     "session_path": "blueprint/BLP-canvas-maestro-command-recommender-2026-06-28",
-    "generated_at": "2026-06-28T00:00:00Z"
+    "generated_at": "2026-06-28T00:00:00Z",
+    "updated_at": "2026-06-30T09:50:00Z",
+    "update_note": "Revised for form-driven shape per ADR-006. Canvas-branch-aware constraint voided; REQ-003/004 superseded by v2."
   },
   "requirements": [
     { "id": "REQ-001", "title": "Rule Update Protocol", "priority": "must", "ref": "requirements/REQ-001-rule-update-protocol.md" },
     { "id": "REQ-002", "title": "Command Rule Set", "priority": "must", "ref": "requirements/REQ-002-command-rule-set.md" },
-    { "id": "REQ-003", "title": "Stepwise Canvas Model", "priority": "must", "ref": "requirements/REQ-003-stepwise-canvas-model.md" },
-    { "id": "REQ-004", "title": "Canvas Interaction UI", "priority": "must", "ref": "requirements/REQ-004-canvas-interaction-ui.md" },
+    { "id": "REQ-003", "title": "Stepwise Canvas Model", "priority": "must", "status": "superseded", "superseded_by": "REQ-003-v2", "ref": "requirements/REQ-003-stepwise-canvas-model.md" },
+    { "id": "REQ-003-v2", "title": "Form-Flow Recommendation Model", "priority": "must", "ref": "requirements/REQ-003-form-flow-model.md" },
+    { "id": "REQ-004", "title": "Canvas Interaction UI", "priority": "must", "status": "superseded", "superseded_by": "REQ-004-v2", "ref": "requirements/REQ-004-canvas-interaction-ui.md" },
+    { "id": "REQ-004-v2", "title": "Form-Driven Recommendation UI", "priority": "must", "ref": "requirements/REQ-004-form-interaction-ui.md" },
     { "id": "REQ-005", "title": "Route Persistence", "priority": "should", "ref": "requirements/REQ-005-route-persistence.md" },
     { "id": "REQ-006", "title": "Route Sharing and Gallery", "priority": "should", "ref": "requirements/REQ-006-route-sharing-gallery.md" }
   ],
   "constraints": [
     { "id": "C-001", "area": "architecture", "constraint": "The app MUST introduce a local CommandRuleSet layer consumed by React.", "status": "locked", "ref": "architecture/ADR-001-local-command-rule-set.md" },
-    { "id": "C-002", "area": "canvas", "constraint": "Canvas state MUST be branch-aware.", "status": "locked", "ref": "architecture/ADR-002-branch-aware-canvas-state.md" },
+    { "id": "C-002", "area": "canvas", "constraint": "Canvas state MUST be branch-aware.", "status": "voided", "voided_at": "2026-06-30T09:50:00Z", "voided_by": "ADR-006", "ref": "architecture/ADR-002-branch-aware-canvas-state.md" },
+    { "id": "C-005", "area": "shape", "constraint": "Recommendation UI MUST be form-driven (textarea + scenario cards + flags + result panel), not canvas-based.", "status": "locked", "ref": "architecture/ADR-006-form-driven-shape.md" },
     { "id": "C-003", "area": "sharing", "constraint": "Public sharing and gallery require online storage/API beyond static MVP.", "status": "locked", "ref": "architecture/ADR-003-browser-persistence-sharing-boundary.md" },
     { "id": "C-004", "area": "provenance", "constraint": "Recommendation rules MUST cite maestro-flow submodule sources.", "status": "locked", "ref": "architecture/ADR-004-source-provenance-update-protocol.md" }
   ],
   "domain": {
-    "problem_statement": "Create a canvas-based Maestro command recommender with source-backed local rules, branch-aware route generation, persistence, and specified sharing/gallery extension.",
-    "terminology": ["Canvas", "CommandRuleSet", "RecommendationGroup", "SavedRoute", "SharedRoute", "EdgeNote"],
+    "problem_statement": "Create a form-driven Maestro command recommender with source-backed local rules, ranked recommendation output, persistence, and specified sharing/gallery extension.",
+    "terminology": ["RecommendationForm", "CommandRuleSet", "RecommendationResult", "SavedRoute", "SharedRoute"],
     "audience": "Users learning which Maestro command or workflow path to choose",
     "industry": "Developer tooling"
   },
   "non_goals": [
     { "title": "Real state parsing in static MVP", "ref": "product-brief.md" },
     { "title": "Browser runtime LLM recommendation", "ref": "product-brief.md" },
+    { "title": "Canvas / node-graph interaction in recommendation experience (voided by ADR-006)", "ref": "architecture/ADR-006-form-driven-shape.md" },
     { "title": "Public gallery without storage/API", "ref": "requirements/REQ-006-route-sharing-gallery.md" }
   ],
   "insights": [
-    { "area": "implementation", "summary": "MVP should implement rules/canvas/persistence before sharing backend.", "ref": "readiness-report.md" }
+    { "area": "implementation", "summary": "MVP should implement rules/form/persistence before sharing backend.", "ref": "readiness-report.md" }
   ],
   "open_questions": [
-    { "area": "canvas-layout", "question": "Tree, swimlane, or auto-layout graph for parallel branches?", "ref": "readiness-report.md" },
     { "area": "rule-storage", "question": "JSON, TypeScript, or hybrid generated rules?", "ref": "readiness-report.md" },
     { "area": "sharing-backend", "question": "Which storage/API hosts shared routes and gallery entries?", "ref": "readiness-report.md" }
   ],

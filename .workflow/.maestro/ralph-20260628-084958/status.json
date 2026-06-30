@@ -1,7 +1,10 @@
 {
   "session_id": "ralph-20260628-084958",
   "source": "ralph",
-  "status": "running",
+  "status": "aborted",
+  "aborted_at": "2026-06-30T09:35:00Z",
+  "abort_reason": "tech_stack_migration: v0.1 src/main.tsx + styles.css 已归档至 archive/src-reference-20260630/，v0.2 改用 React 18 + Tailwind 3 + @xyflow/react 12。旧 execute step 依赖的代码结构已不存在，无法恢复。新 session 重建 execute 链路（参见 BLP ADR-005）。",
+  "abort_superseded_by": "pending",
   "ralph_protocol_version": "1",
   "active_step_index": 2,
   "intent": "-y",

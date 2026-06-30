@@ -1,15 +1,19 @@
 ---
 session_id: BLP-canvas-maestro-command-recommender-2026-06-28
 adr_id: ADR-005
-status: accepted
+status: partially_superseded
 created_at: 2026-06-30T09:30:00Z
+partially_superseded_at: 2026-06-30T09:50:00Z
+superseded_by: ADR-006 (推荐交互的 canvas 渲染部分)
 supersedes_partial:
-  - ADR-002 (rendering approach only)
+  - ADR-002 (rendering approach only, then fully voided by ADR-006)
 ---
 
-# ADR-005: React Flow 技术栈迁移
+# ADR-005: React Flow 技术栈迁移（部分被 ADR-006 取代）
 
-## Decision
+> **状态更新（2026-06-30）**：本 ADR 的**技术栈选型部分仍然有效**（React 18 + Vite 6 + Tailwind 3 + @xyflow/react 12 保留），但**「Canvas UI 用 React Flow 渲染推荐交互」部分已被 ADR-006 取代**——推荐交互回归表单驱动，React Flow 仅保留用于「运行流程」「命令地图」等只读可视化页面。
+
+## Decision (tech stack still active)
 
 Canvas 渲染层从「SVG + React state 自研」迁移到 **@xyflow/react 12**（原 React Flow）。
 

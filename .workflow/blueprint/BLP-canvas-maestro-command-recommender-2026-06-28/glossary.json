@@ -1,10 +1,14 @@
 {
+  "updated_at": "2026-06-30T09:50:00Z",
+  "update_note": "Terms revised for form-driven shape per ADR-006. Canvas-related terms marked legacy.",
   "terms": [
-    { "term": "Canvas", "definition": "Main interaction surface for generated scenario and command nodes.", "category": "core" },
+    { "term": "RecommendationForm", "definition": "Main interaction surface: textarea + scenario cards + flags + action button + result panel.", "category": "core" },
     { "term": "CommandRuleSet", "definition": "Local source-backed rule layer consumed by the React UI.", "category": "technical" },
-    { "term": "RecommendationGroup", "definition": "Ranked or equal-rank command candidates presented on a node.", "category": "technical" },
-    { "term": "SavedRoute", "definition": "Browser-persisted route map with recommendation evidence and version metadata.", "category": "core" },
-    { "term": "SharedRoute", "definition": "Route map published to a standalone URL with optional gallery visibility.", "category": "core" },
-    { "term": "EdgeNote", "definition": "User-authored explanation on a connection between command nodes.", "category": "core" }
+    { "term": "RecommendationResult", "definition": "Output of the rule engine: recommended command, chain, rationale, confidence, clarifying questions.", "category": "technical" },
+    { "term": "SavedRoute", "definition": "Browser-persisted route record with recommendation evidence and version metadata.", "category": "core" },
+    { "term": "SharedRoute", "definition": "Route record published to a standalone URL with optional gallery visibility.", "category": "core" },
+    { "term": "Canvas", "definition": "(legacy, voided by ADR-006) Former main interaction surface. Retained only for future read-only visualization pages.", "category": "legacy" },
+    { "term": "RecommendationGroup", "definition": "(legacy, voided by ADR-006) Former ranked command candidates on a node. Replaced by RecommendationResult.", "category": "legacy" },
+    { "term": "EdgeNote", "definition": "(legacy, voided by ADR-006) Former user-authored explanation on a connection between command nodes. Replaced by inline rationale in result panel.", "category": "legacy" }
   ]
 }

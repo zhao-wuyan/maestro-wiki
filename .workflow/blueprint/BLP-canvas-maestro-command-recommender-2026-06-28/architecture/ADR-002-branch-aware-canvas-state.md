@@ -1,32 +1,35 @@
 ---
 session_id: BLP-canvas-maestro-command-recommender-2026-06-28
 adr_id: ADR-002
-status: accepted
-updated_at: 2026-06-30T09:30:00Z
-rendering_superseded_by: ADR-005
+status: superseded
+updated_at: 2026-06-30T09:50:00Z
+superseded_by: ADR-006
 ---
 
-# ADR-002: Branch-Aware Canvas State
+# ADR-002: Branch-Aware Canvas State (superseded)
 
-## Decision
+> **本 ADR 已被 [ADR-006](./ADR-006-form-driven-shape.md) 完全取代**（数据层 + 渲染层均作废）。
+> 保留原文仅作历史追溯。新 execute 不再实现本 ADR 描述的模型。
+
+## Decision (legacy)
 
 The canvas MUST use branch-aware state with nodes, edges, recommendation groups, and activeBranchId.
 
-> **数据层决策仍然有效**（nodes/edges/activeBranchId 数据结构可直接映射到 React Flow nodes/edges props）。
-> **渲染层约束已被 ADR-005 取代**（见下方 Consequences）。
-
-## Evidence
+## Evidence (legacy)
 
 - REQ-003 requires multiple independently growing branches.
-- ~~`src/main.tsx:309` currently stores only `selectedNodeId` and `activeStepId`~~（**2026-06-30 锚点修订**：旧文件已归档至 `archive/src-reference-20260630/main.tsx`；当前 `src/App.tsx` wireframe 用 `useState<ScenarioId>` 管理单一选中态，待扩展为 branch-aware 模型）
+- ~~`src/main.tsx:309`~~（已归档至 `archive/src-reference-20260630/main.tsx`）
 
-## Consequences
+## Consequences (legacy, all void)
 
-数据层：The model supports multi-branch exploration.
+~~数据层：The model supports multi-branch exploration.~~（作废）
 
-~~渲染层：rendering must control visual complexity with active branch focus.~~（**2026-06-30 作废**）
+~~渲染层：rendering must control visual complexity with active branch focus.~~（作废）
 
-**渲染层替代方案（ADR-005）**：使用 React Flow 内置能力控制视觉复杂度：
-- 节点 `selected` 状态 + 自定义 style 实现激活分支高亮
-- 边 `animated` / `style.stroke` 区分活跃路径
-- `nodesDraggable` / `nodesConnectable` 配置控制交互边界
+## Supersession
+
+**ADR-006 替代方案**：
+
+- 推荐结果直接展示在表单结果面板，不进入节点
+- 多 rank 推荐通过结果面板分组展示
+- 数据 schema 从 `nodes/edges/activeBranchId` 简化为 `RecommendationResult` 单一对象

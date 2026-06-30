@@ -1,12 +1,15 @@
 ---
 session_id: BLP-canvas-maestro-command-recommender-2026-06-28
 phase: P6
+updated_at: 2026-06-30T09:50:00Z
 ---
 
 # Blueprint Summary
 
-The Canvas Maestro Command Recommender is a feature-set redesign of Maestro Workflow Wiki. It replaces the existing fixed scenario and large right sidebar with a canvas-centered, source-backed command recommendation experience.
+> **2026-06-30 修订**：原 "canvas-centered" 形态已作废（ADR-006），回归表单驱动形态。
 
-MVP should prioritize the local rule foundation, stepwise multi-branch canvas, and browser persistence. Sharing and gallery are specified as a follow-on online capability because standalone URLs and public gallery browsing require storage/API support.
+The **Form-Driven Maestro Command Recommender** is a feature-set redesign of Maestro Workflow Wiki. It provides a simple input → action → result form flow backed by a local, source-cited rule engine, so users can describe their task in plain language and get clear ranked Maestro command recommendations.
 
-Readiness: 88% — Pass.
+MVP should prioritize the local rule foundation, the form-driven recommendation UI, and browser persistence (REQ-005). Canvas/node-graph interaction is out of scope; @xyflow/react is retained for future read-only visualization pages (运行流程 / 命令地图) but not for the recommendation experience.
+
+Readiness: 88% — Pass (revised for v0.2 stack + form-driven shape).
