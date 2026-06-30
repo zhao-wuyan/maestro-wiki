@@ -12,7 +12,7 @@ export default {
         },
         accent: {
           DEFAULT: '#3b82f6',
-          hover: '#2563eb',
+          dark: '#2563eb',
         },
       },
       fontFamily: {
